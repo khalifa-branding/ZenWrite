@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ZenWrite AI Settings</title>
+  <link rel="stylesheet" href="popup.css">
+  <!-- Outfit Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Tabler Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+</head>
+<body>
+  <div class="popup-container">
+    <header class="popup-header">
+      <h1 class="logo"><i class="ti ti-feather"></i> ZenWrite AI</h1>
+      <span class="version">v1.0</span>
+    </header>
+
+    <main class="popup-main">
+      <div class="form-group">
+        <label class="form-label" for="apiKeyInput"><i class="ti ti-key"></i> Gemini API Key</label>
+        <input type="password" id="apiKeyInput" placeholder="Enter Gemini API Key..." class="form-input">
+        <small class="help-text">
+          Get a free key from <a href="https://aistudio.google.com/" target="_blank" class="accent-link">Google AI Studio</a>.
+        </small>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="modelSelect"><i class="ti ti-cpu"></i> AI Model</label>
+        <select id="modelSelect" class="form-select">
+          <option value="gemini-3.6-flash" selected>Gemini 3.6 Flash (Recommended - Free & Fast)</option>
+          <option value="gemini-3.5-flash">Gemini 3.5 Flash (Alternative)</option>
+          <option value="gemini-1.5-flash">Gemini 1.5 Flash (Older)</option>
+          <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+          <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+        </select>
+      </div>
+
+      <button id="saveBtn" class="btn btn-primary"><i class="ti ti-device-floppy"></i> Save Settings</button>
+      <div id="statusMessage" class="status-message" style="display: none;">Settings saved!</div>
+    </main>
+
+    <footer class="popup-footer">
+      <span>Right-click selected text in any browser field to run actions.</span>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,3147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenWrite - AI Creative Text Editor</title>
+    <link rel="icon" type="image/jpeg" href="favicon.jpg">
+    <script src="config.js"></script>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tabler Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+    
+    <style>
+        :root {
+            /* Warm Ivory Theme (Light Mode) */
+            --bg-primary: #FAF9F6;
+            --bg-secondary: #F4F1EA;
+            --bg-tertiary: #EBE7DC;
+            --text-primary: #2C2A29;
+            --text-secondary: #6B6865;
+            --accent-glow: rgba(142, 108, 64, 0.1);
+            --accent-color: #8E6C40;
+            --accent-text: #FAF9F6;
+            --border-color: rgba(142, 108, 64, 0.15);
+            --shadow-color: rgba(44, 42, 41, 0.06);
+            --editor-bg: #FAF9F6;
+            --preview-bg: #FAF9F6;
+            --diff-del-bg: rgba(220, 38, 38, 0.15);
+            --diff-del-text: #DC2626;
+            --diff-ins-bg: rgba(5, 150, 105, 0.15);
+            --diff-ins-text: #059669;
+            --glass-bg: rgba(244, 241, 240, 0.7);
+            --sidebar-width: 280px;
+            --ai-drawer-width: 320px;
+        }
+
+        [data-theme="dark"] {
+            /* Deep Obsidian Theme (Dark Mode) */
+            --bg-primary: #0A0A0B;
+            --bg-secondary: #121214;
+            --bg-tertiary: #1A1A1E;
+            --text-primary: #E3E3E6;
+            --text-secondary: #909099;
+            --accent-glow: rgba(138, 92, 246, 0.15);
+            --accent-color: #8B5CF6;
+            --accent-text: #FFFFFF;
+            --border-color: rgba(139, 92, 246, 0.2);
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --editor-bg: #0A0A0B;
+            --preview-bg: #0A0A0B;
+            --diff-del-bg: rgba(239, 68, 68, 0.2);
+            --diff-del-text: #F87171;
+            --diff-ins-bg: rgba(16, 185, 129, 0.2);
+            --diff-ins-text: #34D399;
+            --glass-bg: rgba(18, 18, 20, 0.7);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* Sidebar Style */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            z-index: 10;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar.hidden {
+            transform: translateX(calc(-1 * var(--sidebar-width)));
+            position: absolute;
+            height: 100%;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 1.25rem;
+            letter-spacing: -0.5px;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo i {
+            font-size: 1.4rem;
+        }
+
+        .new-doc-btn {
+            background-color: var(--accent-color);
+            color: var(--accent-text);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px var(--accent-glow);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .new-doc-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px var(--accent-glow);
+        }
+
+        .new-doc-btn:active {
+            transform: translateY(0);
+        }
+
+        .doc-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .doc-item {
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .doc-item:hover {
+            background-color: var(--bg-tertiary);
+        }
+
+        .doc-item.active {
+            background-color: var(--bg-tertiary);
+            border-color: var(--border-color);
+        }
+
+        .doc-title-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .doc-item i {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .doc-item.active i {
+            color: var(--accent-color);
+        }
+
+        .doc-title-text {
+            font-size: 0.95rem;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .doc-item-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .doc-item:hover .doc-item-actions {
+            opacity: 1;
+        }
+
+        .doc-action-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .doc-action-btn:hover {
+            color: var(--text-primary);
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] .doc-action-btn:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .doc-action-btn.delete-btn:hover {
+            color: #EF4444;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sidebar-footer-btn {
+            width: 100%;
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .sidebar-footer-btn:hover {
+            background-color: var(--border-color);
+        }
+
+        /* Main Workspace Style */
+        .main-workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Top Header Bar */
+        .workspace-header {
+            height: 64px;
+            padding: 0 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            background-color: var(--bg-primary);
+            z-index: 5;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .menu-toggle-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.4rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            border-radius: 6px;
+            padding: 6px;
+        }
+
+        .menu-toggle-btn:hover {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .active-doc-title-input {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            padding: 4px 8px;
+            width: 100%;
+            max-width: 400px;
+            outline: none;
+        }
+
+        .active-doc-title-input:focus {
+            border-color: var(--border-color);
+            background-color: var(--bg-secondary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: 1px solid transparent;
+            color: var(--text-secondary);
+            font-size: 1.3rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            width: 38px;
+            height: 38px;
+            position: relative;
+        }
+
+        .icon-btn:hover {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .icon-btn.active {
+            color: var(--accent-color);
+            background-color: var(--accent-glow);
+            border-color: var(--border-color);
+        }
+
+        .icon-btn::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: -32px;
+            left: 50%;
+            transform: translateX(-50%) scale(0.9);
+            background-color: var(--text-primary);
+            color: var(--bg-primary);
+            font-size: 0.75rem;
+            font-family: 'Outfit', sans-serif;
+            padding: 4px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.15s ease;
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+
+        .icon-btn:hover::after {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+            bottom: -36px;
+        }
+
+        /* Editor Layout */
+        .editor-container {
+            flex: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pane {
+            flex: 1;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            padding: 8px 24px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .editor-textarea-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+        }
+
+        .line-numbers {
+            width: 48px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 20px 0;
+            text-align: right;
+            padding-right: 8px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            user-select: none;
+            overflow: hidden;
+            line-height: 1.6;
+        }
+
+        .editor-textarea {
+            flex: 1;
+            height: 100%;
+            border: none;
+            background-color: var(--editor-bg);
+            color: var(--text-primary);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            padding: 20px;
+            resize: none;
+            outline: none;
+            line-height: 1.6;
+            tab-size: 4;
+            overflow-y: auto;
+        }
+
+        .preview-pane {
+            border-left: 1px solid var(--border-color);
+            background-color: var(--preview-bg);
+        }
+
+        .preview-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            line-height: 1.7;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        /* Markdown Styling inside preview */
+        .preview-content h1, .preview-content h2, .preview-content h3 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-top: 1.4em;
+            margin-bottom: 0.6em;
+            line-height: 1.35;
+        }
+
+        .preview-content h1 { font-size: 1.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.3em; }
+        .preview-content h2 { font-size: 1.45rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.2em;}
+        .preview-content h3 { font-size: 1.25rem; }
+        
+        .preview-content p {
+            margin-bottom: 1em;
+        }
+
+        .preview-content a {
+            color: var(--accent-color);
+            text-decoration: underline;
+            text-underline-offset: 4px;
+        }
+
+        .preview-content code {
+            font-family: 'Fira Code', monospace;
+            background-color: var(--bg-secondary);
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            border: 1px solid var(--border-color);
+        }
+
+        .preview-content pre {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+            margin-bottom: 1.2em;
+        }
+
+        .preview-content pre code {
+            background-color: transparent;
+            border: none;
+            padding: 0;
+            font-size: 0.9em;
+            display: block;
+        }
+
+        .preview-content blockquote {
+            border-left: 4px solid var(--accent-color);
+            padding: 10px 20px;
+            color: var(--text-secondary);
+            background-color: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 1.2em;
+            font-style: italic;
+        }
+
+        .preview-content ul, .preview-content ol {
+            margin-bottom: 1.2em;
+            padding-left: 24px;
+        }
+
+        .preview-content li {
+            margin-bottom: 0.4em;
+        }
+
+        .preview-content hr {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: 2em 0;
+        }
+
+        .preview-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.2em;
+        }
+
+        .preview-content th, .preview-content td {
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .preview-content th {
+            background-color: var(--bg-secondary);
+            font-weight: 600;
+        }
+
+        /* Checkboxes in preview */
+        .preview-content input[type="checkbox"] {
+            margin-right: 8px;
+            accent-color: var(--accent-color);
+            cursor: pointer;
+        }
+
+        /* Footer bar */
+        .workspace-footer {
+            height: 36px;
+            padding: 0 24px;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .footer-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Zen Mode Overlay */
+        .zen-active .sidebar,
+        .zen-active .workspace-header,
+        .zen-active .workspace-footer,
+        .zen-active .pane-header,
+        .zen-active .preview-pane {
+            display: none !important;
+        }
+
+        .zen-active .main-workspace {
+            padding: 40px 0;
+            background-color: var(--editor-bg);
+        }
+
+        .zen-active .editor-textarea-wrapper {
+            max-width: 720px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .zen-active .line-numbers {
+            display: none !important;
+        }
+
+        /* Floating Zen Exit Button */
+        .exit-zen-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background-color: var(--accent-color);
+            color: var(--accent-text);
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 14px var(--shadow-color);
+            z-index: 999;
+            transition: transform 0.2s;
+        }
+
+        .zen-active .exit-zen-btn {
+            display: flex;
+        }
+
+        .exit-zen-btn:hover {
+            transform: scale(1.08);
+        }
+
+        /* Floating AI Popover Button */
+        .ai-floating-btn {
+            position: absolute;
+            background: rgba(28, 25, 23, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: #FAF9F6;
+            border: 1px solid var(--border-color);
+            border-radius: 99px;
+            padding: 6px 14px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2), 0 3px 6px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            pointer-events: auto;
+            transform: translateX(-50%);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+        }
+
+        [data-theme="dark"] .ai-floating-btn {
+            background: rgba(18, 18, 20, 0.85);
+        }
+
+        .ai-floating-btn:hover {
+            transform: translateX(-50%) translateY(-1px) scale(1.03);
+            background: rgba(44, 40, 36, 0.95);
+            border-color: var(--accent-color);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25), 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] .ai-floating-btn:hover {
+            background: rgba(30, 30, 35, 0.95);
+        }
+
+        .ai-floating-btn i {
+            font-size: 0.95rem;
+            color: var(--accent-color);
+        }
+
+        /* Floating AI Action Menu */
+        .ai-menu {
+            position: absolute;
+            background: rgba(28, 25, 23, 0.95);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+            padding: 8px;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            width: 220px;
+            z-index: 101;
+            transform: translateX(-50%);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] .ai-menu {
+            background: rgba(18, 18, 20, 0.95);
+        }
+
+        .ai-menu-item {
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: none;
+            border: none;
+            color: rgba(250, 249, 246, 0.85);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+        }
+
+        [data-theme="dark"] .ai-menu-item {
+            color: rgba(227, 227, 230, 0.85);
+        }
+
+        .ai-menu-item:hover {
+            background-color: var(--accent-glow);
+            color: var(--accent-color);
+            transform: translateX(4px);
+        }
+
+        .ai-menu-item i {
+            font-size: 1rem;
+            color: var(--accent-color);
+            transition: color 0.15s ease;
+        }
+
+        .ai-menu-item:hover i {
+            color: var(--accent-color);
+        }
+
+        /* AI Submenu styling */
+        .ai-submenu {
+            display: none;
+            flex-direction: column;
+            gap: 2px;
+            padding: 4px 8px 4px 20px;
+            border-left: 1px solid var(--border-color);
+            margin-left: 16px;
+            animation: submenu-slide 0.2s ease-out;
+        }
+
+        @keyframes submenu-slide {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .ai-submenu-item {
+            padding: 6px 10px;
+            border-radius: 6px;
+            background: none;
+            border: none;
+            color: rgba(250, 249, 246, 0.75);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.8rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        [data-theme="dark"] .ai-submenu-item {
+            color: rgba(227, 227, 230, 0.75);
+        }
+
+        .ai-submenu-item:hover {
+            background-color: var(--accent-glow);
+            color: var(--accent-color);
+            padding-left: 12px;
+        }
+
+        /* Autocomplete suggestion tooltip */
+        .autocomplete-tooltip {
+            position: absolute;
+            background: rgba(28, 25, 23, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #FAF9F6;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.8rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            z-index: 102;
+            display: none;
+            pointer-events: none;
+            flex-direction: column;
+            gap: 4px;
+            max-width: 320px;
+            transform: translateX(-50%);
+            animation: tooltip-fade 0.15s ease-out;
+        }
+
+        @keyframes tooltip-fade {
+            from { opacity: 0; transform: translateX(-50%) translateY(5px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        .autocomplete-text {
+            color: rgba(250, 249, 246, 0.9);
+            font-weight: 500;
+            font-style: italic;
+        }
+
+        .autocomplete-hint {
+            font-size: 0.7rem;
+            color: var(--accent-color);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Proofreader card styles */
+        .proofreader-card {
+            background: rgba(28, 25, 23, 0.4);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        [data-theme="dark"] .proofreader-card {
+            background: rgba(0, 0, 0, 0.25);
+        }
+
+        .proofreader-card:hover {
+            box-shadow: 0 4px 15px var(--accent-glow);
+            border-color: var(--accent-color);
+        }
+
+        .proofreader-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .proofreader-category {
+            background-color: var(--accent-glow);
+            color: var(--accent-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .proofreader-diff {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 0.85rem;
+        }
+
+        .proofreader-original {
+            color: #EF4444;
+            text-decoration: line-through;
+            word-break: break-word;
+        }
+
+        .proofreader-suggestion {
+            color: #10B981;
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .proofreader-explanation {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .proofreader-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .btn-suggestion-accept {
+            background-color: var(--accent-color);
+            color: #FFFFFF;
+            font-size: 0.75rem;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            font-weight: 600;
+            transition: all 0.15s;
+        }
+
+        .btn-suggestion-accept:hover {
+            background-color: #FFFFFF;
+            color: var(--bg-primary);
+        }
+
+        /* AI Custom Prompt input field inside menu */
+        .ai-custom-prompt-wrapper {
+            padding: 6px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .ai-custom-input {
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.8rem;
+            color: #FAF9F6;
+            outline: none;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+
+        [data-theme="dark"] .ai-custom-input {
+            color: var(--text-primary);
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .ai-custom-input:focus {
+            border-color: var(--accent-color);
+            background-color: rgba(0, 0, 0, 0.35);
+        }
+
+        /* Settings Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 20px 50px var(--shadow-color);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .modal-close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .form-input, .form-select {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            outline: none;
+            width: 100%;
+        }
+
+        .form-input:focus, .form-select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--border-color);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: var(--accent-text);
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--text-primary);
+            color: var(--bg-primary);
+        }
+
+        /* AI Drawer / Sidebar on the right */
+        .ai-drawer {
+            width: var(--ai-drawer-width);
+            background-color: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            z-index: 10;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .ai-drawer.hidden {
+            transform: translateX(var(--ai-drawer-width));
+            position: absolute;
+            right: 0;
+            height: 100%;
+        }
+
+        .ai-drawer-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .ai-drawer-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-drawer-title i {
+            color: var(--accent-color);
+        }
+
+        .ai-drawer-body {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .ai-prompt-area {
+            width: 100%;
+            height: 100px;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            resize: none;
+            outline: none;
+        }
+
+        .ai-prompt-area:focus {
+            border-color: var(--accent-color);
+        }
+
+        .ai-output-box {
+            flex: 1;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--text-primary);
+            overflow-y: auto;
+            position: relative;
+            min-height: 200px;
+            max-height: 400px;
+        }
+
+        .ai-output-placeholder {
+            color: var(--text-secondary);
+            font-style: italic;
+            text-align: center;
+            margin-top: 60px;
+        }
+
+        /* Diff Preview Overlay / Modal */
+        .diff-modal {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 680px;
+            box-shadow: 0 20px 50px var(--shadow-color);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .diff-container {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: 350px;
+        }
+
+        .diff-header {
+            background-color: var(--bg-tertiary);
+            padding: 8px 16px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .diff-content {
+            background-color: var(--bg-primary);
+            padding: 16px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            flex: 1;
+        }
+
+        .diff-del {
+            background-color: var(--diff-del-bg);
+            color: var(--diff-del-text);
+            text-decoration: line-through;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .diff-ins {
+            background-color: var(--diff-ins-bg);
+            color: var(--diff-ins-text);
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        /* Loading Spinner */
+        .loading-pulse {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-color);
+            border-radius: 50%;
+            animation: pulse-anim 1.4s infinite ease-in-out both;
+        }
+
+        .pulse-dot:nth-child(1) { animation-delay: -0.32s; }
+        .pulse-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes pulse-anim {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* Custom Context Menu styling */
+        .custom-context-menu {
+            position: fixed;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            padding: 6px;
+            display: none;
+            flex-direction: column;
+            gap: 2px;
+            width: 230px;
+            z-index: 1000;
+            backdrop-filter: blur(12px);
+        }
+
+        .context-header {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            padding: 6px 12px 6px 12px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            font-weight: 500;
+        }
+
+        .context-item {
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            width: 100%;
+        }
+
+        .context-item:hover {
+            background-color: var(--accent-color);
+            color: var(--accent-text);
+        }
+
+        .context-item i {
+            font-size: 1.05rem;
+        }
+
+        .context-divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 4px 0;
+        }
+
+        /* Print styling for clean PDF export */
+        @media print {
+            body {
+                background: #FFFFFF !important;
+                color: #000000 !important;
+            }
+            .sidebar, 
+            .workspace-header, 
+            .workspace-footer, 
+            #editorPane, 
+            .pane-header, 
+            .exit-zen-btn, 
+            .ai-floating-btn, 
+            .ai-menu, 
+            .ai-drawer, 
+            .modal-overlay, 
+            .custom-context-menu, 
+            .autocomplete-tooltip {
+                display: none !important;
+            }
+            .editor-container {
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .preview-pane {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                border: none !important;
+                box-shadow: none !important;
+                position: static !important;
+                overflow: visible !important;
+                height: auto !important;
+            }
+            .preview-content {
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: visible !important;
+                height: auto !important;
+                color: #000000 !important;
+                font-family: Georgia, serif !important;
+                font-size: 12pt !important;
+                line-height: 1.6 !important;
+            }
+            h1, h2, h3, h4, h5, h6 {
+                page-break-after: avoid;
+                color: #000000 !important;
+                font-family: 'Outfit', sans-serif !important;
+            }
+            pre, blockquote {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar (Document Management) -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h1 class="logo"><i class="ti ti-feather"></i> ZenWrite</h1>
+            <button class="new-doc-btn" id="newDocBtn"><i class="ti ti-plus"></i> New</button>
+        </div>
+        <nav class="doc-list" id="docList" aria-label="Documents List">
+            <!-- Documents injected by JS -->
+        </nav>
+        <div class="sidebar-footer">
+            <button class="sidebar-footer-btn" id="importFileBtn">
+                <i class="ti ti-file-upload"></i> Import File
+            </button>
+            <button class="sidebar-footer-btn" id="exportBtn">
+                <i class="ti ti-file-download"></i> Export Document
+            </button>
+            <a href="chrome-extension.zip" download class="sidebar-footer-btn" style="text-decoration: none; box-sizing: border-box;">
+                <i class="ti ti-download"></i> Get Extension
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main-workspace" id="mainWorkspace">
+        
+        <!-- Header Bar -->
+        <header class="workspace-header">
+            <div class="header-left" style="gap: 16px;">
+                <button class="menu-toggle-btn" id="menuToggle" data-tooltip="Toggle Sidebar"><i class="ti ti-menu-2"></i></button>
+                <input type="text" class="active-doc-title-input" id="activeDocTitle" value="Untitled Document" placeholder="Rename document...">
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn" id="themeToggle" data-tooltip="Toggle Theme"><i class="ti ti-sun"></i></button>
+                <button class="icon-btn" id="soundToggle" data-tooltip="Typewriter Sounds"><i class="ti ti-volume"></i></button>
+                <button class="icon-btn" id="splitToggle" data-tooltip="Toggle Preview"><i class="ti ti-layout-columns"></i></button>
+                <button class="icon-btn" id="zenToggle" data-tooltip="Zen Focus Mode"><i class="ti ti-maximize"></i></button>
+                <button class="icon-btn" id="proofreadToggleBtn" data-tooltip="AI Proofreader"><i class="ti ti-spellcheck"></i></button>
+                <button class="icon-btn" id="aiDrawerToggle" data-tooltip="AI Writing Assistant"><i class="ti ti-sparkles"></i></button>
+                <button class="icon-btn" id="settingsToggle" data-tooltip="Settings"><i class="ti ti-settings"></i></button>
+            </div>
+        </header>
+
+        <!-- Editor & Preview Panel -->
+        <div class="editor-container">
+            <!-- Editor Pane -->
+            <section class="pane" id="editorPane">
+                <div class="pane-header">
+                    <span>Editor (Markdown)</span>
+                </div>
+                <div class="editor-textarea-wrapper">
+                    <div class="line-numbers" id="lineNumbers">1</div>
+                    <textarea class="editor-textarea" id="editorTextarea" placeholder="Start typing your draft here... Use markdown headings (#), lists (-), bold (**), or italic (*) to format. Highlight text to trigger the AI writing helper."></textarea>
+                </div>
+            </section>
+
+            <!-- Live Preview Pane -->
+            <section class="pane preview-pane" id="previewPane">
+                <div class="pane-header">
+                    <span>Live Preview</span>
+                </div>
+                <div class="preview-content" id="previewContent">
+                    <!-- Rendered HTML -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Footer -->
+        <footer class="workspace-footer">
+            <div class="footer-left">
+                <span id="wordCount">Words: 0</span>
+                <span id="charCount">Characters: 0</span>
+                <span id="readTime">Read Time: 0 min</span>
+            </div>
+            <div class="footer-right">
+                <span id="saveStatus"><i class="ti ti-cloud-check"></i> Saved locally</span>
+            </div>
+        </footer>
+
+        <!-- Floating Zen Exit Button -->
+        <button class="exit-zen-btn" id="exitZenBtn" data-tooltip="Exit Zen Mode">
+            <i class="ti ti-minimize"></i>
+        </button>
+
+        <!-- Floating AI Selection Trigger -->
+        <button class="ai-floating-btn" id="aiFloatingBtn">
+            <i class="ti ti-sparkles"></i> AI Actions
+        </button>
+
+        <!-- Floating AI Context Menu -->
+        <div class="ai-menu" id="aiMenu">
+            <button class="ai-menu-item" data-action="grammar"><i class="ti ti-spellcheck"></i> Correct Grammar</button>
+            <button class="ai-menu-item" data-action="rephrase"><i class="ti ti-refresh"></i> Rephrase Text</button>
+            <button class="ai-menu-item" data-action="concise"><i class="ti ti-arrows-minimize"></i> Make Concise</button>
+            <button class="ai-menu-item" data-action="shorter"><i class="ti ti-scissors"></i> Make Shorter</button>
+            <button class="ai-menu-item" data-action="expand"><i class="ti ti-arrows-maximize"></i> Elaborate / Expand</button>
+            <button class="ai-menu-item" data-action="explain"><i class="ti ti-info-circle"></i> Explain This</button>
+            
+            <!-- Change Tone Accordion -->
+            <button class="ai-menu-item accordion-trigger" id="toneTrigger" data-submenu="toneSubmenu"><i class="ti ti-palette"></i> Change Tone <i class="ti ti-chevron-down" style="margin-left: auto; font-size: 0.8rem;"></i></button>
+            <div class="ai-submenu" id="toneSubmenu" style="display: none;">
+                <button class="ai-submenu-item" data-action="tone-professional">👔 Professional</button>
+                <button class="ai-submenu-item" data-action="tone-casual">👕 Casual</button>
+                <button class="ai-submenu-item" data-action="tone-persuasive">🎯 Persuasive</button>
+                <button class="ai-submenu-item" data-action="tone-friendly">🤝 Friendly</button>
+                <button class="ai-submenu-item" data-action="tone-urgent">⚡ Urgent</button>
+                <button class="ai-submenu-item" data-action="tone-sarcastic">😏 Sarcastic</button>
+            </div>
+
+            <!-- Translate Accordion -->
+            <button class="ai-menu-item accordion-trigger" id="translateTrigger" data-submenu="translateSubmenu"><i class="ti ti-language"></i> Translate To <i class="ti ti-chevron-down" style="margin-left: auto; font-size: 0.8rem;"></i></button>
+            <div class="ai-submenu" id="translateSubmenu" style="display: none;">
+                <button class="ai-submenu-item" data-action="translate-es">🇪🇸 Spanish</button>
+                <button class="ai-submenu-item" data-action="translate-fr">🇫🇷 French</button>
+                <button class="ai-submenu-item" data-action="translate-de">🇩🇪 German</button>
+                <button class="ai-submenu-item" data-action="translate-ja">🇯🇵 Japanese</button>
+                <button class="ai-submenu-item" data-action="translate-zh">🇨🇳 Chinese</button>
+                <button class="ai-submenu-item" data-action="translate-ar">🇸🇦 Arabic</button>
+            </div>
+
+            <div class="ai-custom-prompt-wrapper">
+                <input type="text" class="ai-custom-input" id="aiCustomInput" placeholder="Custom instruction...">
+                <button class="btn btn-primary" id="aiCustomSubmitBtn" style="font-size: 0.75rem; padding: 6px 10px;">Run Prompt</button>
+            </div>
+        </div>
+
+        <!-- Autocomplete Tooltip -->
+        <div class="autocomplete-tooltip" id="autocompleteTooltip">
+            <span class="autocomplete-text" id="autocompleteText">AI is thinking...</span>
+            <span class="autocomplete-hint"><i class="ti ti-keyboard"></i> Press Tab to accept / Esc to dismiss</span>
+        </div>
+    </main>
+
+    <!-- Sidebar AI Drafting Drawer -->
+    <aside class="ai-drawer hidden" id="aiDrawer">
+        <div class="ai-drawer-header">
+            <h2 class="ai-drawer-title"><i class="ti ti-sparkles"></i> AI Drafting</h2>
+            <button class="icon-btn" id="aiDrawerClose" style="border: none;"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="ai-drawer-body">
+            <div class="form-group">
+                <label class="form-label" for="aiPrompt">What would you like the AI to draft?</label>
+                <textarea class="ai-prompt-area" id="aiPrompt" placeholder="e.g. Write a professional introduction explaining the benefits of local data privacy in AI editors..."></textarea>
+            </div>
+            <button class="btn btn-primary" id="aiDraftBtn" style="width: 100%;">
+                <i class="ti ti-rocket"></i> Generate Draft
+            </button>
+            
+            <div class="form-group" style="flex: 1; display: flex; flex-direction: column;">
+                <label class="form-label">Generated Response</label>
+                <div class="ai-output-box" id="aiOutputBox">
+                    <div class="ai-output-placeholder">Generated text will appear here. You can insert it directly into your editor.</div>
+                </div>
+            </div>
+            <button class="btn btn-secondary" id="aiInsertBtn" style="width: 100%; display: none;">
+                <i class="ti ti-arrow-left"></i> Insert at Cursor
+            </button>
+        </div>
+    </aside>
+
+    <!-- AI Proofreader Drawer -->
+    <aside class="ai-drawer hidden" id="proofreaderDrawer" style="border-left: 1px solid var(--border-color);">
+        <div class="ai-drawer-header">
+            <h2 class="ai-drawer-title"><i class="ti ti-spellcheck"></i> AI Proofreader</h2>
+            <button class="icon-btn" id="proofreaderDrawerClose" style="border: none; background: none; color: var(--text-secondary); cursor: pointer;"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="ai-drawer-body" id="proofreaderDrawerBody">
+            <button class="btn btn-primary" id="proofreaderScanBtn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i class="ti ti-scan"></i> Scan Document
+            </button>
+            
+            <div id="proofreaderStatus" style="text-align: center; color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px; display: none;">
+                Scanning document...
+            </div>
+            
+            <div class="proofreader-suggestions" id="proofreaderSuggestions" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+                <div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem; padding: 20px;">
+                    Click "Scan Document" to find grammar, spelling, and phrasing improvements.
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">ZenWrite Settings</h3>
+                <button class="modal-close-btn" id="closeSettingsModal"><i class="ti ti-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="apiKeyInput">Gemini API Key</label>
+                    <input type="password" class="form-input" id="apiKeyInput" placeholder="Enter Gemini API Key...">
+                    <small style="color: var(--text-secondary); margin-top: 4px; display: block;">
+                        Saved in browser storage. For a **permanent, universal solution** across all browsers, paste your key directly into the <code>config.js</code> file next to this editor. Get a free key from <a href="https://aistudio.google.com/" target="_blank" style="color: var(--accent-color)">Google AI Studio</a>.
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="modelSelect">AI Model</label>
+                    <select class="form-select" id="modelSelect">
+                        <option value="gemini-3.6-flash" selected>Gemini 3.6 Flash (Recommended - Stable & Free)</option>
+                        <option value="gemini-3.5-flash">Gemini 3.5 Flash (Alternative)</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (Older)</option>
+                        <option value="gemini-2.0-flash">Gemini 2.0 Flash (Newer)</option>
+                        <option value="gemini-1.5-pro">Gemini 1.5 Pro (High Reasoning)</option>
+                        <option value="custom">Custom Model ID...</option>
+                    </select>
+                </div>
+                <div class="form-group" id="customModelGroup" style="display: none; margin-top: 10px;">
+                    <label class="form-label" for="customModelInput">Custom Model ID</label>
+                    <input type="text" class="form-input" id="customModelInput" placeholder="e.g. gemini-1.5-flash-8b">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelSettingsBtn">Cancel</button>
+                <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Suggestion / Diff Preview Modal -->
+    <div class="modal-overlay" id="diffModalOverlay">
+        <div class="diff-modal">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="ti ti-sparkles" style="color: var(--accent-color)"></i> Proposed AI Change</h3>
+                <button class="modal-close-btn" id="closeDiffModal"><i class="ti ti-x"></i></button>
+            </div>
+            <div class="diff-container">
+                <div class="diff-header">
+                    <span>Changes Preview</span>
+                    <span style="font-size: 0.75rem; text-transform: none; color: var(--accent-color)"><span class="diff-del" style="text-decoration: none;">Deleted</span> / <span class="diff-ins">Inserted</span></span>
+                </div>
+                <div class="diff-content" id="diffContent">
+                    <!-- Diff outputs injected here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="rejectDiffBtn">Dismiss Change</button>
+                <button class="btn btn-primary" id="acceptDiffBtn">Accept & Replace</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Context Menu -->
+    <div class="custom-context-menu" id="customContextMenu">
+        <div class="context-header" id="contextSelectionInfo">Target: None</div>
+        <button class="context-item" data-action="grammar"><i class="ti ti-spellcheck"></i> Correct Grammar</button>
+        <button class="context-item" data-action="rephrase"><i class="ti ti-refresh"></i> Rephrase Text</button>
+        <button class="context-item" data-action="concise"><i class="ti ti-arrows-minimize"></i> Make Concise</button>
+        <button class="context-item" data-action="shorter"><i class="ti ti-scissors"></i> Make Shorter</button>
+        <button class="context-item" data-action="expand"><i class="ti ti-arrows-maximize"></i> Elaborate / Expand</button>
+        <button class="context-item" data-action="explain"><i class="ti ti-info-circle"></i> Explain This</button>
+        <div class="context-divider"></div>
+        <button class="context-item" id="contextCustomBtn"><i class="ti ti-prompt"></i> Run Custom Prompt...</button>
+    </div>
+
+    <!-- Main Logic Script -->
+    <script>
+        // --- State Management ---
+        let documents = [];
+        let activeDocId = null;
+        let theme = 'light';
+        let soundEnabled = true;
+        let previewEnabled = true;
+        let isZenMode = false;
+        let apiKey = '';
+        let aiModel = 'gemini-3.6-flash';
+        
+        let debounceTimer;
+
+        // Selection variables
+        let selectedText = '';
+        let selectionStart = 0;
+        let selectionEnd = 0;
+
+        // Autocomplete state
+        let currentSuggestion = '';
+        let isFetchingAutocomplete = false;
+        const autocompleteTooltip = document.getElementById('autocompleteTooltip');
+        const autocompleteText = document.getElementById('autocompleteText');
+
+        // Synthesizer Audio Context
+        let audioCtx = null;
+
+        // Get elements
+        const sidebar = document.getElementById('sidebar');
+        const mainWorkspace = document.getElementById('mainWorkspace');
+        const menuToggle = document.getElementById('menuToggle');
+        const themeToggle = document.getElementById('themeToggle');
+        const soundToggle = document.getElementById('soundToggle');
+        const splitToggle = document.getElementById('splitToggle');
+        const zenToggle = document.getElementById('zenToggle');
+        const aiDrawerToggle = document.getElementById('aiDrawerToggle');
+        const settingsToggle = document.getElementById('settingsToggle');
+        const exitZenBtn = document.getElementById('exitZenBtn');
+
+        const docList = document.getElementById('docList');
+        const newDocBtn = document.getElementById('newDocBtn');
+        const importFileBtn = document.getElementById('importFileBtn');
+        const exportBtn = document.getElementById('exportBtn');
+
+        const activeDocTitle = document.getElementById('activeDocTitle');
+        const editorTextarea = document.getElementById('editorTextarea');
+        const lineNumbers = document.getElementById('lineNumbers');
+        const previewPane = document.getElementById('previewPane');
+        const previewContent = document.getElementById('previewContent');
+
+        const wordCount = document.getElementById('wordCount');
+        const charCount = document.getElementById('charCount');
+        const readTime = document.getElementById('readTime');
+        const saveStatus = document.getElementById('saveStatus');
+
+        // AI specific elements
+        const aiFloatingBtn = document.getElementById('aiFloatingBtn');
+        const aiMenu = document.getElementById('aiMenu');
+        const aiCustomInput = document.getElementById('aiCustomInput');
+        const aiCustomSubmitBtn = document.getElementById('aiCustomSubmitBtn');
+        
+        const aiDrawer = document.getElementById('aiDrawer');
+        const aiDrawerClose = document.getElementById('aiDrawerClose');
+        const aiPrompt = document.getElementById('aiPrompt');
+        const aiDraftBtn = document.getElementById('aiDraftBtn');
+        const aiOutputBox = document.getElementById('aiOutputBox');
+        const aiInsertBtn = document.getElementById('aiInsertBtn');
+
+        const settingsModal = document.getElementById('settingsModal');
+        const closeSettingsModal = document.getElementById('closeSettingsModal');
+        const cancelSettingsBtn = document.getElementById('cancelSettingsBtn');
+        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        const modelSelect = document.getElementById('modelSelect');
+        const customModelGroup = document.getElementById('customModelGroup');
+        const customModelInput = document.getElementById('customModelInput');
+
+        const diffModalOverlay = document.getElementById('diffModalOverlay');
+        const closeDiffModal = document.getElementById('closeDiffModal');
+        const rejectDiffBtn = document.getElementById('rejectDiffBtn');
+        const acceptDiffBtn = document.getElementById('acceptDiffBtn');
+        const diffContent = document.getElementById('diffContent');
+        
+        const customContextMenu = document.getElementById('customContextMenu');
+        const contextSelectionInfo = document.getElementById('contextSelectionInfo');
+        const contextCustomBtn = document.getElementById('contextCustomBtn');
+        let proposedText = '';
+
+        // --- Custom Markdown Parser ---
+        function parseMarkdown(md) {
+            if (!md) return '';
+            
+            // Protect HTML special chars
+            let html = md
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+
+            // Headers
+            html = html.replace(/^#### (.*?)$/gm, '<h4>$1</h4>');
+            html = html.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
+            html = html.replace(/^## (.*?)$/gm, '<h2>$1</h2>');
+            html = html.replace(/^# (.*?)$/gm, '<h1>$1</h1>');
+
+            // Horizontal rules
+            html = html.replace(/^---$/gm, '<hr>');
+
+            // Blockquotes
+            html = html.replace(/^&gt;\s?(.*?)$/gm, '<blockquote>$1</blockquote>');
+
+            // Code blocks: match ```language ... ```
+            html = html.replace(/```([\s\S]*?)```/g, (match, code) => {
+                // Remove first line if it contains syntax tags
+                const lines = code.trim().split('\n');
+                let cleanCode = code;
+                if (lines.length > 0 && !lines[0].includes(' ') && lines[0].length < 15) {
+                    cleanCode = lines.slice(1).join('\n');
+                }
+                return `<pre><code>${cleanCode}</code></pre>`;
+            });
+
+            // Inline Code
+            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+            // Checkbox Lists
+            html = html.replace(/^\s*-\s?\[ \] (.*?)$/gm, '<p><input type="checkbox" disabled> $1</p>');
+            html = html.replace(/^\s*-\s?\[[xX]\] (.*?)$/gm, '<p><input type="checkbox" checked disabled> $1</p>');
+
+            // Bullet lists
+            html = html.replace(/^\s*[\-\*]\s(.*?)$/gm, '<ul><li>$1</li></ul>');
+            // Merge consecutive ul lists
+            html = html.replace(/<\/ul>\s*<ul>/g, '');
+
+            // Numbered lists
+            html = html.replace(/^\s*\d+\.\s(.*?)$/gm, '<ol><li>$1</li></ol>');
+            // Merge consecutive ol lists
+            html = html.replace(/<\/ol>\s*<ol>/g, '');
+
+            // Bold
+            html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+
+            // Italic
+            html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+            html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
+
+            // Links [text](url)
+            html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+
+            // Add paragraphs to double newlines (not within HTML blocks)
+            const blocks = html.split(/\n{2,}/);
+            html = blocks.map(block => {
+                block = block.trim();
+                if (!block) return '';
+                // If it starts with standard tags, don't wrap it in a p
+                if (block.startsWith('<h') || block.startsWith('<pre') || block.startsWith('<ul') || block.startsWith('<ol') || block.startsWith('<blockquote') || block.startsWith('<hr') || block.startsWith('<p>')) {
+                    return block;
+                }
+                return `<p>${block.replace(/\n/g, '<br>')}</p>`;
+            }).join('');
+
+            return html;
+        }
+
+        // --- Document Management Functions ---
+        function createDocument(title = 'Untitled Document', content = '') {
+            const doc = {
+                id: Date.now().toString(),
+                title,
+                content,
+                updatedAt: Date.now()
+            };
+            documents.unshift(doc);
+            saveToLocalStorage();
+            renderDocList();
+            setActiveDocument(doc.id);
+        }
+
+        function setActiveDocument(id) {
+            activeDocId = id;
+            const doc = documents.find(d => d.id === id);
+            if (doc) {
+                activeDocTitle.value = doc.title;
+                editorTextarea.value = doc.content;
+                renderEditor();
+                renderDocList();
+            }
+        }
+
+        function deleteDocument(id, event) {
+            event.stopPropagation();
+            if (documents.length <= 1) {
+                alert("You need to keep at least one document.");
+                return;
+            }
+            if (confirm("Are you sure you want to delete this document?")) {
+                documents = documents.filter(d => d.id !== id);
+                saveToLocalStorage();
+                renderDocList();
+                if (activeDocId === id) {
+                    setActiveDocument(documents[0].id);
+                }
+            }
+        }
+
+        function renameActiveDoc() {
+            const doc = documents.find(d => d.id === activeDocId);
+            if (doc) {
+                doc.title = activeDocTitle.value.trim() || 'Untitled Document';
+                doc.updatedAt = Date.now();
+                saveToLocalStorage();
+                renderDocList();
+            }
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('zw_documents', JSON.stringify(documents));
+            localStorage.setItem('zw_settings', JSON.stringify({
+                theme,
+                soundEnabled,
+                previewEnabled,
+                apiKey,
+                aiModel
+            }));
+            
+            saveStatus.innerHTML = '<i class="ti ti-cloud-check"></i> Saved locally';
+        }
+
+        function loadFromLocalStorage() {
+            const savedDocs = localStorage.getItem('zw_documents');
+            const savedSettings = localStorage.getItem('zw_settings');
+
+            if (savedSettings) {
+                const settings = JSON.parse(savedSettings);
+                theme = settings.theme || 'light';
+                soundEnabled = settings.soundEnabled !== false;
+                previewEnabled = settings.previewEnabled !== false;
+                apiKey = settings.apiKey || '';
+                aiModel = settings.aiModel || 'gemini-3.6-flash';
+                if (aiModel === 'gemini-2.5-flash' || aiModel === 'gemini-1.5-flash' || aiModel === 'gemini-3.5-flash') {
+                    aiModel = 'gemini-3.6-flash';
+                }
+                
+                // Set HTML attributes
+                document.documentElement.setAttribute('data-theme', theme);
+                updateUIState();
+            }
+
+            if (savedDocs) {
+                documents = JSON.parse(savedDocs);
+            }
+
+            // Sync settings from browser extension if installed
+            window.addEventListener("message", (event) => {
+                if (event.data && event.data.type === "SET_PAGE_SETTINGS") {
+                    if (event.data.apiKey && !apiKey) {
+                        apiKey = event.data.apiKey;
+                        aiModel = event.data.aiModel || aiModel;
+                        saveToLocalStorage();
+                        apiKeyInput.value = apiKey;
+                        modelSelect.value = aiModel;
+                    }
+                }
+            });
+            window.postMessage({ type: "GET_EXTENSION_SETTINGS" }, "*");
+
+            // Universal permanent config fallback
+            if (typeof ZENWRITE_CONFIG !== 'undefined' && ZENWRITE_CONFIG.apiKey) {
+                apiKey = ZENWRITE_CONFIG.apiKey;
+                aiModel = ZENWRITE_CONFIG.aiModel || aiModel;
+            }
+
+            if (documents.length === 0) {
+                // Initialize default documents
+                createDocument("Welcome to ZenWrite", `# Welcome to ZenWrite ✍️
+
+ZenWrite is a premium, distraction-free markdown text editor integrated with a Gemini AI Writing Assistant.
+
+## Key Features
+
+1. **Live Markdown Rendering**: Type in the editor and watch it build beautifully on the right.
+2. **Interactive AI Writing Helper**: Highlight any sentence or paragraph, and click the **AI Actions** popover button to correct grammar, rephrase, expand or prompt directly.
+3. **Zen Focus Mode**: Hide headers, footers, sidebars, and panels by pressing the maximize button or double-clicking the title.
+4. **Offline Keyboard Sounds**: Toggle mechanical keyboard typing feedback using the volume icon.
+5. **Autosave**: Everything you write is saved in your browser local storage instantly.
+
+### Quick Markdown Cheatsheet
+
+- Add headings using \`#\` (H1) or \`##\` (H2) tags.
+- Apply formats: **Bold** using \`**bold**\` or *Italic* using \`*italic*\`.
+- List items with \`-\` or numerical list \`1.\`
+- Inline code uses backticks: \`const writing = true;\`
+- Make code blocks:
+\`\`\`
+function hello() {
+    console.log("Welcome home!");
+}
+\`\`\`
+- Checkbox tasks:
+- [ ] Task incomplete
+- [x] Task complete
+
+Try editing this text, or create a new document!`);
+            } else {
+                renderDocList();
+                setActiveDocument(documents[0].id);
+            }
+        }
+
+        function renderDocList() {
+            docList.innerHTML = '';
+            documents.forEach(doc => {
+                const item = document.createElement('div');
+                item.className = `doc-item ${doc.id === activeDocId ? 'active' : ''}`;
+                item.onclick = () => setActiveDocument(doc.id);
+
+                item.innerHTML = `
+                    <div class="doc-title-wrapper">
+                        <i class="ti ti-file-text"></i>
+                        <span class="doc-title-text">${doc.title}</span>
+                    </div>
+                    <div class="doc-item-actions">
+                        <button class="doc-action-btn delete-btn" title="Delete Document">
+                            <i class="ti ti-trash"></i>
+                        </button>
+                    </div>
+                `;
+
+                // Add delete action listener
+                item.querySelector('.delete-btn').onclick = (e) => deleteDocument(doc.id, e);
+
+                docList.appendChild(item);
+            });
+        }
+
+        function updateUIState() {
+            // Theme Icon
+            const themeIcon = themeToggle.querySelector('i');
+            if (theme === 'dark') {
+                themeIcon.className = 'ti ti-moon';
+                themeToggle.className = 'icon-btn active';
+            } else {
+                themeIcon.className = 'ti ti-sun';
+                themeToggle.className = 'icon-btn';
+            }
+
+            // Sound Icon
+            const soundIcon = soundToggle.querySelector('i');
+            if (soundEnabled) {
+                soundIcon.className = 'ti ti-volume';
+                soundToggle.className = 'icon-btn active';
+            } else {
+                soundIcon.className = 'ti ti-volume-3';
+                soundToggle.className = 'icon-btn';
+            }
+
+            // Split View State
+            if (previewEnabled) {
+                previewPane.style.display = 'flex';
+                splitToggle.className = 'icon-btn active';
+            } else {
+                previewPane.style.display = 'none';
+                splitToggle.className = 'icon-btn';
+            }
+
+            apiKeyInput.value = apiKey;
+            
+            const options = Array.from(modelSelect.options).map(opt => opt.value);
+            if (options.includes(aiModel) && aiModel !== 'custom') {
+                modelSelect.value = aiModel;
+                customModelGroup.style.display = 'none';
+            } else {
+                modelSelect.value = 'custom';
+                customModelGroup.style.display = 'flex';
+                customModelInput.value = aiModel;
+            }
+        }
+
+        // --- Render Textarea and Stats ---
+        function renderEditor() {
+            const content = editorTextarea.value;
+            previewContent.innerHTML = parseMarkdown(content);
+
+            // Update stats
+            const chars = content.length;
+            const words = content.trim() === '' ? 0 : content.trim().split(/\s+/).length;
+            const paragraphs = content.trim() === '' ? 0 : content.split(/\n{2,}/).length;
+            const readingTime = Math.ceil(words / 200);
+
+            wordCount.textContent = `Words: ${words}`;
+            charCount.textContent = `Characters: ${chars}`;
+            readTime.textContent = `Read Time: ${readingTime} min`;
+
+            // Line numbers mapping
+            const lines = content.split('\n');
+            lineNumbers.innerHTML = lines.map((_, i) => i + 1).join('<br>');
+        }
+
+        // Trigger autosave debounced
+        function triggerAutosave() {
+            saveStatus.innerHTML = '<i class="ti ti-reload rotate"></i> Saving...';
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                const doc = documents.find(d => d.id === activeDocId);
+                if (doc) {
+                    doc.content = editorTextarea.value;
+                    doc.updatedAt = Date.now();
+                    saveToLocalStorage();
+                }
+            }, 500);
+        }
+
+        // --- mechanical Keyboard Click Sound Synthesizer ---
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playClickSound() {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                
+                // Key down click synthesizer (Oscillator + Filter + Gain)
+                const osc = audioCtx.createOscillator();
+                const oscGain = audioCtx.createGain();
+                
+                // Synthesize the mechanical "thump"
+                const pitch = 160 + Math.random() * 80;
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(pitch, audioCtx.currentTime);
+                
+                osc.connect(oscGain);
+                oscGain.connect(audioCtx.destination);
+                
+                osc.start();
+                oscGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                oscGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+                osc.stop(audioCtx.currentTime + 0.05);
+                
+                // Synthesize the high-pitch keyboard "clack" noise
+                const bufferSize = audioCtx.sampleRate * 0.015; // Short duration
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                
+                const noiseNode = audioCtx.createBufferSource();
+                noiseNode.buffer = buffer;
+                
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(2800, audioCtx.currentTime);
+                filter.Q.setValueAtTime(6, audioCtx.currentTime);
+                
+                const noiseGain = audioCtx.createGain();
+                
+                noiseNode.connect(filter);
+                filter.connect(noiseGain);
+                noiseGain.connect(audioCtx.destination);
+                
+                noiseNode.start();
+                noiseGain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.015);
+                noiseNode.stop(audioCtx.currentTime + 0.02);
+            } catch (e) {
+                console.error("Audio Synthesis error: ", e);
+            }
+        }
+
+        // --- Selection Floating AI Popover Logic ---
+        function checkSelection(e) {
+            const start = editorTextarea.selectionStart;
+            const end = editorTextarea.selectionEnd;
+            const text = editorTextarea.value.substring(start, end).trim();
+
+            if (text.length > 2) {
+                selectedText = text;
+                selectionStart = start;
+                selectionEnd = end;
+
+                // Position the floating AI button
+                const textareaCoords = getSelectionCoords(editorTextarea, start, end);
+                if (textareaCoords) {
+                    aiFloatingBtn.style.left = `${textareaCoords.left}px`;
+                    aiFloatingBtn.style.top = `${textareaCoords.top}px`;
+                    aiFloatingBtn.style.display = 'flex';
+                }
+            } else {
+                hideSelectionUI();
+            }
+        }
+
+        function hideSelectionUI() {
+            aiFloatingBtn.style.display = 'none';
+            aiMenu.style.display = 'none';
+            aiMenu.querySelectorAll('.ai-submenu').forEach(sm => sm.style.display = 'none');
+            aiMenu.querySelectorAll('.accordion-trigger i.ti-chevron-up').forEach(icon => {
+                icon.className = 'ti ti-chevron-down';
+            });
+        }
+
+        // Calculate coordinates of current text selection in textarea
+        function getSelectionCoords(textarea, start, end) {
+            const { offsetLeft, offsetTop, scrollLeft, scrollTop } = textarea;
+            
+            // Create temporary div to mirror textarea layout and measure positioning
+            const div = document.createElement('div');
+            const style = window.getComputedStyle(textarea);
+            for (let prop of style) {
+                div.style[prop] = style[prop];
+            }
+            
+            div.style.position = 'absolute';
+            div.style.visibility = 'hidden';
+            div.style.whiteSpace = 'pre-wrap';
+            div.style.wordBreak = 'break-word';
+            
+            const text = textarea.value;
+            const beforeText = text.substring(0, start);
+            const selectedTextPart = text.substring(start, end);
+            
+            div.innerHTML = beforeText.replace(/&/g, '&amp;').replace(/</g, '&lt;') + 
+                            '<span>' + selectedTextPart.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>';
+            
+            document.body.appendChild(div);
+            
+            const span = div.querySelector('span');
+            if (!span) {
+                document.body.removeChild(div);
+                return null;
+            }
+
+            const textareaRect = textarea.getBoundingClientRect();
+            const spanRect = span.getBoundingClientRect();
+            
+            // Calculate relative offset inside the viewport (centered at selection middle)
+            let left = textareaRect.left + spanRect.left - div.getBoundingClientRect().left - scrollLeft + (spanRect.width / 2);
+            let top = textareaRect.top + spanRect.top - div.getBoundingClientRect().top - scrollTop;
+
+            // Bounds protection for left coordinate (ensuring button doesn't overflow)
+            left = Math.max(textareaRect.left + 65, Math.min(left, textareaRect.right - 65));
+            
+            // Vertical placement with flip detection (opens below if not enough room above)
+            let finalTop = top - 42;
+            if (finalTop < textareaRect.top + 10) {
+                finalTop = top + spanRect.height + 8;
+            }
+            finalTop = Math.max(textareaRect.top + 10, Math.min(finalTop, textareaRect.bottom - 40));
+
+            document.body.removeChild(div);
+            return { left, top: finalTop };
+        }
+
+        // --- Diff Match and render function ---
+        function renderDiff(original, proposed) {
+            // Basic word-based diff rendering
+            const origWords = original.split(/\s+/);
+            const propWords = proposed.split(/\s+/);
+            
+            let i = 0, j = 0;
+            let diffHtml = '';
+
+            while (i < origWords.length || j < propWords.length) {
+                if (i < origWords.length && j < propWords.length && origWords[i] === propWords[j]) {
+                    diffHtml += origWords[i] + ' ';
+                    i++;
+                    j++;
+                } else {
+                    // Collect deletion block
+                    let delBlock = '';
+                    while (i < origWords.length && (j >= propWords.length || origWords[i] !== propWords[j])) {
+                        delBlock += origWords[i] + ' ';
+                        i++;
+                    }
+                    if (delBlock) {
+                        diffHtml += `<span class="diff-del">${delBlock.trim()}</span> `;
+                    }
+
+                    // Collect insertion block
+                    let insBlock = '';
+                    while (j < propWords.length && (i >= origWords.length || propWords[j] !== origWords[i])) {
+                        insBlock += propWords[j] + ' ';
+                        j++;
+                    }
+                    if (insBlock) {
+                        diffHtml += `<span class="diff-ins">${insBlock.trim()}</span> `;
+                    }
+                }
+            }
+            return diffHtml;
+        }
+
+        // --- Call Gemini API ---
+        async function runGeminiAI(promptInstruction, textContent, fullText = '') {
+            if (!apiKey) {
+                alert("Please add your Gemini API Key in Settings to use the AI Writing Assistant.");
+                settingsModal.style.display = 'flex';
+                return null;
+            }
+
+            let prompt = '';
+            if (fullText && fullText.trim() && textContent && textContent.trim()) {
+                prompt = `You are a professional writing assistant. You are helping the user edit a document.
+Here is the FULL surrounding document context for style, tone, and reference:
+"""
+${fullText}
+"""
+
+Here is the SPECIFIC section of text that the user wants you to modify:
+"""
+${textContent}
+"""
+
+Instruction: ${promptInstruction}
+
+Requirements:
+1. ONLY modify the SPECIFIC section of text requested. Do not change the surrounding document.
+2. The revised section MUST blend in seamlessly with the surrounding document context. Match its exact tone, style, level of detail, vocabulary, and formatting.
+3. Return ONLY the modified section of text. Do not wrap the output in quotes. Do not add any introductory, transition, or explanatory remarks (e.g., do not say "Here is the revised text:").`;
+            } else {
+                prompt = `You are a writing assistant. ${promptInstruction}\n\nTarget Text:\n"""\n${textContent}\n"""`;
+            }
+
+            // Determine models list (with fallback in case of high demand / rate limit)
+            let modelsToTry = [aiModel];
+            if (aiModel === 'gemini-3.5-flash') {
+                modelsToTry.push('gemini-3.6-flash');
+            } else if (aiModel === 'gemini-3.6-flash') {
+                modelsToTry.push('gemini-3.5-flash');
+            } else if (aiModel !== 'gemini-3.6-flash') {
+                modelsToTry.push('gemini-3.6-flash');
+            }
+
+            let lastError = null;
+
+            for (const model of modelsToTry) {
+                // Try v1beta first, then fallback to v1 if it fails
+                const apiVersions = ['v1beta', 'v1'];
+                
+                for (const apiVer of apiVersions) {
+                    const endpoint = `https://generativelanguage.googleapis.com/v1${apiVer === 'v1' ? '' : 'beta'}/models/${model}:generateContent?key=${apiKey}`;
+                    try {
+                        const response = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                contents: [{
+                                    parts: [{ text: prompt }]
+                                }],
+                                generationConfig: {
+                                    temperature: 0.2
+                                }
+                            })
+                        });
+
+                        if (!response.ok) {
+                            const err = await response.json();
+                            const errMsg = err.error?.message || `HTTP error! status: ${response.status}`;
+                            const isRateLimitOrCongested = response.status === 429 || response.status === 503 || 
+                                errMsg.toLowerCase().includes('high demand') || 
+                                errMsg.toLowerCase().includes('limit') || 
+                                errMsg.toLowerCase().includes('temporary') || 
+                                errMsg.toLowerCase().includes('exhausted');
+
+                            if (isRateLimitOrCongested && modelsToTry.indexOf(model) < modelsToTry.length - 1) {
+                                console.warn(`Model ${model} is congested/limited. Trying fallback model...`);
+                                throw new Error(`CONGESTION:${errMsg}`);
+                            }
+                            throw new Error(errMsg);
+                        }
+
+                        const data = await response.json();
+                        const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (!responseText) throw new Error("Empty response from AI model.");
+                        
+                        return responseText.trim();
+                    } catch (err) {
+                        console.warn(`Failed with model ${model} (API version ${apiVer}): ${err.message}`);
+                        lastError = err;
+                        
+                        if (err.message.startsWith('CONGESTION:')) {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            const finalErrMsg = lastError.message.replace(/^CONGESTION:/, '');
+            alert(`AI Generation Error: ${finalErrMsg}`);
+            return null;
+        }
+
+        // --- AI Explainer Logic ---
+        function showAIExplanation(text, explanation) {
+            aiPrompt.parentElement.style.display = 'none';
+            aiDraftBtn.style.display = 'none';
+            document.querySelector('.ai-drawer-title').innerHTML = '<i class="ti ti-info-circle"></i> AI Explainer';
+            
+            aiOutputBox.innerHTML = `
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Selected Text:</div>
+                <div style="background: rgba(0,0,0,0.15); border-left: 3px solid var(--accent-color); padding: 8px 12px; margin-bottom: 16px; font-style: italic; font-size: 0.85rem; border-radius: 4px; word-break: break-word;">"${escapeHtml(text)}"</div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Explanation:</div>
+                <div style="line-height: 1.5; font-size: 0.9rem; word-break: break-word;">${parseMarkdown(explanation)}</div>
+                <button class="btn btn-secondary" id="aiExplainerBackBtn" style="width: 100%; margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i class="ti ti-arrow-left"></i> Back to Drafting
+                </button>
+            `;
+            
+            aiDrawer.classList.remove('hidden');
+            proofreaderDrawer.classList.add('hidden');
+            
+            document.getElementById('aiExplainerBackBtn').onclick = () => {
+                resetAIDrawerToDrafting();
+            };
+        }
+
+        function resetAIDrawerToDrafting() {
+            aiPrompt.parentElement.style.display = 'block';
+            aiDraftBtn.style.display = 'block';
+            document.querySelector('.ai-drawer-title').innerHTML = '<i class="ti ti-sparkles"></i> AI Drafting';
+            aiOutputBox.innerHTML = '<div class="ai-output-placeholder">Generated text will appear here. You can insert it directly into your editor.</div>';
+            document.getElementById('aiInsertBtn').style.display = 'none';
+        }
+
+        // --- AI Proofreader Logic ---
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function applyCorrection(original, suggestion) {
+            const val = editorTextarea.value;
+            const idx = val.indexOf(original);
+            if (idx !== -1) {
+                editorTextarea.value = val.substring(0, idx) + suggestion + val.substring(idx + original.length);
+                renderEditor();
+                triggerAutosave();
+            } else {
+                alert("Could not find the exact text in the editor. It might have been modified.");
+            }
+        }
+
+        // Toggles
+        const proofreaderDrawer = document.getElementById('proofreaderDrawer');
+        const proofreadToggleBtn = document.getElementById('proofreadToggleBtn');
+        const proofreaderDrawerClose = document.getElementById('proofreaderDrawerClose');
+        const proofreaderScanBtn = document.getElementById('proofreaderScanBtn');
+        const proofreaderSuggestions = document.getElementById('proofreaderSuggestions');
+        const proofreaderStatus = document.getElementById('proofreaderStatus');
+
+        proofreadToggleBtn.onclick = () => {
+            proofreaderDrawer.classList.toggle('hidden');
+            if (!proofreaderDrawer.classList.contains('hidden')) {
+                aiDrawer.classList.add('hidden');
+            }
+        };
+
+        proofreaderDrawerClose.onclick = () => {
+            proofreaderDrawer.classList.add('hidden');
+        };
+
+        proofreaderScanBtn.onclick = async () => {
+            const documentText = editorTextarea.value.trim();
+            if (!documentText) {
+                proofreaderSuggestions.innerHTML = '<div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem; padding: 20px;">The document is empty! Write something first.</div>';
+                return;
+            }
+
+            proofreaderStatus.style.display = 'block';
+            proofreaderScanBtn.disabled = true;
+            proofreaderSuggestions.innerHTML = '';
+
+            const proofreaderPrompt = `Analyze this text for spelling, grammar, and stylistic errors. Return ONLY a valid JSON array containing the identified errors. Each object in the array MUST have this exact format:
+{
+  "original": "exact text in original with the error",
+  "suggestion": "corrected text replacement",
+  "explanation": "very brief explanation of why this was changed"
+}
+Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or \`\`\` tags). Return ONLY the raw JSON array. If there are no errors, return an empty array [].`;
+
+            try {
+                const response = await runGeminiAI(proofreaderPrompt, documentText);
+                if (response) {
+                    let cleanResponse = response.trim();
+                    if (cleanResponse.startsWith("```")) {
+                        cleanResponse = cleanResponse.replace(/^```json\s*/i, "").replace(/^```\s*/, "").replace(/\s*```$/, "");
+                    }
+                    
+                    const errors = JSON.parse(cleanResponse);
+                    proofreaderSuggestions.innerHTML = '';
+                    
+                    if (errors.length === 0) {
+                        proofreaderSuggestions.innerHTML = '<div style="text-align: center; color: #10B981; font-size: 0.95rem; padding: 20px;"><i class="ti ti-circle-check" style="font-size: 1.5rem; display: block; margin-bottom: 8px;"></i> No errors found! Your writing is perfect ✨</div>';
+                    } else {
+                        errors.forEach((err, idx) => {
+                            const card = document.createElement('div');
+                            card.className = 'proofreader-card';
+                            card.innerHTML = `
+                                <div class="proofreader-card-header">
+                                    <span class="proofreader-category">Issue #${idx + 1}</span>
+                                </div>
+                                <div class="proofreader-diff">
+                                    <div class="proofreader-original">${escapeHtml(err.original)}</div>
+                                    <div class="proofreader-suggestion">${escapeHtml(err.suggestion)}</div>
+                                </div>
+                                <div class="proofreader-explanation">${escapeHtml(err.explanation)}</div>
+                                <div class="proofreader-actions">
+                                    <button class="btn-suggestion-accept">Accept</button>
+                                </div>
+                            `;
+                            
+                            card.querySelector('.btn-suggestion-accept').onclick = () => {
+                                applyCorrection(err.original, err.suggestion);
+                                card.remove();
+                                if (proofreaderSuggestions.children.length === 0) {
+                                    proofreaderSuggestions.innerHTML = '<div style="text-align: center; color: #10B981; font-size: 0.95rem; padding: 20px;"><i class="ti ti-circle-check" style="font-size: 1.5rem; display: block; margin-bottom: 8px;"></i> All corrections applied!</div>';
+                                }
+                            };
+                            
+                            proofreaderSuggestions.appendChild(card);
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error("Proofreader scan failed:", err);
+                proofreaderSuggestions.innerHTML = '<div style="text-align: center; color: #EF4444; font-size: 0.9rem; padding: 20px;">Failed to parse AI corrections. Please try again.</div>';
+            } finally {
+                proofreaderStatus.style.display = 'none';
+                proofreaderScanBtn.disabled = false;
+            }
+        };
+
+        // --- Export / Import ---
+        function exportDoc(format) {
+            const doc = documents.find(d => d.id === activeDocId);
+            if (!doc) return;
+
+            // Handle PDF printing directly
+            if (format === 'pdf') {
+                window.print();
+                return;
+            }
+
+            let fileContent = '';
+            let fileType = 'text/plain';
+            let extension = '.txt';
+
+            if (format === 'md') {
+                fileContent = doc.content;
+                fileType = 'text/markdown';
+                extension = '.md';
+            } else if (format === 'html') {
+                fileContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>${doc.title}</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        pre { background: #f4f4f4; padding: 15px; border-radius: 5px; }
+        code { background: #f4f4f4; padding: 2px 5px; }
+        blockquote { border-left: 4px solid #ccc; padding-left: 15px; color: #555; }
+    </style>
+</head>
+<body>
+    ${parseMarkdown(doc.content)}
+</body>
+</html>`;
+                fileType = 'text/html';
+                extension = '.html';
+            } else if (format === 'doc') {
+                fileContent = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+    <title>${doc.title}</title>
+    <!--[if gte mso 9]>
+    <xml>
+        <w:WordDocument>
+            <w:View>Print</w:View>
+            <w:Zoom>100</w:Zoom>
+            <w:DoNotOptimizeForBrowser/>
+        </w:WordDocument>
+    </xml>
+    <![endif]-->
+    <style>
+        body { font-family: 'Calibri', 'Arial', sans-serif; line-height: 1.5; font-size: 11pt; }
+        h1 { font-size: 24pt; color: #1F497D; margin-bottom: 12pt; }
+        h2 { font-size: 16pt; color: #595959; margin-top: 18pt; margin-bottom: 6pt; }
+        h3 { font-size: 13pt; color: #595959; margin-top: 14pt; margin-bottom: 4pt; }
+        p { margin-bottom: 10pt; }
+        code { font-family: Consolas, monospace; background-color: #F2F2F2; padding: 2px 4px; font-size: 10pt; }
+        pre { font-family: Consolas, monospace; background-color: #F2F2F2; padding: 10px; font-size: 10pt; margin-bottom: 10pt; border: 1px solid #D3D3D3; }
+        blockquote { border-left: 3px solid #595959; padding-left: 10px; margin-left: 0; color: #595959; font-style: italic; }
+    </style>
+</head>
+<body>
+    ${parseMarkdown(doc.content)}
+</body>
+</html>`;
+                fileType = 'application/msword';
+                extension = '.doc';
+            } else {
+                fileContent = doc.content;
+            }
+
+            const blob = new Blob([fileContent], { type: fileType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = doc.title.toLowerCase().replace(/\s+/g, '_') + extension;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importFile() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.md,.txt,.html';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const content = event.target.result;
+                    const title = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+                    createDocument(title, content);
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        // --- Event Listeners ---
+
+        // Theme Toggle
+        themeToggle.onclick = () => {
+            theme = theme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            saveToLocalStorage();
+            updateUIState();
+        };
+
+        // Sound Toggle
+        soundToggle.onclick = () => {
+            soundEnabled = !soundEnabled;
+            saveToLocalStorage();
+            updateUIState();
+        };
+
+        // Split Toggle
+        splitToggle.onclick = () => {
+            previewEnabled = !previewEnabled;
+            saveToLocalStorage();
+            updateUIState();
+        };
+
+        // Zen Mode Toggle
+        function toggleZen() {
+            isZenMode = !isZenMode;
+            if (isZenMode) {
+                document.body.classList.add('zen-active');
+            } else {
+                document.body.classList.remove('zen-active');
+            }
+        }
+        zenToggle.onclick = toggleZen;
+        exitZenBtn.onclick = toggleZen;
+
+
+
+        // Settings Toggle
+        settingsToggle.onclick = () => {
+            apiKeyInput.value = apiKey;
+            
+            const options = Array.from(modelSelect.options).map(opt => opt.value);
+            if (options.includes(aiModel) && aiModel !== 'custom') {
+                modelSelect.value = aiModel;
+                customModelGroup.style.display = 'none';
+            } else {
+                modelSelect.value = 'custom';
+                customModelGroup.style.display = 'flex';
+                customModelInput.value = aiModel;
+            }
+            settingsModal.style.display = 'flex';
+        };
+
+        modelSelect.onchange = () => {
+            if (modelSelect.value === 'custom') {
+                customModelGroup.style.display = 'flex';
+            } else {
+                customModelGroup.style.display = 'none';
+            }
+        };
+
+        closeSettingsModal.onclick = () => settingsModal.style.display = 'none';
+        cancelSettingsBtn.onclick = () => settingsModal.style.display = 'none';
+        
+        saveSettingsBtn.onclick = () => {
+            apiKey = apiKeyInput.value.trim();
+            if (modelSelect.value === 'custom') {
+                aiModel = customModelInput.value.trim() || 'gemini-3.5-flash';
+            } else {
+                aiModel = modelSelect.value;
+            }
+            saveToLocalStorage();
+            settingsModal.style.display = 'none';
+            alert("Settings saved successfully.");
+        };
+
+        // Sentence boundary search helper for cursor-right-click selection
+        function getSentenceAtCursor(textarea) {
+            const pos = textarea.selectionStart;
+            const text = textarea.value;
+            
+            // Search backward for start of sentence
+            let start = pos;
+            while (start > 0) {
+                const char = text[start - 1];
+                if (char === '.' || char === '?' || char === '!' || char === '\n') {
+                    break;
+                }
+                start--;
+            }
+            
+            // Search forward for end of sentence
+            let end = pos;
+            while (end < text.length) {
+                const char = text[end];
+                if (char === '.' || char === '?' || char === '!' || char === '\n') {
+                    end++; // include the punctuation
+                    break;
+                }
+                end++;
+            }
+            
+            return {
+                text: text.substring(start, end).trim(),
+                start: start,
+                end: end
+            };
+        }
+
+        // Custom Right Click Event on Editor Textarea
+        editorTextarea.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            
+            const start = editorTextarea.selectionStart;
+            const end = editorTextarea.selectionEnd;
+            let text = editorTextarea.value.substring(start, end).trim();
+            
+            if (text.length > 0) {
+                selectedText = text;
+                selectionStart = start;
+                selectionEnd = end;
+            } else {
+                // Auto-select sentence under cursor if no active selection
+                const sentence = getSentenceAtCursor(editorTextarea);
+                if (sentence.text.length > 0) {
+                    selectedText = sentence.text;
+                    selectionStart = sentence.start;
+                    selectionEnd = sentence.end;
+                    editorTextarea.setSelectionRange(sentence.start, sentence.end);
+                } else {
+                    selectedText = '';
+                    selectionStart = start;
+                    selectionEnd = end;
+                }
+            }
+            
+            if (selectedText.length > 0) {
+                contextSelectionInfo.textContent = `Target: "${selectedText.substring(0, 20)}${selectedText.length > 20 ? '...' : ''}"`;
+                
+                // Position custom menu at cursor
+                let x = e.clientX;
+                let y = e.clientY;
+                
+                // Keep inside screen boundaries
+                const menuWidth = 230;
+                const menuHeight = 240;
+                if (x + menuWidth > window.innerWidth) x = window.innerWidth - menuWidth - 10;
+                if (y + menuHeight > window.innerHeight) y = window.innerHeight - menuHeight - 10;
+                
+                customContextMenu.style.left = `${x}px`;
+                customContextMenu.style.top = `${y}px`;
+                customContextMenu.style.display = 'flex';
+                
+                hideSelectionUI(); // hide selection popover button
+            } else {
+                customContextMenu.style.display = 'none';
+            }
+        });
+
+        // Hide context menu on left clicks outside of it
+        document.addEventListener('mousedown', (e) => {
+            if (!customContextMenu.contains(e.target)) {
+                customContextMenu.style.display = 'none';
+            }
+        });
+
+        // Context Menu Items Click Handler
+        customContextMenu.querySelectorAll('.context-item').forEach(btn => {
+            btn.onclick = async (e) => {
+                e.stopPropagation();
+                customContextMenu.style.display = 'none';
+                
+                const action = btn.getAttribute('data-action');
+                let promptInstruction = '';
+
+                if (action === 'grammar') {
+                    promptInstruction = 'Proofread and correct the spelling, grammar, and sentence structure of the text. Keep all styling intact. Return ONLY the updated corrected text without any extra text or quotes.';
+                } else if (action === 'rephrase') {
+                    promptInstruction = 'Rewrite and polish the target text to elevate its professional quality, clarity, and stylistic flow. Elevate vocabulary, eliminate passive voice, and remove wordiness while retaining all core semantic meanings, variables, and technical terms. Preserve all structural formatting, such as lists, headings, code blocks, and markdown syntax. Ensure the output reads elegantly and naturally. Return ONLY the polished, rewritten text. Do not wrap the output in quotes. Do not include any explanations.';
+                } else if (action === 'concise') {
+                    promptInstruction = 'Make the text more concise and direct. Keep formatting. Return ONLY the direct concise text.';
+                } else if (action === 'shorter') {
+                    promptInstruction = 'Rewrite the text to make it significantly shorter and more concise, keeping only the absolute core message. Return ONLY the shortened text without explanations.';
+                } else if (action === 'expand') {
+                    promptInstruction = 'Expand and elaborate on the text by adding descriptive depth and context. Return ONLY the expanded text with markdown intact.';
+                }
+
+                if (action === 'explain') {
+                    // Explainer logic inside drawer
+                    customContextMenu.style.display = 'none';
+                    aiPrompt.parentElement.style.display = 'none';
+                    aiDraftBtn.style.display = 'none';
+                    document.querySelector('.ai-drawer-title').innerHTML = '<i class="ti ti-info-circle"></i> AI Explainer';
+                    aiOutputBox.innerHTML = '<div class="loading-pulse"><div class="pulse-dot"></div><div class="pulse-dot"></div><div class="pulse-dot"></div></div><p style="text-align: center; color: var(--text-secondary); margin-top: 8px;">Consulting Gemini AI...</p>';
+                    aiDrawer.classList.remove('hidden');
+                    proofreaderDrawer.classList.add('hidden');
+                    
+                    const explanationPrompt = "Explain the following text or concept in a concise, informative manner. Focus on definitions, background context, and clear explanations. Keep it under 150 words.";
+                    const response = await runGeminiAI(explanationPrompt, selectedText);
+                    if (response) {
+                        showAIExplanation(selectedText, response);
+                    } else {
+                        resetAIDrawerToDrafting();
+                    }
+                    return;
+                }
+
+                // Show loading modal/overlay
+                diffContent.innerHTML = '<div class="loading-pulse"><div class="pulse-dot"></div><div class="pulse-dot"></div><div class="pulse-dot"></div></div><p style="text-align: center; color: var(--text-secondary); margin-top: 8px;">Consulting Gemini AI...</p>';
+                diffModalOverlay.style.display = 'flex';
+
+                const response = await runGeminiAI(promptInstruction, selectedText, editorTextarea.value);
+                if (response) {
+                    proposedText = response;
+                    diffContent.innerHTML = renderDiff(selectedText, proposedText);
+                } else {
+                    diffModalOverlay.style.display = 'none';
+                }
+            };
+        });
+
+        // Context Custom Prompt Dialog handler
+        contextCustomBtn.onclick = async (e) => {
+            e.stopPropagation();
+            customContextMenu.style.display = 'none';
+            
+            const instruction = prompt("Enter your custom AI instruction (e.g. 'translate to French', 'make it sound sarcastic'):");
+            if (!instruction || !instruction.trim()) return;
+
+            diffContent.innerHTML = '<div class="loading-pulse"><div class="pulse-dot"></div><div class="pulse-dot"></div><div class="pulse-dot"></div></div><p style="text-align: center; color: var(--text-secondary); margin-top: 8px;">Consulting Gemini AI...</p>';
+            diffModalOverlay.style.display = 'flex';
+
+            const promptInstruction = `Modify the text based on this specific instruction: "${instruction}". Return ONLY the modified text with markdown intact. Do not add conversational explanations.`;
+            const response = await runGeminiAI(promptInstruction, selectedText, editorTextarea.value);
+            if (response) {
+                proposedText = response;
+                diffContent.innerHTML = renderDiff(selectedText, proposedText);
+            } else {
+                diffModalOverlay.style.display = 'none';
+            }
+        };
+
+        // Menu Toggle
+        menuToggle.onclick = () => {
+            sidebar.classList.toggle('hidden');
+        };
+
+        // Create document btn
+        newDocBtn.onclick = () => createDocument();
+
+        // Title rename listener
+        activeDocTitle.oninput = renameActiveDoc;
+
+        // Editor inputs
+        editorTextarea.oninput = (e) => {
+            renderEditor();
+            triggerAutosave();
+        };
+
+        // Typewriter click listener & Autocomplete handler
+        editorTextarea.onkeydown = async (e) => {
+            // 1. Handle Tab key to accept autocomplete
+            if (e.key === 'Tab' && currentSuggestion) {
+                e.preventDefault();
+                const start = editorTextarea.selectionStart;
+                const end = editorTextarea.selectionEnd;
+                const val = editorTextarea.value;
+                editorTextarea.value = val.substring(0, start) + currentSuggestion + val.substring(end);
+                editorTextarea.selectionStart = editorTextarea.selectionEnd = start + currentSuggestion.length;
+                
+                renderEditor();
+                triggerAutosave();
+                
+                currentSuggestion = '';
+                autocompleteTooltip.style.display = 'none';
+                return;
+            }
+
+            // 2. Handle Escape to cancel autocomplete
+            if (e.key === 'Escape' && currentSuggestion) {
+                e.preventDefault();
+                currentSuggestion = '';
+                autocompleteTooltip.style.display = 'none';
+                return;
+            }
+
+            // 3. Trigger Autocomplete: Alt + \ (Alt + Backslash)
+            if (e.altKey && (e.key === '\\' || e.code === 'Backslash')) {
+                e.preventDefault();
+                if (isFetchingAutocomplete) return;
+                
+                const start = editorTextarea.selectionStart;
+                const textBefore = editorTextarea.value.substring(0, start);
+                const contextText = textBefore.slice(-2000).trim();
+                
+                if (contextText.length < 5) return; // Too short to continue
+                
+                isFetchingAutocomplete = true;
+                const coords = getSelectionCoords(editorTextarea, start, start);
+                if (coords) {
+                    autocompleteTooltip.style.left = `${coords.left}px`;
+                    autocompleteTooltip.style.top = `${coords.top + 28}px`;
+                    autocompleteText.textContent = "AI is thinking...";
+                    autocompleteTooltip.style.display = 'flex';
+                }
+                
+                try {
+                    const response = await runGeminiAI("Write the next sentence naturally. Return ONLY your continuation text (maximum 15 words). Do not repeat the target text or add conversational remarks.", contextText);
+                    if (response && !response.startsWith("Error:") && !response.startsWith("AI Generation Error:")) {
+                        currentSuggestion = response.trim();
+                        autocompleteText.textContent = currentSuggestion;
+                    } else {
+                        autocompleteTooltip.style.display = 'none';
+                        currentSuggestion = '';
+                    }
+                } catch (err) {
+                    console.error("Autocomplete failed:", err);
+                    autocompleteTooltip.style.display = 'none';
+                    currentSuggestion = '';
+                } finally {
+                    isFetchingAutocomplete = false;
+                }
+                return;
+            }
+
+            // 4. Any other non-navigation typing key dismisses the active autocomplete
+            if (currentSuggestion && !e.ctrlKey && !e.metaKey && e.key !== 'Shift' && e.key !== 'Control' && e.key !== 'Alt') {
+                currentSuggestion = '';
+                autocompleteTooltip.style.display = 'none';
+            }
+
+            // Play Typewriter sound
+            if (!e.ctrlKey && !e.metaKey && e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace' || e.key === 'Space') {
+                playClickSound();
+            }
+        };
+
+        // Selection Listener
+        editorTextarea.onmouseup = checkSelection;
+        editorTextarea.onkeyup = checkSelection;
+
+        // Click outside selection UI to hide
+        mainWorkspace.addEventListener('mousedown', (e) => {
+            if (e.target !== aiFloatingBtn && !aiFloatingBtn.contains(e.target) && e.target !== aiMenu && !aiMenu.contains(e.target)) {
+                hideSelectionUI();
+            }
+            if (e.target !== editorTextarea) {
+                currentSuggestion = '';
+                autocompleteTooltip.style.display = 'none';
+            }
+        });
+
+        // Floating AI actions button
+        aiFloatingBtn.onclick = (e) => {
+            e.stopPropagation();
+            aiMenu.style.left = aiFloatingBtn.style.left;
+            
+            const btnTop = parseInt(aiFloatingBtn.style.top);
+            const menuHeight = 260; // approximate menu height
+            const viewportHeight = window.innerHeight;
+            
+            if (btnTop + 38 + menuHeight > viewportHeight - 20) {
+                // Not enough space below, open menu ABOVE the button
+                aiMenu.style.top = `${btnTop - menuHeight - 8}px`;
+            } else {
+                // Open menu below the button
+                aiMenu.style.top = `${btnTop + 38}px`;
+            }
+            aiMenu.style.display = 'flex';
+        };
+
+        // Toggle submenus on accordion clicks
+        aiMenu.querySelectorAll('.accordion-trigger').forEach(trigger => {
+            trigger.onclick = (e) => {
+                e.stopPropagation();
+                const submenuId = trigger.getAttribute('data-submenu');
+                const submenu = document.getElementById(submenuId);
+                const isHidden = submenu.style.display === 'none';
+                
+                // Close all submenus first
+                aiMenu.querySelectorAll('.ai-submenu').forEach(sm => sm.style.display = 'none');
+                aiMenu.querySelectorAll('.accordion-trigger i.ti-chevron-up').forEach(icon => {
+                    icon.className = 'ti ti-chevron-down';
+                });
+                
+                // Toggle this submenu
+                if (isHidden) {
+                    submenu.style.display = 'flex';
+                    trigger.querySelector('i:last-child').className = 'ti ti-chevron-up';
+                }
+            };
+        });
+
+        // Menu items selection handler
+        aiMenu.querySelectorAll('.ai-menu-item:not(.accordion-trigger), .ai-submenu-item').forEach(btn => {
+            btn.onclick = async (e) => {
+                e.stopPropagation();
+                const action = btn.getAttribute('data-action');
+                let promptInstruction = '';
+
+                if (action === 'grammar') {
+                    promptInstruction = 'Proofread and correct the spelling, grammar, and sentence structure of the text. Keep all styling intact. Return ONLY the updated corrected text without any extra text or quotes.';
+                } else if (action === 'rephrase') {
+                    promptInstruction = 'Rewrite and polish the target text to elevate its professional quality, clarity, and stylistic flow. Elevate vocabulary, eliminate passive voice, and remove wordiness while retaining all core semantic meanings, variables, and technical terms. Preserve all structural formatting, such as lists, headings, code blocks, and markdown syntax. Ensure the output reads elegantly and naturally. Return ONLY the polished, rewritten text. Do not wrap the output in quotes. Do not include any explanations.';
+                } else if (action === 'concise') {
+                    promptInstruction = 'Make the text more concise and direct. Keep formatting. Return ONLY the direct concise text.';
+                } else if (action === 'shorter') {
+                    promptInstruction = 'Rewrite the text to make it significantly shorter and more concise, keeping only the absolute core message. Return ONLY the shortened text without explanations.';
+                } else if (action === 'expand') {
+                    promptInstruction = 'Expand and elaborate on the text by adding descriptive depth and context. Return ONLY the expanded text with markdown intact.';
+                } else if (action.startsWith('tone-')) {
+                    const tone = action.replace('tone-', '');
+                    promptInstruction = `Rewrite and adjust the tone of the target text to sound ${tone}. Preserve all markdown formatting, headings, and lists. Return ONLY the rewritten text without explanations, greetings, or extra quotes.`;
+                } else if (action.startsWith('translate-')) {
+                    const langCode = action.replace('translate-', '');
+                    let language = 'English';
+                    if (langCode === 'es') language = 'Spanish';
+                    else if (langCode === 'fr') language = 'French';
+                    else if (langCode === 'de') language = 'German';
+                    else if (langCode === 'ja') language = 'Japanese';
+                    else if (langCode === 'zh') language = 'Chinese';
+                    else if (langCode === 'ar') language = 'Arabic';
+                    
+                    promptInstruction = `Translate the target text into ${language}. Preserve all markdown formatting, links, and HTML structure. Return ONLY the translation without any conversational remarks.`;
+                }
+
+                if (action === 'explain') {
+                    hideSelectionUI();
+                    
+                    // Show explanation loading inside AI drawer
+                    aiPrompt.parentElement.style.display = 'none';
+                    aiDraftBtn.style.display = 'none';
+                    document.querySelector('.ai-drawer-title').innerHTML = '<i class="ti ti-info-circle"></i> AI Explainer';
+                    aiOutputBox.innerHTML = '<div class="loading-pulse"><div class="pulse-dot"></div><div class="pulse-dot"></div><div class="pulse-dot"></div></div><p style="text-align: center; color: var(--text-secondary); margin-top: 8px;">Consulting Gemini AI...</p>';
+                    aiDrawer.classList.remove('hidden');
+                    proofreaderDrawer.classList.add('hidden');
+                    
+                    const explanationPrompt = "Explain the following text or concept in a concise, informative manner. Focus on definitions, background context, and clear explanations. Keep it under 150 words.";
+                    const response = await runGeminiAI(explanationPrompt, selectedText);
+                    if (response) {
+                        showAIExplanation(selectedText, response);
+                    } else {
+                        resetAIDrawerToDrafting();
+                    }
+                    return;
+                }
+
+                hideSelectionUI();
+                
+                // Show loading modal/overlay
+                diffContent.innerHTML = '<div class="loading-pulse"><div class="pulse-dot"></div><div class="pulse-dot"></div><div class="pulse-dot"></div></div><p style="text-align: center; color: var(--text-secondary); margin-top: 8px;">Consulting Gemini AI...</p>';
+                diffModalOverlay.style.display = 'flex';
+
+                const response = await runGeminiAI(promptInstruction, selectedText, editorTextarea.value);
+                if (response) {
+                    proposedText = response;
+                    diffContent.innerHTML = renderDiff(selectedText, proposedText);
+                } else {
+                    diffModalOverlay.style.display = 'none';
+                }
+            };
+        });
+
+        // Custom prompt run handler
+        aiCustomSubmitBtn.onclick = async (e) => {
+            e.stopPropagation();
+            const instruction = aiCustomInput.value.trim();
+            if (!instruction) return;
+
+            hideSelectionUI();
+
+            diffContent.innerHTML = '<div class="loading-pulse"><div class="pulse-dot"></div><div class="pulse-dot"></div><div class="pulse-dot"></div></div><p style="text-align: center; color: var(--text-secondary); margin-top: 8px;">Consulting Gemini AI...</p>';
+            diffModalOverlay.style.display = 'flex';
+
+            const promptInstruction = `Modify the text based on this specific instruction: "${instruction}". Return ONLY the modified text with markdown intact. Do not add conversational explanations.`;
+            const response = await runGeminiAI(promptInstruction, selectedText, editorTextarea.value);
+            if (response) {
+                proposedText = response;
+                diffContent.innerHTML = renderDiff(selectedText, proposedText);
+            } else {
+                diffModalOverlay.style.display = 'none';
+            }
+            aiCustomInput.value = '';
+        };
+
+        // Diff modal buttons
+        acceptDiffBtn.onclick = () => {
+            const currentContent = editorTextarea.value;
+            const updatedContent = currentContent.substring(0, selectionStart) + proposedText + currentContent.substring(selectionEnd);
+            editorTextarea.value = updatedContent;
+            renderEditor();
+            triggerAutosave();
+            diffModalOverlay.style.display = 'none';
+        };
+
+        rejectDiffBtn.onclick = () => diffModalOverlay.style.display = 'none';
+        closeDiffModal.onclick = () => diffModalOverlay.style.display = 'none';
+
+        // AI Drawer side panel toggle
+        aiDrawerToggle.onclick = () => {
+            aiDrawer.classList.toggle('hidden');
+        };
+
+        aiDrawerClose.onclick = () => {
+            aiDrawer.classList.add('hidden');
+        };
+
+        // AI Drawer draft action
+        aiDraftBtn.onclick = async () => {
+            const prompt = aiPrompt.value.trim();
+            if (!prompt) return;
+
+            aiOutputBox.innerHTML = '<div class="loading-pulse" style="margin-top: 50px;"><div class="pulse-dot"></div><div class="pulse-dot"></div><div class="pulse-dot"></div></div>';
+            aiInsertBtn.style.display = 'none';
+
+            const instruction = "You are a writing assistant. Draft a comprehensive piece based on the prompt instructions. Make it engaging, informative, and formatted in clean markdown. Return ONLY the generated text.";
+            const response = await runGeminiAI(instruction, prompt);
+
+            if (response) {
+                aiOutputBox.innerHTML = parseMarkdown(response);
+                aiInsertBtn.style.display = 'block';
+                // Save reference of plain text for insertion
+                aiInsertBtn.onclick = () => {
+                    const start = editorTextarea.selectionStart;
+                    const text = editorTextarea.value;
+                    editorTextarea.value = text.substring(0, start) + "\n\n" + response + "\n\n" + text.substring(start);
+                    renderEditor();
+                    triggerAutosave();
+                    aiDrawer.classList.add('hidden');
+                    alert("Draft inserted successfully.");
+                };
+            } else {
+                aiOutputBox.innerHTML = '<div class="ai-output-placeholder" style="color: #EF4444;">Failed to generate draft. Please check your settings/API key.</div>';
+            }
+        };
+
+        // Export button menu handler
+        exportBtn.onclick = () => {
+            const format = prompt("Export Format: Choose 'md' for Markdown, 'txt' for Plain Text, 'html' for HTML, 'pdf' for PDF Document, or 'doc' for Word Document.", "md");
+            if (format && ['md', 'txt', 'html', 'pdf', 'doc'].includes(format.toLowerCase().trim())) {
+                exportDoc(format.toLowerCase().trim());
+            }
+        };
+
+        importFileBtn.onclick = importFile;
+
+        // Initialize App
+        window.onload = () => {
+            loadFromLocalStorage();
+        };
+
+    </script>
+</body>
+</html>

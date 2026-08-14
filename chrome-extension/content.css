@@ -1,0 +1,226 @@
+/* Injected overlay styles for webpage overlay */
+#zenwrite-overlay-modal {
+  all: initial; /* Reset all inherit styles from webpage */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(10, 10, 11, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 2147483647; /* Stay on top of all webpage elements */
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #E3E3E6;
+  box-sizing: border-box;
+}
+
+#zenwrite-overlay-modal * {
+  box-sizing: border-box;
+}
+
+.zenwrite-modal-card {
+  background-color: #121214;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 580px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: zw-fade-in 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes zw-fade-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.zenwrite-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.15);
+  padding-bottom: 12px;
+}
+
+.zenwrite-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #8B5CF6;
+  letter-spacing: -0.3px;
+}
+
+.zenwrite-close-btn {
+  background: none;
+  border: none;
+  color: #909099;
+  cursor: pointer;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  line-height: 1;
+}
+
+.zenwrite-close-btn:hover {
+  color: #FFFFFF;
+}
+
+.zenwrite-modal-body {
+  min-height: 80px;
+}
+
+.zenwrite-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+  gap: 12px;
+}
+
+.zenwrite-loading-text {
+  font-size: 0.9rem;
+  color: #909099;
+}
+
+/* Pulsing dots */
+.zenwrite-pulse {
+  display: flex;
+  gap: 6px;
+}
+
+.zenwrite-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #8B5CF6;
+  border-radius: 50%;
+  animation: zw-pulse-anim 1.4s infinite ease-in-out both;
+}
+
+.zenwrite-dot:nth-child(1) { animation-delay: -0.32s; }
+.zenwrite-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes zw-pulse-anim {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1.0); }
+}
+
+/* Custom Prompt Panel */
+.zenwrite-prompt-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.zenwrite-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #909099;
+}
+
+.zenwrite-input {
+  background-color: #0A0A0B;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  color: #E3E3E6;
+  outline: none;
+  width: 100%;
+}
+
+.zenwrite-input:focus {
+  border-color: #8B5CF6;
+  box-shadow: 0 0 0 3px rgba(138, 92, 246, 0.15);
+}
+
+/* Diff Panel styling */
+.zenwrite-diff-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.zenwrite-diff-header {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #909099;
+}
+
+.zenwrite-diff-box {
+  background-color: #0A0A0B;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  font-family: monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #E3E3E6;
+  max-height: 250px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
+.zw-diff-del {
+  background-color: rgba(239, 68, 68, 0.25);
+  color: #F87171;
+  text-decoration: line-through;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.zw-diff-ins {
+  background-color: rgba(16, 185, 129, 0.25);
+  color: #34D399;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+/* Modal Buttons styling */
+.zenwrite-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid rgba(139, 92, 246, 0.15);
+  padding-top: 12px;
+}
+
+.zenwrite-btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.zenwrite-btn-secondary {
+  background-color: #1A1A1E;
+  color: #E3E3E6;
+  border: 1px solid rgba(139, 92, 246, 0.15);
+}
+
+.zenwrite-btn-secondary:hover {
+  background-color: rgba(139, 92, 246, 0.1);
+  border-color: #8B5CF6;
+}
+
+.zenwrite-btn-primary {
+  background-color: #8B5CF6;
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(138, 92, 246, 0.2);
+}
+
+.zenwrite-btn-primary:hover {
+  background-color: #FFFFFF;
+  color: #0A0A0B;
+  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.15);
+}
