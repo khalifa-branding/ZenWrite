@@ -1883,6 +1883,9 @@
                 soundEnabled = settings.soundEnabled !== false;
                 previewEnabled = settings.previewEnabled !== false;
                 apiKey = settings.apiKey || '';
+                if (apiKey === 'AQ.Ab8RN6Jl_5ww3Z02h-ca0lrlGsMtscLodyaqXJM1_HJDe7J5kA') {
+                    apiKey = '';
+                }
                 aiModel = settings.aiModel || 'gemini-3.6-flash';
                 if (aiModel === 'gemini-2.5-flash' || aiModel === 'gemini-1.5-flash' || aiModel === 'gemini-3.5-flash') {
                     aiModel = 'gemini-3.6-flash';
@@ -1902,6 +1905,9 @@
                 if (event.data && event.data.type === "SET_PAGE_SETTINGS") {
                     if (event.data.apiKey && !apiKey) {
                         apiKey = event.data.apiKey;
+                        if (apiKey === 'AQ.Ab8RN6Jl_5ww3Z02h-ca0lrlGsMtscLodyaqXJM1_HJDe7J5kA') {
+                            apiKey = '';
+                        }
                         aiModel = event.data.aiModel || aiModel;
                         saveToLocalStorage();
                         apiKeyInput.value = apiKey;
@@ -1914,6 +1920,9 @@
             // Universal permanent config fallback
             if (typeof ZENWRITE_CONFIG !== 'undefined' && ZENWRITE_CONFIG.apiKey) {
                 apiKey = ZENWRITE_CONFIG.apiKey;
+                if (apiKey === 'AQ.Ab8RN6Jl_5ww3Z02h-ca0lrlGsMtscLodyaqXJM1_HJDe7J5kA') {
+                    apiKey = '';
+                }
                 aiModel = ZENWRITE_CONFIG.aiModel || aiModel;
             }
 
