@@ -1702,6 +1702,7 @@
                 </div>
             </div>
             <div class="modal-footer">
+                <button class="btn btn-secondary" id="copyDiffBtn"><i class="ti ti-copy"></i> Copy Text</button>
                 <button class="btn btn-secondary" id="rejectDiffBtn">Dismiss Change</button>
                 <button class="btn btn-primary" id="acceptDiffBtn">Accept & Replace</button>
             </div>
@@ -3219,6 +3220,21 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         };
 
         // Diff modal buttons
+        const copyDiffBtn = document.getElementById('copyDiffBtn');
+        copyDiffBtn.onclick = async () => {
+            if (!proposedText) return;
+            try {
+                await navigator.clipboard.writeText(proposedText);
+                const originalHtml = copyDiffBtn.innerHTML;
+                copyDiffBtn.innerHTML = '<i class="ti ti-check" style="color: #10B981;"></i> Copied!';
+                setTimeout(() => {
+                    copyDiffBtn.innerHTML = originalHtml;
+                }, 2000);
+            } catch (err) {
+                console.error("Failed to copy:", err);
+            }
+        };
+
         acceptDiffBtn.onclick = () => {
             const currentContent = editorTextarea.value;
             const updatedContent = currentContent.substring(0, selectionStart) + proposedText + currentContent.substring(selectionEnd);

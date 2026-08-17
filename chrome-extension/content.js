@@ -93,6 +93,7 @@ function createOverlayModal() {
         </div>
       </div>
       <div class="zenwrite-modal-footer" id="zenwrite-footer-actions" style="display: none;">
+        <button class="zenwrite-btn zenwrite-btn-secondary" id="zenwrite-btn-copy">Copy</button>
         <button class="zenwrite-btn zenwrite-btn-secondary" id="zenwrite-btn-reject">Dismiss</button>
         <button class="zenwrite-btn zenwrite-btn-primary" id="zenwrite-btn-accept">Accept & Replace</button>
       </div>
@@ -239,13 +240,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     const diffContent = document.getElementById("zenwrite-diff-content");
     diffContent.innerHTML = generateDiffHtml(message.originalText, message.proposedText);
 
-    // Bind Accept button
+    // Bind Copy and Accept buttons
     const acceptBtn = document.getElementById("zenwrite-btn-accept");
+    const copyBtn = document.getElementById("zenwrite-btn-copy");
+    
+    if (copyBtn) {
+      copyBtn.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(message.proposedText);
+          copyBtn.textContent = "Copied!";
+          setTimeout(() => { copyBtn.textContent = "Copy"; }, 2000);
+        } catch (err) {
+          console.error("Failed to copy:", err);
+        }
+      };
+    }
     
     if (message.proposedText.startsWith("Error:") || message.proposedText.startsWith("AI Generation Error:")) {
       acceptBtn.style.display = "none";
+      if (copyBtn) copyBtn.style.display = "none";
     } else {
       acceptBtn.style.display = "block";
+      if (copyBtn) copyBtn.style.display = "block";
       acceptBtn.onclick = () => {
         replaceTextOnWebpage(message.originalText, message.proposedText);
         hideModal();
@@ -263,6 +279,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     const acceptBtn = document.getElementById("zenwrite-btn-accept");
     if (acceptBtn) {
       acceptBtn.style.display = "none";
+    }
+
+    const copyBtn = document.getElementById("zenwrite-btn-copy");
+    if (copyBtn) {
+      copyBtn.style.display = "block";
+      copyBtn.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(message.explanation);
+          copyBtn.textContent = "Copied!";
+          setTimeout(() => { copyBtn.textContent = "Copy"; }, 2000);
+        } catch (err) {
+          console.error("Failed to copy:", err);
+        }
+      };
     }
 
     const diffContent = document.getElementById("zenwrite-diff-content");
