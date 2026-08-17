@@ -2329,9 +2329,13 @@ Try editing this text, or create a new document!`);
 
         // --- Call Gemini API ---
         async function runGeminiAI(promptInstruction, textContent, fullText = '') {
+            apiKey = (apiKey || '').replace(/^["']|["']$/g, '').trim();
             if (!apiKey) {
-                alert("Please add your Gemini API Key in Settings to use the AI Writing Assistant.");
-                settingsModal.style.display = 'flex';
+                alert("⚠️ Please add your Gemini API Key in Settings to use the AI Writing Assistant.");
+                if (settingsModal) {
+                    settingsModal.style.display = 'flex';
+                    if (apiKeyInput) apiKeyInput.focus();
+                }
                 return null;
             }
 
@@ -2767,16 +2771,22 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         closeSettingsModal.onclick = () => settingsModal.style.display = 'none';
         cancelSettingsBtn.onclick = () => settingsModal.style.display = 'none';
         
+        // Auto-save API Key on paste or typing to guarantee it is NEVER lost
+        apiKeyInput.oninput = () => {
+            apiKey = apiKeyInput.value.replace(/^["']|["']$/g, '').trim();
+            saveToLocalStorage();
+        };
+
         saveSettingsBtn.onclick = () => {
-            apiKey = apiKeyInput.value.trim();
+            apiKey = apiKeyInput.value.replace(/^["']|["']$/g, '').trim();
             if (modelSelect.value === 'custom') {
-                aiModel = customModelInput.value.trim() || 'gemini-3.5-flash';
+                aiModel = customModelInput.value.trim() || 'gemini-3.6-flash';
             } else {
                 aiModel = modelSelect.value;
             }
             saveToLocalStorage();
             settingsModal.style.display = 'none';
-            alert("Settings saved successfully.");
+            alert("Settings saved permanently in your browser.");
         };
 
         // Sentence boundary search helper for cursor-right-click selection
