@@ -741,10 +741,12 @@
             display: none;
             flex-direction: column;
             gap: 4px;
-            width: 220px;
+            width: 230px;
+            max-height: min(460px, calc(100vh - 60px));
+            overflow-y: auto;
             z-index: 101;
             transform: translateX(-50%);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.15s ease, opacity 0.15s ease;
         }
 
         [data-theme="dark"] .ai-menu {
@@ -1354,6 +1356,8 @@
             flex-direction: column;
             gap: 2px;
             width: 230px;
+            max-height: min(460px, calc(100vh - 40px));
+            overflow-y: auto;
             z-index: 1000;
             backdrop-filter: blur(12px);
         }
@@ -2826,19 +2830,26 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             if (selectedText.length > 0) {
                 contextSelectionInfo.textContent = `Target: "${selectedText.substring(0, 20)}${selectedText.length > 20 ? '...' : ''}"`;
                 
-                // Position custom menu at cursor
+                // Position custom menu at cursor with dynamic viewport boundary clamping
+                customContextMenu.style.visibility = 'hidden';
+                customContextMenu.style.display = 'flex';
+                
+                const menuWidth = 230;
+                const menuHeight = customContextMenu.offsetHeight || 380;
+                
                 let x = e.clientX;
                 let y = e.clientY;
                 
-                // Keep inside screen boundaries
-                const menuWidth = 230;
-                const menuHeight = 240;
-                if (x + menuWidth > window.innerWidth) x = window.innerWidth - menuWidth - 10;
-                if (y + menuHeight > window.innerHeight) y = window.innerHeight - menuHeight - 10;
+                if (x + menuWidth > window.innerWidth - 10) x = window.innerWidth - menuWidth - 15;
+                if (x < 10) x = 10;
+                
+                if (y + menuHeight > window.innerHeight - 10) {
+                    y = Math.max(10, window.innerHeight - menuHeight - 15);
+                }
                 
                 customContextMenu.style.left = `${x}px`;
                 customContextMenu.style.top = `${y}px`;
-                customContextMenu.style.display = 'flex';
+                customContextMenu.style.visibility = 'visible';
                 
                 hideSelectionUI(); // hide selection popover button
             } else {
@@ -3046,20 +3057,33 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         // Floating AI actions button
         aiFloatingBtn.onclick = (e) => {
             e.stopPropagation();
-            aiMenu.style.left = aiFloatingBtn.style.left;
             
-            const btnTop = parseInt(aiFloatingBtn.style.top);
-            const menuHeight = 260; // approximate menu height
+            aiMenu.style.visibility = 'hidden';
+            aiMenu.style.display = 'flex';
+            
+            const btnLeft = parseInt(aiFloatingBtn.style.left) || (window.innerWidth / 2);
+            const btnTop = parseInt(aiFloatingBtn.style.top) || 100;
+            const menuHeight = aiMenu.offsetHeight || 380;
+            const menuWidth = 230;
             const viewportHeight = window.innerHeight;
+            const viewportWidth = window.innerWidth;
             
-            if (btnTop + 38 + menuHeight > viewportHeight - 20) {
+            // Horizontal clamping
+            let adjustedLeft = btnLeft;
+            if (adjustedLeft - (menuWidth / 2) < 10) adjustedLeft = (menuWidth / 2) + 10;
+            if (adjustedLeft + (menuWidth / 2) > viewportWidth - 10) adjustedLeft = viewportWidth - (menuWidth / 2) - 10;
+            aiMenu.style.left = `${adjustedLeft}px`;
+            
+            // Vertical clamping
+            if (btnTop + 44 + menuHeight > viewportHeight - 20) {
                 // Not enough space below, open menu ABOVE the button
-                aiMenu.style.top = `${btnTop - menuHeight - 8}px`;
+                const topPos = Math.max(10, btnTop - menuHeight - 8);
+                aiMenu.style.top = `${topPos}px`;
             } else {
                 // Open menu below the button
-                aiMenu.style.top = `${btnTop + 38}px`;
+                aiMenu.style.top = `${btnTop + 44}px`;
             }
-            aiMenu.style.display = 'flex';
+            aiMenu.style.visibility = 'visible';
         };
 
         // Toggle submenus on accordion clicks
@@ -3080,6 +3104,14 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 if (isHidden) {
                     submenu.style.display = 'flex';
                     trigger.querySelector('i:last-child').className = 'ti ti-chevron-up';
+                }
+
+                // Re-check menu position against viewport bottom
+                const rect = aiMenu.getBoundingClientRect();
+                if (rect.bottom > window.innerHeight - 10) {
+                    const currentTop = parseInt(aiMenu.style.top) || 0;
+                    const diff = rect.bottom - (window.innerHeight - 15);
+                    aiMenu.style.top = `${Math.max(10, currentTop - diff)}px`;
                 }
             };
         });
