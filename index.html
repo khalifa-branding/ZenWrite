@@ -412,16 +412,20 @@
         }
 
         /* Editor Layout */
+        /* Editor Layout */
         .editor-container {
             flex: 1;
             display: flex;
             position: relative;
             overflow: hidden;
+            min-height: 0;
+            height: 100%;
         }
 
         .pane {
             flex: 1;
             height: 100%;
+            min-height: 0;
             position: relative;
             overflow: hidden;
             display: flex;
@@ -429,6 +433,8 @@
         }
 
         .pane-header {
+            flex-shrink: 0;
+            height: 38px;
             padding: 8px 24px;
             font-size: 0.8rem;
             text-transform: uppercase;
@@ -444,39 +450,46 @@
 
         .editor-textarea-wrapper {
             flex: 1;
+            height: calc(100% - 38px);
+            min-height: 0;
             position: relative;
             display: flex;
+            overflow: hidden;
         }
 
         .line-numbers {
-            width: 48px;
+            width: 52px;
+            flex-shrink: 0;
             background-color: var(--bg-secondary);
             border-right: 1px solid var(--border-color);
-            padding: 20px 0;
+            padding: 20px 8px 20px 0;
             text-align: right;
-            padding-right: 8px;
             font-family: 'Fira Code', monospace;
-            font-size: 0.85rem;
+            font-size: 0.95rem; /* Matches editor-textarea font-size */
+            line-height: 1.6;   /* Matches editor-textarea line-height */
             color: var(--text-secondary);
             user-select: none;
-            overflow: hidden;
-            line-height: 1.6;
+            overflow-y: hidden;
+            overflow-x: hidden;
+            box-sizing: border-box;
         }
 
         .editor-textarea {
             flex: 1;
             height: 100%;
+            min-height: 0;
             border: none;
             background-color: var(--editor-bg);
             color: var(--text-primary);
             font-family: 'Fira Code', monospace;
-            font-size: 0.95rem;
+            font-size: 0.95rem; /* Matches line-numbers font-size */
+            line-height: 1.6;   /* Matches line-numbers line-height */
             padding: 20px;
             resize: none;
             outline: none;
-            line-height: 1.6;
             tab-size: 4;
             overflow-y: auto;
+            box-sizing: border-box;
         }
 
         .preview-pane {
@@ -2927,10 +2940,14 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         // Title rename listener
         activeDocTitle.oninput = renameActiveDoc;
 
-        // Editor inputs
+        // Editor inputs & scroll synchronization
         editorTextarea.oninput = (e) => {
             renderEditor();
             triggerAutosave();
+        };
+
+        editorTextarea.onscroll = () => {
+            lineNumbers.scrollTop = editorTextarea.scrollTop;
         };
 
         // Typewriter click listener & Autocomplete handler
