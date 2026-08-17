@@ -2424,8 +2424,19 @@ Requirements:
                 }
             }
 
-            const finalErrMsg = lastError.message.replace(/^CONGESTION:/, '');
-            alert(`AI Generation Error: ${finalErrMsg}`);
+            const finalErrMsg = lastError ? lastError.message.replace(/^CONGESTION:/, '') : 'Unknown connection error';
+            if (finalErrMsg.toLowerCase().includes('authentication') || 
+                finalErrMsg.toLowerCase().includes('api key') || 
+                finalErrMsg.toLowerCase().includes('credential') ||
+                finalErrMsg.toLowerCase().includes('oauth')) {
+                alert("⚠️ Invalid or Missing Gemini API Key.\n\nYour Gemini API key is missing or invalid.\nPlease paste your valid Gemini API Key into the Settings dialog to activate AI features.");
+                if (settingsModal) {
+                    settingsModal.style.display = 'flex';
+                    if (apiKeyInput) apiKeyInput.focus();
+                }
+            } else {
+                alert(`AI Generation Error: ${finalErrMsg}`);
+            }
             return null;
         }
 
