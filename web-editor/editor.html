@@ -1665,10 +1665,8 @@
                 <div class="form-group">
                     <label class="form-label" for="modelSelect">AI Model</label>
                     <select class="form-select" id="modelSelect">
-                        <option value="gemini-3.6-flash" selected>Gemini 3.6 Flash (Recommended - Stable & Free)</option>
-                        <option value="gemini-3.5-flash">Gemini 3.5 Flash (Alternative)</option>
-                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (Older)</option>
-                        <option value="gemini-2.0-flash">Gemini 2.0 Flash (Newer)</option>
+                        <option value="gemini-1.5-flash" selected>Gemini 1.5 Flash (Ultra Fast & Recommended)</option>
+                        <option value="gemini-2.0-flash">Gemini 2.0 Flash (Next-Gen High Speed)</option>
                         <option value="gemini-1.5-pro">Gemini 1.5 Pro (High Reasoning)</option>
                         <option value="custom">Custom Model ID...</option>
                     </select>
@@ -1964,9 +1962,9 @@
                 if (apiKey === 'AQ.Ab8RN6Jl_5ww3Z02h-ca0lrlGsMtscLodyaqXJM1_HJDe7J5kA') {
                     apiKey = '';
                 }
-                aiModel = settings.aiModel || 'gemini-3.6-flash';
-                if (aiModel === 'gemini-2.5-flash' || aiModel === 'gemini-1.5-flash' || aiModel === 'gemini-3.5-flash') {
-                    aiModel = 'gemini-3.6-flash';
+                aiModel = settings.aiModel || 'gemini-1.5-flash';
+                if (aiModel === 'gemini-3.6-flash' || aiModel === 'gemini-3.5-flash' || aiModel === 'gemini-2.5-flash') {
+                    aiModel = 'gemini-1.5-flash';
                 }
                 
                 // Set HTML attributes
@@ -2363,67 +2361,63 @@ Requirements:
             }
 
             // Determine models list (with fallback in case of high demand / rate limit)
-            let modelsToTry = [aiModel];
-            if (aiModel === 'gemini-3.5-flash') {
-                modelsToTry.push('gemini-3.6-flash');
-            } else if (aiModel === 'gemini-3.6-flash') {
-                modelsToTry.push('gemini-3.5-flash');
-            } else if (aiModel !== 'gemini-3.6-flash') {
-                modelsToTry.push('gemini-3.6-flash');
+            // Fast direct model execution (gemini-1.5-flash is Google's fastest production model)
+            let modelsToTry = [aiModel || 'gemini-1.5-flash'];
+            if (!modelsToTry.includes('gemini-1.5-flash')) {
+                modelsToTry.push('gemini-1.5-flash');
+            }
+            if (!modelsToTry.includes('gemini-2.0-flash')) {
+                modelsToTry.push('gemini-2.0-flash');
             }
 
             let lastError = null;
 
             for (const model of modelsToTry) {
-                // Try v1beta first, then fallback to v1 if it fails
-                const apiVersions = ['v1beta', 'v1'];
-                
-                for (const apiVer of apiVersions) {
-                    const endpoint = `https://generativelanguage.googleapis.com/v1${apiVer === 'v1' ? '' : 'beta'}/models/${model}:generateContent?key=${apiKey}`;
-                    try {
-                        const response = await fetch(endpoint, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                contents: [{
-                                    parts: [{ text: prompt }]
-                                }],
-                                generationConfig: {
-                                    temperature: 0.2
-                                }
-                            })
-                        });
-
-                        if (!response.ok) {
-                            const err = await response.json();
-                            const errMsg = err.error?.message || `HTTP error! status: ${response.status}`;
-                            const isRateLimitOrCongested = response.status === 429 || response.status === 503 || 
-                                errMsg.toLowerCase().includes('high demand') || 
-                                errMsg.toLowerCase().includes('limit') || 
-                                errMsg.toLowerCase().includes('temporary') || 
-                                errMsg.toLowerCase().includes('exhausted');
-
-                            if (isRateLimitOrCongested && modelsToTry.indexOf(model) < modelsToTry.length - 1) {
-                                console.warn(`Model ${model} is congested/limited. Trying fallback model...`);
-                                throw new Error(`CONGESTION:${errMsg}`);
+                const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{ text: prompt }]
+                            }],
+                            generationConfig: {
+                                temperature: 0.2,
+                                maxOutputTokens: 2048
                             }
-                            throw new Error(errMsg);
-                        }
+                        })
+                    });
 
-                        const data = await response.json();
-                        const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                        if (!responseText) throw new Error("Empty response from AI model.");
-                        
-                        return responseText.trim();
-                    } catch (err) {
-                        console.warn(`Failed with model ${model} (API version ${apiVer}): ${err.message}`);
-                        lastError = err;
-                        
-                        if (err.message.startsWith('CONGESTION:')) {
-                            break;
+                    if (!response.ok) {
+                        const err = await response.json();
+                        const errMsg = err.error?.message || `HTTP error! status: ${response.status}`;
+                        const isRateLimitOrCongested = response.status === 429 || response.status === 503 || 
+                            errMsg.toLowerCase().includes('high demand') || 
+                            errMsg.toLowerCase().includes('limit') || 
+                            errMsg.toLowerCase().includes('temporary') || 
+                            errMsg.toLowerCase().includes('exhausted');
+
+                        if (isRateLimitOrCongested && modelsToTry.indexOf(model) < modelsToTry.length - 1) {
+                            console.warn(`Model ${model} is congested/limited. Trying fallback model...`);
+                            throw new Error(`CONGESTION:${errMsg}`);
                         }
+                        throw new Error(errMsg);
+                    }
+
+                    const data = await response.json();
+                    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (!responseText) throw new Error("Empty response from AI model.");
+                    
+                    return responseText.trim();
+                } catch (err) {
+                    console.warn(`Failed with model ${model}: ${err.message}`);
+                    lastError = err;
+                    
+                    if (err.message.startsWith('CONGESTION:')) {
+                        continue;
                     }
                 }
             }
