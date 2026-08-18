@@ -247,63 +247,65 @@ Requirements:
     prompt = `You are a writing assistant. ${promptInstruction}\n\nTarget Text:\n"""\n${textContent}\n"""`;
   }
 
-  // Determine models list (fast direct execution)
-  let modelsToTry = [aiModel || "gemini-1.5-flash"];
-  if (!modelsToTry.includes("gemini-1.5-flash")) {
-    modelsToTry.push("gemini-1.5-flash");
-  }
-  if (!modelsToTry.includes("gemini-2.0-flash")) {
-    modelsToTry.push("gemini-2.0-flash");
-  }
+  // Direct execution on available fast models
+  let modelsToTry = [aiModel, "gemini-2.0-flash", "gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-pro", "gemini-2.5-flash"].filter(Boolean);
+  modelsToTry = [...new Set(modelsToTry)];
 
   let lastError = null;
 
   for (const model of modelsToTry) {
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: prompt }]
-          }],
-          generationConfig: {
-            temperature: 0.2,
-            maxOutputTokens: 2048
+    const apiVersions = ["v1beta", "v1"];
+    for (const apiVer of apiVersions) {
+      const endpoint = `https://generativelanguage.googleapis.com/${apiVer}/models/${model}:generateContent?key=${apiKey}`;
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{ text: prompt }]
+            }],
+            generationConfig: {
+              temperature: 0.2,
+              maxOutputTokens: 2048
+            }
+          })
+        });
+
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          const errMsg = err.error?.message || `HTTP ${response.status}: ${response.statusText}`;
+
+          if (response.status === 404 || errMsg.toLowerCase().includes("not found")) {
+            continue;
           }
-        })
-      });
 
-      if (!response.ok) {
-        const err = await response.json();
-        const errMsg = err.error?.message || `HTTP error! status: ${response.status}`;
-        const isRateLimitOrCongested = response.status === 429 || response.status === 503 || 
-          errMsg.toLowerCase().includes("high demand") || 
-          errMsg.toLowerCase().includes("limit") || 
-          errMsg.toLowerCase().includes("temporary") || 
-          errMsg.toLowerCase().includes("exhausted");
+          const isRateLimitOrCongested = response.status === 429 || response.status === 503 || 
+            errMsg.toLowerCase().includes("high demand") || 
+            errMsg.toLowerCase().includes("limit") || 
+            errMsg.toLowerCase().includes("temporary") || 
+            errMsg.toLowerCase().includes("exhausted");
 
-        if (isRateLimitOrCongested && modelsToTry.indexOf(model) < modelsToTry.length - 1) {
-          console.warn(`Model ${model} is congested/limited. Trying fallback model...`);
-          throw new Error(`CONGESTION:${errMsg}`);
+          if (isRateLimitOrCongested && modelsToTry.indexOf(model) < modelsToTry.length - 1) {
+            console.warn(`Model ${model} is congested. Trying fallback...`);
+            throw new Error(`CONGESTION:${errMsg}`);
+          }
+          throw new Error(errMsg);
         }
-        throw new Error(errMsg);
-      }
 
-      const data = await response.json();
-      const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!responseText) throw new Error("Empty response from AI model.");
-      
-      return responseText.trim();
-    } catch (err) {
-      console.warn(`Extension model ${model} call failed: ${err.message}`);
-      lastError = err;
-      
-      if (err.message.startsWith("CONGESTION:")) {
-        continue;
+        const data = await response.json();
+        const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!responseText) throw new Error("Empty response from AI model.");
+        
+        return responseText.trim();
+      } catch (err) {
+        lastError = err;
+        if (err.message.startsWith("CONGESTION:")) {
+          break;
+        }
       }
     }
   }
