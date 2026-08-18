@@ -1657,9 +1657,15 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label class="form-label" for="apiKeyInput">Gemini API Key</label>
-                    <input type="password" class="form-input" id="apiKeyInput" placeholder="Enter Gemini API Key...">
+                    <div style="position: relative; display: flex; align-items: center;">
+                        <input type="password" class="form-input" id="apiKeyInput" placeholder="AIzaSy..." style="padding-right: 42px;">
+                        <button type="button" id="toggleApiKeyVisBtn" style="position: absolute; right: 8px; background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 6px; font-size: 1.1rem;" title="Show/Hide API Key">
+                            <i class="ti ti-eye"></i>
+                        </button>
+                    </div>
+                    <div id="apiKeyStatusMsg" style="margin-top: 6px; font-size: 0.8rem; display: none;"></div>
                     <small style="color: var(--text-secondary); margin-top: 4px; display: block;">
-                        Saved in browser storage. For a **permanent, universal solution** across all browsers, paste your key directly into the <code>config.js</code> file next to this editor. Get a free key from <a href="https://aistudio.google.com/" target="_blank" style="color: var(--accent-color)">Google AI Studio</a>.
+                        Saved locally in browser storage. Get a free key from <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--accent-color); font-weight: 600; text-decoration: underline;">Google AI Studio</a>.
                     </small>
                 </div>
                 <div class="form-group">
@@ -2327,9 +2333,14 @@ Try editing this text, or create a new document!`);
 
         // --- Call Gemini API ---
         async function runGeminiAI(promptInstruction, textContent, fullText = '') {
+            // Check active state, input box, or storage
+            if (!apiKey && apiKeyInput && apiKeyInput.value) {
+                apiKey = apiKeyInput.value.replace(/^["']|["']$/g, '').trim();
+            }
             apiKey = (apiKey || '').replace(/^["']|["']$/g, '').trim();
+
             if (!apiKey) {
-                alert("⚠️ Please add your Gemini API Key in Settings to use the AI Writing Assistant.");
+                alert("⚠️ Please add your Gemini API Key in Settings to use the AI Writing Assistant.\n\nGet a free key from: https://aistudio.google.com/app/apikey");
                 if (settingsModal) {
                     settingsModal.style.display = 'flex';
                     if (apiKeyInput) apiKeyInput.focus();
@@ -2360,8 +2371,7 @@ Requirements:
                 prompt = `You are a writing assistant. ${promptInstruction}\n\nTarget Text:\n"""\n${textContent}\n"""`;
             }
 
-            // Determine models list (with fallback in case of high demand / rate limit)
-            // Fast direct model execution (gemini-1.5-flash is Google's fastest production model)
+            // Direct execution on fast models
             let modelsToTry = [aiModel || 'gemini-1.5-flash'];
             if (!modelsToTry.includes('gemini-1.5-flash')) {
                 modelsToTry.push('gemini-1.5-flash');
@@ -2378,7 +2388,8 @@ Requirements:
                     const response = await fetch(endpoint, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'x-goog-api-key': apiKey
                         },
                         body: JSON.stringify({
                             contents: [{
@@ -2393,7 +2404,7 @@ Requirements:
 
                     if (!response.ok) {
                         const err = await response.json();
-                        const errMsg = err.error?.message || `HTTP error! status: ${response.status}`;
+                        const errMsg = err.error?.message || `HTTP ${response.status}: ${response.statusText}`;
                         const isRateLimitOrCongested = response.status === 429 || response.status === 503 || 
                             errMsg.toLowerCase().includes('high demand') || 
                             errMsg.toLowerCase().includes('limit') || 
@@ -2423,17 +2434,10 @@ Requirements:
             }
 
             const finalErrMsg = lastError ? lastError.message.replace(/^CONGESTION:/, '') : 'Unknown connection error';
-            if (finalErrMsg.toLowerCase().includes('authentication') || 
-                finalErrMsg.toLowerCase().includes('api key') || 
-                finalErrMsg.toLowerCase().includes('credential') ||
-                finalErrMsg.toLowerCase().includes('oauth')) {
-                alert("⚠️ Invalid or Missing Gemini API Key.\n\nYour Gemini API key is missing or invalid.\nPlease paste your valid Gemini API Key into the Settings dialog to activate AI features.");
-                if (settingsModal) {
-                    settingsModal.style.display = 'flex';
-                    if (apiKeyInput) apiKeyInput.focus();
-                }
-            } else {
-                alert(`AI Generation Error: ${finalErrMsg}`);
+            alert(`⚠️ Google Gemini API Notice:\n\n${finalErrMsg}\n\nMake sure your key was created at https://aistudio.google.com/app/apikey`);
+            if (settingsModal && (finalErrMsg.toLowerCase().includes('key') || finalErrMsg.toLowerCase().includes('auth') || finalErrMsg.toLowerCase().includes('credential'))) {
+                settingsModal.style.display = 'flex';
+                if (apiKeyInput) apiKeyInput.focus();
             }
             return null;
         }
@@ -2764,6 +2768,16 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
 
         closeSettingsModal.onclick = () => settingsModal.style.display = 'none';
         cancelSettingsBtn.onclick = () => settingsModal.style.display = 'none';
+
+        // Show/Hide API Key Toggle
+        const toggleApiKeyVisBtn = document.getElementById('toggleApiKeyVisBtn');
+        if (toggleApiKeyVisBtn) {
+            toggleApiKeyVisBtn.onclick = () => {
+                const isPass = apiKeyInput.type === 'password';
+                apiKeyInput.type = isPass ? 'text' : 'password';
+                toggleApiKeyVisBtn.innerHTML = isPass ? '<i class="ti ti-eye-off"></i>' : '<i class="ti ti-eye"></i>';
+            };
+        }
         
         // Auto-save API Key on paste or typing to guarantee it is NEVER lost
         apiKeyInput.oninput = () => {
@@ -2771,16 +2785,66 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             saveToLocalStorage();
         };
 
-        saveSettingsBtn.onclick = () => {
-            apiKey = apiKeyInput.value.replace(/^["']|["']$/g, '').trim();
+        saveSettingsBtn.onclick = async () => {
+            const rawKey = apiKeyInput.value.replace(/^["']|["']$/g, '').trim();
+            apiKey = rawKey;
             if (modelSelect.value === 'custom') {
-                aiModel = customModelInput.value.trim() || 'gemini-3.6-flash';
+                aiModel = customModelInput.value.trim() || 'gemini-1.5-flash';
             } else {
                 aiModel = modelSelect.value;
             }
             saveToLocalStorage();
-            settingsModal.style.display = 'none';
-            alert("Settings saved permanently in your browser.");
+
+            const statusEl = document.getElementById('apiKeyStatusMsg');
+            if (!apiKey) {
+                if (statusEl) {
+                    statusEl.style.display = 'block';
+                    statusEl.style.color = '#EF4444';
+                    statusEl.innerHTML = '<i class="ti ti-alert-circle"></i> Please enter an API key.';
+                }
+                return;
+            }
+
+            if (statusEl) {
+                statusEl.style.display = 'block';
+                statusEl.style.color = 'var(--text-secondary)';
+                statusEl.innerHTML = '<i class="ti ti-loader rotate"></i> Testing key with Google AI...';
+            }
+
+            saveSettingsBtn.disabled = true;
+            try {
+                const testResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: 'ping' }] }], generationConfig: { maxOutputTokens: 1 } })
+                });
+
+                if (testResp.ok) {
+                    if (statusEl) {
+                        statusEl.style.color = '#10B981';
+                        statusEl.innerHTML = '<i class="ti ti-circle-check"></i> Key is valid and active!';
+                    }
+                    setTimeout(() => {
+                        settingsModal.style.display = 'none';
+                        if (statusEl) statusEl.style.display = 'none';
+                    }, 1200);
+                } else {
+                    const errData = await testResp.json();
+                    const msg = errData.error?.message || `HTTP ${testResp.status}`;
+                    if (statusEl) {
+                        statusEl.style.color = '#EF4444';
+                        statusEl.innerHTML = `<i class="ti ti-alert-circle"></i> Google Error: ${msg}`;
+                    }
+                }
+            } catch (err) {
+                if (statusEl) {
+                    statusEl.style.color = '#10B981';
+                    statusEl.innerHTML = 'Settings saved locally.';
+                }
+                setTimeout(() => { settingsModal.style.display = 'none'; }, 1000);
+            } finally {
+                saveSettingsBtn.disabled = false;
+            }
         };
 
         // Sentence boundary search helper for cursor-right-click selection
