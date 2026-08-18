@@ -1671,9 +1671,13 @@
                 <div class="form-group">
                     <label class="form-label" for="modelSelect">AI Model</label>
                     <select class="form-select" id="modelSelect">
-                        <option value="gemini-1.5-flash" selected>Gemini 1.5 Flash (Ultra Fast & Recommended)</option>
-                        <option value="gemini-2.0-flash">Gemini 2.0 Flash (Next-Gen High Speed)</option>
-                        <option value="gemini-1.5-pro">Gemini 1.5 Pro (High Reasoning)</option>
+                        <option value="gemini-3.6-flash" selected>Gemini 3.6 Flash (Latest / High Speed)</option>
+                        <option value="gemini-3.5-flash">Gemini 3.5 Flash (Fast & Stable)</option>
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                        <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                        <option value="gemini-pro">Gemini Pro (Legacy)</option>
                         <option value="custom">Custom Model ID...</option>
                     </select>
                 </div>
@@ -1968,10 +1972,7 @@
                 if (apiKey === 'AQ.Ab8RN6Jl_5ww3Z02h-ca0lrlGsMtscLodyaqXJM1_HJDe7J5kA') {
                     apiKey = '';
                 }
-                aiModel = settings.aiModel || 'gemini-1.5-flash';
-                if (aiModel === 'gemini-3.6-flash' || aiModel === 'gemini-3.5-flash' || aiModel === 'gemini-2.5-flash') {
-                    aiModel = 'gemini-1.5-flash';
-                }
+                aiModel = settings.aiModel || 'gemini-3.6-flash';
                 
                 // Set HTML attributes
                 document.documentElement.setAttribute('data-theme', theme);
@@ -2371,8 +2372,18 @@ Requirements:
                 prompt = `You are a writing assistant. ${promptInstruction}\n\nTarget Text:\n"""\n${textContent}\n"""`;
             }
 
-            // Direct execution on available fast models
-            let modelsToTry = [aiModel, 'gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-flash', 'gemini-pro', 'gemini-2.5-flash'].filter(Boolean);
+            // Direct execution on selected model first, followed by all latest candidate models
+            let modelsToTry = [
+                aiModel,
+                'gemini-3.6-flash',
+                'gemini-3.5-flash',
+                'gemini-2.5-flash',
+                'gemini-2.0-flash',
+                'gemini-1.5-flash-latest',
+                'gemini-1.5-flash',
+                'gemini-pro',
+                'gemini-1.5-pro'
+            ].filter(Boolean);
             modelsToTry = [...new Set(modelsToTry)];
 
             let lastError = null;
@@ -2825,22 +2836,9 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 });
 
                 if (listResp.ok) {
-                    const listData = await listResp.json();
-                    const availableModels = (listData.models || [])
-                        .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
-                        .map(m => m.name.replace(/^models\//, ''));
-
-                    if (availableModels.length > 0) {
-                        if (!availableModels.includes(aiModel)) {
-                            aiModel = availableModels.find(m => m.includes('flash')) || availableModels[0];
-                            modelSelect.value = aiModel;
-                            saveToLocalStorage();
-                        }
-                    }
-
                     if (statusEl) {
                         statusEl.style.color = '#10B981';
-                        statusEl.innerHTML = `<i class="ti ti-circle-check"></i> Key is valid & active! (Model: ${aiModel})`;
+                        statusEl.innerHTML = `<i class="ti ti-circle-check"></i> Key is valid & active! (${aiModel})`;
                     }
                     setTimeout(() => {
                         settingsModal.style.display = 'none';

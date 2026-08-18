@@ -247,8 +247,18 @@ Requirements:
     prompt = `You are a writing assistant. ${promptInstruction}\n\nTarget Text:\n"""\n${textContent}\n"""`;
   }
 
-  // Direct execution on available fast models
-  let modelsToTry = [aiModel, "gemini-2.0-flash", "gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-pro", "gemini-2.5-flash"].filter(Boolean);
+  // Direct execution on selected model first, followed by all latest candidate models
+  let modelsToTry = [
+    aiModel,
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-flash",
+    "gemini-pro",
+    "gemini-1.5-pro"
+  ].filter(Boolean);
   modelsToTry = [...new Set(modelsToTry)];
 
   let lastError = null;
