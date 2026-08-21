@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <title>ZenWrite - AI Creative Text Editor</title>
+    <meta name="description" content="ZenWrite is a modern, responsive, distraction-free markdown text editor powered by Google Gemini AI.">
+    <meta name="theme-color" content="#FAF9F6">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -77,8 +79,16 @@
             background-color: var(--bg-primary);
             color: var(--text-primary);
             height: 100vh;
+            height: 100dvh;
+            min-height: -webkit-fill-available;
             overflow: hidden;
             display: flex;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         /* Sidebar Style */
@@ -1410,6 +1420,247 @@
             margin: 4px 0;
         }
 
+        /* Mobile Backdrop Overlay */
+        .mobile-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 40;
+            opacity: 0;
+            transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+
+        .mobile-backdrop.active {
+            display: block;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Mobile Segmented View Switcher */
+        .mobile-view-switcher {
+            display: none;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2px;
+            gap: 2px;
+            align-items: center;
+        }
+
+        .view-switch-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 6px 12px;
+            min-height: 36px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .view-switch-btn.active {
+            background-color: var(--accent-color);
+            color: var(--accent-text);
+            box-shadow: 0 2px 6px var(--accent-glow);
+        }
+
+        /* Tablet & Mobile Media Queries */
+        @media (max-width: 1024px) {
+            :root {
+                --sidebar-width: 250px;
+                --ai-drawer-width: 300px;
+            }
+            .active-doc-title-input {
+                max-width: 240px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --sidebar-width: 280px;
+                --ai-drawer-width: min(340px, 90vw);
+            }
+
+            body {
+                height: 100vh;
+                height: 100dvh;
+                min-height: -webkit-fill-available;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                height: 100%;
+                z-index: 50;
+                box-shadow: 0 10px 40px var(--shadow-color);
+                transform: translateX(0);
+            }
+
+            .sidebar.hidden {
+                transform: translateX(calc(-1 * var(--sidebar-width)));
+            }
+
+            .ai-drawer {
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                right: 0;
+                height: 100%;
+                z-index: 50;
+                box-shadow: 0 10px 40px var(--shadow-color);
+                transform: translateX(0);
+            }
+
+            .ai-drawer.hidden {
+                transform: translateX(var(--ai-drawer-width));
+            }
+
+            .workspace-header {
+                padding: 0 12px;
+                height: 54px;
+                gap: 8px;
+            }
+
+            .header-left {
+                gap: 8px !important;
+                flex: 1;
+                min-width: 0;
+            }
+
+            .active-doc-title-input {
+                font-size: 1rem;
+                max-width: 140px;
+                padding: 4px 6px;
+            }
+
+            .header-actions {
+                gap: 4px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 2px;
+            }
+
+            .header-actions::-webkit-scrollbar {
+                display: none;
+            }
+
+            .icon-btn {
+                padding: 6px;
+                min-width: 40px;
+                min-height: 40px;
+                font-size: 1.15rem;
+            }
+
+            .mobile-view-switcher {
+                display: flex;
+            }
+
+            /* Responsive Single Pane / Switcher Mode */
+            .editor-container {
+                position: relative;
+            }
+
+            .pane {
+                width: 100% !important;
+                flex: 1 1 100% !important;
+            }
+
+            .preview-pane {
+                display: none;
+                border-left: none;
+            }
+
+            .editor-container.mobile-preview-active #editorPane {
+                display: none;
+            }
+
+            .editor-container.mobile-preview-active #previewPane {
+                display: flex;
+            }
+
+            .editor-textarea {
+                padding: 16px;
+                font-size: 0.95rem;
+            }
+
+            .preview-content {
+                padding: 20px 16px;
+            }
+
+            .workspace-footer {
+                padding: 0 12px;
+                font-size: 0.75rem;
+                height: 32px;
+            }
+
+            .footer-left span:nth-child(2),
+            .footer-left span:nth-child(3) {
+                display: none;
+            }
+
+            .modal {
+                max-width: calc(100vw - 24px);
+                max-height: calc(100vh - 40px);
+                max-height: calc(100dvh - 40px);
+                padding: 20px 16px;
+            }
+
+            .diff-modal {
+                max-width: calc(100vw - 24px);
+                max-height: calc(100vh - 40px);
+                max-height: calc(100dvh - 40px);
+                padding: 18px 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 1.1rem;
+            }
+            .sidebar-header {
+                padding: 14px;
+            }
+            .new-doc-btn {
+                padding: 8px 12px;
+                font-size: 0.85rem;
+            }
+            .workspace-header {
+                padding: 0 8px;
+            }
+            .active-doc-title-input {
+                max-width: 100px;
+                font-size: 0.9rem;
+            }
+            .pane-header {
+                padding: 6px 12px;
+                font-size: 0.75rem;
+            }
+            .line-numbers {
+                padding: 16px 6px;
+                font-size: 0.85rem;
+                min-width: 32px;
+            }
+            .ai-menu, .custom-context-menu {
+                max-width: calc(100vw - 24px);
+            }
+        }
+
         /* Print styling for clean PDF export */
         @media print {
             body {
@@ -1468,24 +1719,27 @@
 </head>
 <body>
 
+    <!-- Mobile Backdrop Overlay for Off-Canvas Drawers -->
+    <div class="mobile-backdrop" id="mobileBackdrop" aria-hidden="true"></div>
+
     <!-- Sidebar (Document Management) -->
-    <aside class="sidebar" id="sidebar">
+    <aside class="sidebar" id="sidebar" aria-label="Document Management Sidebar">
         <div class="sidebar-header">
-            <h1 class="logo"><i class="ti ti-feather"></i> ZenWrite</h1>
-            <button class="new-doc-btn" id="newDocBtn"><i class="ti ti-plus"></i> New</button>
+            <h1 class="logo"><i class="ti ti-feather" aria-hidden="true"></i> ZenWrite</h1>
+            <button class="new-doc-btn" id="newDocBtn" aria-label="Create New Document"><i class="ti ti-plus" aria-hidden="true"></i> New</button>
         </div>
         <nav class="doc-list" id="docList" aria-label="Documents List">
             <!-- Documents injected by JS -->
         </nav>
         <div class="sidebar-footer">
-            <button class="sidebar-footer-btn" id="importFileBtn">
-                <i class="ti ti-file-upload"></i> Import File
+            <button class="sidebar-footer-btn" id="importFileBtn" aria-label="Import Markdown or Text File">
+                <i class="ti ti-file-upload" aria-hidden="true"></i> Import File
             </button>
-            <button class="sidebar-footer-btn" id="exportBtn">
-                <i class="ti ti-file-download"></i> Export Document
+            <button class="sidebar-footer-btn" id="exportBtn" aria-label="Export Document">
+                <i class="ti ti-file-download" aria-hidden="true"></i> Export Document
             </button>
-            <a href="chrome-extension.zip" download class="sidebar-footer-btn" style="text-decoration: none; box-sizing: border-box;">
-                <i class="ti ti-download"></i> Get Extension
+            <a href="chrome-extension.zip" download class="sidebar-footer-btn" style="text-decoration: none; box-sizing: border-box;" aria-label="Download ZenWrite Chrome Extension">
+                <i class="ti ti-download" aria-hidden="true"></i> Get Extension
             </a>
         </div>
     </aside>
@@ -1494,19 +1748,29 @@
     <main class="main-workspace" id="mainWorkspace">
         
         <!-- Header Bar -->
-        <header class="workspace-header">
-            <div class="header-left" style="gap: 16px;">
-                <button class="menu-toggle-btn" id="menuToggle" data-tooltip="Toggle Sidebar"><i class="ti ti-menu-2"></i></button>
-                <input type="text" class="active-doc-title-input" id="activeDocTitle" value="Untitled Document" placeholder="Rename document...">
+        <header class="workspace-header" role="banner">
+            <div class="header-left">
+                <button class="menu-toggle-btn" id="menuToggle" data-tooltip="Toggle Sidebar" aria-label="Toggle Navigation Sidebar" aria-expanded="false" aria-controls="sidebar"><i class="ti ti-menu-2" aria-hidden="true"></i></button>
+                <input type="text" class="active-doc-title-input" id="activeDocTitle" value="Untitled Document" placeholder="Rename document..." aria-label="Active Document Title">
+                
+                <!-- Mobile Segmented View Switcher -->
+                <div class="mobile-view-switcher" id="mobileViewSwitcher" role="tablist" aria-label="Mobile Pane Switcher">
+                    <button class="view-switch-btn active" id="mobileEditTab" role="tab" aria-selected="true" aria-controls="editorPane" aria-label="Editor View">
+                        <i class="ti ti-edit" aria-hidden="true"></i> Write
+                    </button>
+                    <button class="view-switch-btn" id="mobilePreviewTab" role="tab" aria-selected="false" aria-controls="previewPane" aria-label="Live Preview View">
+                        <i class="ti ti-eye" aria-hidden="true"></i> Preview
+                    </button>
+                </div>
             </div>
-            <div class="header-actions">
-                <button class="icon-btn" id="themeToggle" data-tooltip="Toggle Theme"><i class="ti ti-sun"></i></button>
-                <button class="icon-btn" id="soundToggle" data-tooltip="Typewriter Sounds"><i class="ti ti-volume"></i></button>
-                <button class="icon-btn" id="splitToggle" data-tooltip="Toggle Preview"><i class="ti ti-layout-columns"></i></button>
-                <button class="icon-btn" id="zenToggle" data-tooltip="Zen Focus Mode"><i class="ti ti-maximize"></i></button>
-                <button class="icon-btn" id="proofreadToggleBtn" data-tooltip="AI Proofreader"><i class="ti ti-spellcheck"></i></button>
-                <button class="icon-btn" id="aiDrawerToggle" data-tooltip="AI Writing Assistant"><i class="ti ti-sparkles"></i></button>
-                <button class="icon-btn" id="settingsToggle" data-tooltip="Settings"><i class="ti ti-settings"></i></button>
+            <div class="header-actions" role="toolbar" aria-label="Editor Controls">
+                <button class="icon-btn" id="themeToggle" data-tooltip="Toggle Theme" aria-label="Toggle Light and Dark Theme"><i class="ti ti-sun" aria-hidden="true"></i></button>
+                <button class="icon-btn" id="soundToggle" data-tooltip="Typewriter Sounds" aria-label="Toggle Typewriter Sound Effects"><i class="ti ti-volume" aria-hidden="true"></i></button>
+                <button class="icon-btn" id="splitToggle" data-tooltip="Toggle Preview" aria-label="Toggle Markdown Preview Pane"><i class="ti ti-layout-columns" aria-hidden="true"></i></button>
+                <button class="icon-btn" id="zenToggle" data-tooltip="Zen Focus Mode" aria-label="Toggle Fullscreen Zen Focus Mode"><i class="ti ti-maximize" aria-hidden="true"></i></button>
+                <button class="icon-btn" id="proofreadToggleBtn" data-tooltip="AI Proofreader" aria-label="Open AI Proofreader Drawer"><i class="ti ti-spellcheck" aria-hidden="true"></i></button>
+                <button class="icon-btn" id="aiDrawerToggle" data-tooltip="AI Writing Assistant" aria-label="Open AI Writing Assistant Drawer"><i class="ti ti-sparkles" aria-hidden="true"></i></button>
+                <button class="icon-btn" id="settingsToggle" data-tooltip="Settings" aria-label="Open Application Settings"><i class="ti ti-settings" aria-hidden="true"></i></button>
             </div>
         </header>
 
@@ -1651,29 +1915,29 @@
     </aside>
 
     <!-- Settings Modal -->
-    <div class="modal-overlay" id="settingsModal">
+    <div class="modal-overlay" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
         <div class="modal">
             <div class="modal-header">
-                <h3 class="modal-title">ZenWrite Settings</h3>
-                <button class="modal-close-btn" id="closeSettingsModal"><i class="ti ti-x"></i></button>
+                <h3 class="modal-title" id="settingsModalTitle">ZenWrite Settings</h3>
+                <button class="modal-close-btn" id="closeSettingsModal" aria-label="Close Settings Dialog"><i class="ti ti-x" aria-hidden="true"></i></button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
                     <label class="form-label" for="apiKeyInput">Gemini API Key</label>
                     <div style="position: relative; display: flex; align-items: center;">
-                        <input type="password" class="form-input" id="apiKeyInput" placeholder="AIzaSy..." style="padding-right: 42px;">
-                        <button type="button" id="toggleApiKeyVisBtn" style="position: absolute; right: 8px; background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 6px; font-size: 1.1rem;" title="Show/Hide API Key">
-                            <i class="ti ti-eye"></i>
+                        <input type="password" class="form-input" id="apiKeyInput" placeholder="AIzaSy..." style="padding-right: 42px;" aria-label="Gemini API Key">
+                        <button type="button" id="toggleApiKeyVisBtn" style="position: absolute; right: 8px; background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 6px; font-size: 1.1rem;" title="Show/Hide API Key" aria-label="Show or Hide API Key">
+                            <i class="ti ti-eye" aria-hidden="true"></i>
                         </button>
                     </div>
-                    <div id="apiKeyStatusMsg" style="margin-top: 6px; font-size: 0.8rem; display: none;"></div>
+                    <div id="apiKeyStatusMsg" style="margin-top: 6px; font-size: 0.8rem; display: none;" role="status" aria-live="polite"></div>
                     <small style="color: var(--text-secondary); margin-top: 4px; display: block;">
                         Saved locally in browser storage. Get a free key from <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--accent-color); font-weight: 600; text-decoration: underline;">Google AI Studio</a>.
                     </small>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="modelSelect">AI Model</label>
-                    <select class="form-select" id="modelSelect">
+                    <select class="form-select" id="modelSelect" aria-label="Select AI Model">
                         <option value="gemini-3.6-flash" selected>Gemini 3.6 Flash (Latest / High Speed)</option>
                         <option value="gemini-3.5-flash">Gemini 3.5 Flash (Fast & Stable)</option>
                         <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
@@ -1686,22 +1950,22 @@
                 </div>
                 <div class="form-group" id="customModelGroup" style="display: none; margin-top: 10px;">
                     <label class="form-label" for="customModelInput">Custom Model ID</label>
-                    <input type="text" class="form-input" id="customModelInput" placeholder="e.g. gemini-1.5-flash-8b">
+                    <input type="text" class="form-input" id="customModelInput" placeholder="e.g. gemini-1.5-flash-8b" aria-label="Custom Model ID">
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" id="cancelSettingsBtn">Cancel</button>
-                <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
+                <button class="btn btn-secondary" id="cancelSettingsBtn" aria-label="Cancel and Close Settings">Cancel</button>
+                <button class="btn btn-primary" id="saveSettingsBtn" aria-label="Save Settings and Verify Key">Save Settings</button>
             </div>
         </div>
     </div>
 
     <!-- AI Suggestion / Diff Preview Modal -->
-    <div class="modal-overlay" id="diffModalOverlay">
+    <div class="modal-overlay" id="diffModalOverlay" role="dialog" aria-modal="true" aria-labelledby="diffModalTitle">
         <div class="diff-modal">
             <div class="modal-header">
-                <h3 class="modal-title"><i class="ti ti-sparkles" style="color: var(--accent-color)"></i> Proposed AI Change</h3>
-                <button class="modal-close-btn" id="closeDiffModal"><i class="ti ti-x"></i></button>
+                <h3 class="modal-title" id="diffModalTitle"><i class="ti ti-sparkles" style="color: var(--accent-color)" aria-hidden="true"></i> Proposed AI Change</h3>
+                <button class="modal-close-btn" id="closeDiffModal" aria-label="Close Proposed Change Dialog"><i class="ti ti-x" aria-hidden="true"></i></button>
             </div>
             <div class="diff-container">
                 <div class="diff-header">
@@ -1713,9 +1977,9 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" id="copyDiffBtn"><i class="ti ti-copy"></i> Copy Text</button>
-                <button class="btn btn-secondary" id="rejectDiffBtn">Dismiss Change</button>
-                <button class="btn btn-primary" id="acceptDiffBtn">Accept & Replace</button>
+                <button class="btn btn-secondary" id="copyDiffBtn" aria-label="Copy proposed text to clipboard"><i class="ti ti-copy" aria-hidden="true"></i> Copy Text</button>
+                <button class="btn btn-secondary" id="rejectDiffBtn" aria-label="Dismiss proposed change">Dismiss Change</button>
+                <button class="btn btn-primary" id="acceptDiffBtn" aria-label="Accept change and replace selected text">Accept & Replace</button>
             </div>
         </div>
     </div>
@@ -1920,6 +2184,11 @@
                 editorTextarea.value = doc.content;
                 renderEditor();
                 renderDocList();
+            }
+            if (window.innerWidth <= 768 && sidebar) {
+                sidebar.classList.add('hidden');
+                if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
+                if (typeof updateBackdropState === 'function') updateBackdropState();
             }
         }
 
@@ -2545,10 +2814,12 @@ Requirements:
             if (!proofreaderDrawer.classList.contains('hidden')) {
                 aiDrawer.classList.add('hidden');
             }
+            if (typeof updateBackdropState === 'function') updateBackdropState();
         };
 
         proofreaderDrawerClose.onclick = () => {
             proofreaderDrawer.classList.add('hidden');
+            if (typeof updateBackdropState === 'function') updateBackdropState();
         };
 
         proofreaderScanBtn.onclick = async () => {
@@ -3039,9 +3310,62 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             }
         };
 
+        // --- Mobile & Responsive Viewport Helpers ---
+        const mobileBackdrop = document.getElementById('mobileBackdrop');
+        const mobileEditTab = document.getElementById('mobileEditTab');
+        const mobilePreviewTab = document.getElementById('mobilePreviewTab');
+        const editorContainer = document.querySelector('.editor-container');
+
+        function updateBackdropState() {
+            if (window.innerWidth <= 768) {
+                const sidebarOpen = sidebar && !sidebar.classList.contains('hidden');
+                const aiOpen = aiDrawer && !aiDrawer.classList.contains('hidden');
+                const proofOpen = proofreaderDrawer && !proofreaderDrawer.classList.contains('hidden');
+                if (sidebarOpen || aiOpen || proofOpen) {
+                    if (mobileBackdrop) mobileBackdrop.classList.add('active');
+                } else {
+                    if (mobileBackdrop) mobileBackdrop.classList.remove('active');
+                }
+            } else {
+                if (mobileBackdrop) mobileBackdrop.classList.remove('active');
+            }
+        }
+
+        if (mobileBackdrop) {
+            mobileBackdrop.onclick = () => {
+                if (sidebar) sidebar.classList.add('hidden');
+                if (aiDrawer) aiDrawer.classList.add('hidden');
+                if (proofreaderDrawer) proofreaderDrawer.classList.add('hidden');
+                if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
+                updateBackdropState();
+            };
+        }
+
+        if (mobileEditTab && mobilePreviewTab && editorContainer) {
+            mobileEditTab.onclick = () => {
+                editorContainer.classList.remove('mobile-preview-active');
+                mobileEditTab.classList.add('active');
+                mobileEditTab.setAttribute('aria-selected', 'true');
+                mobilePreviewTab.classList.remove('active');
+                mobilePreviewTab.setAttribute('aria-selected', 'false');
+            };
+
+            mobilePreviewTab.onclick = () => {
+                editorContainer.classList.add('mobile-preview-active');
+                mobilePreviewTab.classList.add('active');
+                mobilePreviewTab.setAttribute('aria-selected', 'true');
+                mobileEditTab.classList.remove('active');
+                mobileEditTab.setAttribute('aria-selected', 'false');
+                renderEditor();
+            };
+        }
+
         // Menu Toggle
         menuToggle.onclick = () => {
             sidebar.classList.toggle('hidden');
+            const isExpanded = !sidebar.classList.contains('hidden');
+            menuToggle.setAttribute('aria-expanded', isExpanded);
+            updateBackdropState();
         };
 
         // Create document btn
@@ -3348,10 +3672,15 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         // AI Drawer side panel toggle
         aiDrawerToggle.onclick = () => {
             aiDrawer.classList.toggle('hidden');
+            if (!aiDrawer.classList.contains('hidden')) {
+                proofreaderDrawer.classList.add('hidden');
+            }
+            if (typeof updateBackdropState === 'function') updateBackdropState();
         };
 
         aiDrawerClose.onclick = () => {
             aiDrawer.classList.add('hidden');
+            if (typeof updateBackdropState === 'function') updateBackdropState();
         };
 
         // AI Drawer draft action
@@ -3379,6 +3708,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                     renderEditor();
                     triggerAutosave();
                     aiDrawer.classList.add('hidden');
+                    if (typeof updateBackdropState === 'function') updateBackdropState();
                     alert("Draft inserted successfully.");
                 };
             } else {
@@ -3404,7 +3734,17 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 if (proofreaderDrawer && !proofreaderDrawer.classList.contains('hidden')) {
                     proofreaderDrawer.classList.add('hidden');
                 }
+                if (window.innerWidth <= 768 && sidebar && !sidebar.classList.contains('hidden')) {
+                    sidebar.classList.add('hidden');
+                    if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
+                }
+                if (typeof updateBackdropState === 'function') updateBackdropState();
             }
+        });
+
+        // Window resize listener to sync responsive states
+        window.addEventListener('resize', () => {
+            if (typeof updateBackdropState === 'function') updateBackdropState();
         });
 
         // Export button menu handler
@@ -3420,6 +3760,10 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         // Initialize App
         window.onload = () => {
             loadFromLocalStorage();
+            if (window.innerWidth <= 768 && sidebar) {
+                sidebar.classList.add('hidden');
+                if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
+            }
         };
 
     </script>
