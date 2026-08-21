@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content">
     <title>ZenWrite - AI Creative Text Editor</title>
     <meta name="description" content="ZenWrite is a modern, responsive, distraction-free markdown text editor powered by Google Gemini AI.">
     <meta name="theme-color" content="#8E6C40">
@@ -1447,8 +1447,6 @@
             display: block;
             opacity: 1;
             pointer-events: auto;
-        }
-
         /* Mobile Segmented View Switcher */
         .mobile-view-switcher {
             display: none;
@@ -1483,6 +1481,164 @@
             box-shadow: 0 2px 6px var(--accent-glow);
         }
 
+        /* Mobile More Button (hidden on desktop) */
+        .mobile-more-btn {
+            display: none;
+        }
+
+        /* Mobile Quick Markdown Formatting Toolbar */
+        .mobile-format-toolbar {
+            display: none;
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 6px 8px;
+            padding-bottom: calc(6px + env(safe-area-inset-bottom));
+            gap: 6px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            z-index: 35;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .mobile-format-toolbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .format-btn {
+            flex: 0 0 auto;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 6px 12px;
+            min-height: 38px;
+            min-width: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .format-btn:active {
+            transform: scale(0.92);
+            background-color: var(--accent-glow);
+            border-color: var(--accent-color);
+        }
+
+        .format-ai-btn {
+            background: linear-gradient(135deg, var(--accent-color), #B8860B);
+            color: #FFFFFF !important;
+            border: none;
+            box-shadow: 0 2px 8px var(--accent-glow);
+        }
+
+        /* Mobile "More Actions" Bottom Sheet */
+        .mobile-action-sheet {
+            display: block;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -12px 48px var(--shadow-color);
+            padding: 12px 16px;
+            padding-bottom: calc(20px + env(safe-area-inset-bottom));
+            z-index: 60;
+            transform: translateY(105%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+        }
+
+        .mobile-action-sheet.active {
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .sheet-handle {
+            width: 40px;
+            height: 4px;
+            background: var(--text-secondary);
+            border-radius: 2px;
+            margin: 0 auto 12px;
+            opacity: 0.4;
+        }
+
+        .sheet-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sheet-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .sheet-close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            padding: 4px;
+            cursor: pointer;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sheet-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .sheet-item-btn {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.15s ease;
+        }
+
+        .sheet-item-btn i {
+            font-size: 1.35rem;
+            color: var(--accent-color);
+        }
+
+        .sheet-item-btn:active {
+            transform: scale(0.94);
+            background: var(--accent-glow);
+            border-color: var(--accent-color);
+        }
+
         /* Tablet & Mobile Media Queries */
         @media (max-width: 1024px) {
             :root {
@@ -1490,7 +1646,7 @@
                 --ai-drawer-width: 300px;
             }
             .active-doc-title-input {
-                max-width: 240px;
+                max-width: 200px;
             }
         }
 
@@ -1521,19 +1677,20 @@
                 transform: translateX(calc(-1 * var(--sidebar-width)));
             }
 
-            .ai-drawer {
+            .ai-drawer, .proofreader-drawer {
                 position: fixed;
                 top: 0;
                 bottom: 0;
                 right: 0;
                 height: 100%;
+                width: var(--ai-drawer-width);
                 z-index: 50;
                 box-shadow: 0 10px 40px var(--shadow-color);
                 transform: translateX(0);
             }
 
-            .ai-drawer.hidden {
-                transform: translateX(var(--ai-drawer-width));
+            .ai-drawer.hidden, .proofreader-drawer.hidden {
+                transform: translateX(100%);
             }
 
             .workspace-header {
@@ -1549,36 +1706,49 @@
             }
 
             .active-doc-title-input {
-                font-size: 1rem;
-                max-width: 140px;
+                font-size: 0.95rem;
+                max-width: 130px;
                 padding: 4px 6px;
             }
 
-            .header-actions {
-                gap: 4px;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                padding-bottom: 2px;
+            /* Declutter header: Hide secondary action buttons on mobile */
+            .header-actions #themeToggle,
+            .header-actions #soundToggle,
+            .header-actions #splitToggle,
+            .header-actions #zenToggle,
+            .header-actions #proofreadToggleBtn,
+            .header-actions #settingsToggle {
+                display: none !important;
             }
 
-            .header-actions::-webkit-scrollbar {
-                display: none;
+            /* Show mobile more actions trigger */
+            .mobile-more-btn {
+                display: flex !important;
+            }
+
+            .header-actions {
+                gap: 6px;
             }
 
             .icon-btn {
                 padding: 6px;
                 min-width: 40px;
                 min-height: 40px;
-                font-size: 1.15rem;
+                font-size: 1.2rem;
             }
 
             .mobile-view-switcher {
                 display: flex;
             }
 
+            .mobile-format-toolbar {
+                display: flex;
+            }
+
             /* Responsive Single Pane / Switcher Mode */
             .editor-container {
                 position: relative;
+                flex: 1;
             }
 
             .pane {
@@ -1601,7 +1771,8 @@
 
             .editor-textarea {
                 padding: 16px;
-                font-size: 0.95rem;
+                font-size: 1rem;
+                line-height: 1.65;
             }
 
             .preview-content {
@@ -1620,17 +1791,19 @@
             }
 
             .modal {
-                max-width: calc(100vw - 24px);
+                max-width: calc(100vw - 20px);
                 max-height: calc(100vh - 40px);
                 max-height: calc(100dvh - 40px);
                 padding: 20px 16px;
+                border-radius: 16px;
             }
 
             .diff-modal {
-                max-width: calc(100vw - 24px);
+                max-width: calc(100vw - 20px);
                 max-height: calc(100vh - 40px);
                 max-height: calc(100dvh - 40px);
                 padding: 18px 14px;
+                border-radius: 16px;
             }
         }
 
@@ -1649,17 +1822,23 @@
                 padding: 0 8px;
             }
             .active-doc-title-input {
-                max-width: 100px;
-                font-size: 0.9rem;
+                max-width: 95px;
+                font-size: 0.85rem;
             }
             .pane-header {
                 padding: 6px 12px;
                 font-size: 0.75rem;
             }
+            /* Hide line numbers on small phones for maximum edge-to-edge width */
             .line-numbers {
-                padding: 16px 6px;
-                font-size: 0.85rem;
-                min-width: 32px;
+                display: none !important;
+            }
+            .editor-textarea {
+                padding: 14px 14px !important;
+            }
+            .sheet-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
             }
             .ai-menu, .custom-context-menu {
                 max-width: calc(100vw - 24px);
@@ -1779,6 +1958,7 @@
                 <button class="icon-btn" id="proofreadToggleBtn" data-tooltip="AI Proofreader" aria-label="Open AI Proofreader Drawer"><i class="ti ti-spellcheck" aria-hidden="true"></i></button>
                 <button class="icon-btn" id="aiDrawerToggle" data-tooltip="AI Writing Assistant" aria-label="Open AI Writing Assistant Drawer"><i class="ti ti-sparkles" aria-hidden="true"></i></button>
                 <button class="icon-btn" id="settingsToggle" data-tooltip="Settings" aria-label="Open Application Settings"><i class="ti ti-settings" aria-hidden="true"></i></button>
+                <button class="icon-btn mobile-more-btn" id="mobileMoreBtn" data-tooltip="More Actions" aria-label="Open Quick Actions Menu"><i class="ti ti-dots" aria-hidden="true"></i></button>
             </div>
         </header>
 
@@ -1804,6 +1984,20 @@
                     <!-- Rendered HTML -->
                 </div>
             </section>
+        </div>
+
+        <!-- Mobile Quick-Format Markdown Toolbar -->
+        <div class="mobile-format-toolbar" id="mobileFormatToolbar" role="toolbar" aria-label="Quick Markdown Formatting">
+            <button type="button" class="format-btn" data-format="h1" aria-label="Heading 1">H1</button>
+            <button type="button" class="format-btn" data-format="h2" aria-label="Heading 2">H2</button>
+            <button type="button" class="format-btn" data-format="bold" aria-label="Bold"><i class="ti ti-bold" aria-hidden="true"></i></button>
+            <button type="button" class="format-btn" data-format="italic" aria-label="Italic"><i class="ti ti-italic" aria-hidden="true"></i></button>
+            <button type="button" class="format-btn" data-format="quote" aria-label="Blockquote"><i class="ti ti-quote" aria-hidden="true"></i></button>
+            <button type="button" class="format-btn" data-format="code" aria-label="Code Block"><i class="ti ti-code" aria-hidden="true"></i></button>
+            <button type="button" class="format-btn" data-format="list" aria-label="Bullet List"><i class="ti ti-list" aria-hidden="true"></i></button>
+            <button type="button" class="format-btn" data-format="task" aria-label="Task Checkbox"><i class="ti ti-checkbox" aria-hidden="true"></i></button>
+            <button type="button" class="format-btn" data-format="link" aria-label="Insert Link"><i class="ti ti-link" aria-hidden="true"></i></button>
+            <button type="button" class="format-btn format-ai-btn" id="mobileAiFormatBtn" aria-label="AI Writing Prompt"><i class="ti ti-sparkles" aria-hidden="true"></i> AI</button>
         </div>
 
         <!-- Footer -->
@@ -2003,6 +2197,25 @@
         <button class="context-item" data-action="explain"><i class="ti ti-info-circle"></i> Explain This</button>
         <div class="context-divider"></div>
         <button class="context-item" id="contextCustomBtn"><i class="ti ti-prompt"></i> Run Custom Prompt...</button>
+    </div>
+
+    <!-- Mobile "More Actions" Bottom Sheet -->
+    <div class="mobile-action-sheet" id="mobileActionsSheet" role="dialog" aria-modal="true" aria-label="More Options and Tools">
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <div class="sheet-header">
+            <h3>Quick Actions</h3>
+            <button class="sheet-close-btn" id="closeActionsSheet" aria-label="Close Actions"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>
+        <div class="sheet-grid">
+            <button class="sheet-item-btn" id="sheetThemeToggle"><i class="ti ti-sun" id="sheetThemeIcon" aria-hidden="true"></i> <span>Theme</span></button>
+            <button class="sheet-item-btn" id="sheetSoundToggle"><i class="ti ti-volume" id="sheetSoundIcon" aria-hidden="true"></i> <span>Sounds</span></button>
+            <button class="sheet-item-btn" id="sheetZenToggle"><i class="ti ti-maximize" aria-hidden="true"></i> <span>Zen Mode</span></button>
+            <button class="sheet-item-btn" id="sheetProofreadToggle"><i class="ti ti-spellcheck" aria-hidden="true"></i> <span>Proofread</span></button>
+            <button class="sheet-item-btn" id="sheetExportBtn"><i class="ti ti-file-download" aria-hidden="true"></i> <span>Export</span></button>
+            <button class="sheet-item-btn" id="sheetImportBtn"><i class="ti ti-file-upload" aria-hidden="true"></i> <span>Import</span></button>
+            <button class="sheet-item-btn" id="sheetSettingsToggle"><i class="ti ti-settings" aria-hidden="true"></i> <span>Settings</span></button>
+            <button class="sheet-item-btn" id="sheetInstallBtn" style="display: none;"><i class="ti ti-device-mobile-down" aria-hidden="true"></i> <span>Install App</span></button>
+        </div>
     </div>
 
     <!-- Main Logic Script -->
@@ -3323,13 +3536,17 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         const mobileEditTab = document.getElementById('mobileEditTab');
         const mobilePreviewTab = document.getElementById('mobilePreviewTab');
         const editorContainer = document.querySelector('.editor-container');
+        const mobileActionsSheet = document.getElementById('mobileActionsSheet');
+        const closeActionsSheet = document.getElementById('closeActionsSheet');
+        const mobileMoreBtn = document.getElementById('mobileMoreBtn');
 
         function updateBackdropState() {
             if (window.innerWidth <= 768) {
                 const sidebarOpen = sidebar && !sidebar.classList.contains('hidden');
                 const aiOpen = aiDrawer && !aiDrawer.classList.contains('hidden');
                 const proofOpen = proofreaderDrawer && !proofreaderDrawer.classList.contains('hidden');
-                if (sidebarOpen || aiOpen || proofOpen) {
+                const sheetOpen = mobileActionsSheet && mobileActionsSheet.classList.contains('active');
+                if (sidebarOpen || aiOpen || proofOpen || sheetOpen) {
                     if (mobileBackdrop) mobileBackdrop.classList.add('active');
                 } else {
                     if (mobileBackdrop) mobileBackdrop.classList.remove('active');
@@ -3344,8 +3561,208 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 if (sidebar) sidebar.classList.add('hidden');
                 if (aiDrawer) aiDrawer.classList.add('hidden');
                 if (proofreaderDrawer) proofreaderDrawer.classList.add('hidden');
+                if (mobileActionsSheet) mobileActionsSheet.classList.remove('active');
                 if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
                 updateBackdropState();
+            };
+        }
+
+        // --- Mobile Quick Markdown Toolbar Formatting ---
+        function applyMarkdownFormat(type) {
+            const start = editorTextarea.selectionStart;
+            const end = editorTextarea.selectionEnd;
+            const val = editorTextarea.value;
+            const selected = val.substring(start, end);
+
+            let before = '';
+            let after = '';
+            let newText = '';
+            let newCursorPos = start;
+
+            switch (type) {
+                case 'h1':
+                    before = '# ';
+                    newText = before + selected;
+                    newCursorPos = start + before.length + selected.length;
+                    break;
+                case 'h2':
+                    before = '## ';
+                    newText = before + selected;
+                    newCursorPos = start + before.length + selected.length;
+                    break;
+                case 'bold':
+                    before = '**';
+                    after = '**';
+                    newText = before + (selected || 'bold') + after;
+                    newCursorPos = selected ? end + 4 : start + 2;
+                    break;
+                case 'italic':
+                    before = '*';
+                    after = '*';
+                    newText = before + (selected || 'italic') + after;
+                    newCursorPos = selected ? end + 2 : start + 1;
+                    break;
+                case 'quote':
+                    before = '> ';
+                    newText = before + (selected || 'quote');
+                    newCursorPos = start + before.length + (selected || 'quote').length;
+                    break;
+                case 'code':
+                    if (selected.includes('\n')) {
+                        before = '```\n';
+                        after = '\n```';
+                        newText = before + (selected || 'code') + after;
+                    } else {
+                        before = '`';
+                        after = '`';
+                        newText = before + (selected || 'code') + after;
+                    }
+                    newCursorPos = selected ? end + before.length + after.length : start + before.length;
+                    break;
+                case 'list':
+                    before = '- ';
+                    newText = before + (selected || 'item');
+                    newCursorPos = start + before.length + (selected || 'item').length;
+                    break;
+                case 'task':
+                    before = '- [ ] ';
+                    newText = before + (selected || 'task');
+                    newCursorPos = start + before.length + (selected || 'task').length;
+                    break;
+                case 'link':
+                    newText = `[${selected || 'link'}](url)`;
+                    newCursorPos = selected ? start + selected.length + 3 : start + 1;
+                    break;
+                default:
+                    return;
+            }
+
+            editorTextarea.value = val.substring(0, start) + newText + val.substring(end);
+            editorTextarea.focus();
+            editorTextarea.setSelectionRange(newCursorPos, newCursorPos);
+            renderEditor();
+            triggerAutosave();
+            playClickSound();
+        }
+
+        // Bind Mobile Format Bar Buttons
+        document.querySelectorAll('.mobile-format-toolbar .format-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const format = btn.getAttribute('data-format');
+                if (format) {
+                    applyMarkdownFormat(format);
+                }
+            });
+        });
+
+        // Mobile AI Format Button
+        const mobileAiFormatBtn = document.getElementById('mobileAiFormatBtn');
+        if (mobileAiFormatBtn) {
+            mobileAiFormatBtn.onclick = () => {
+                aiDrawer.classList.toggle('hidden');
+                if (!aiDrawer.classList.contains('hidden')) {
+                    proofreaderDrawer.classList.add('hidden');
+                    if (aiPrompt) aiPrompt.focus();
+                }
+                updateBackdropState();
+            };
+        }
+
+        // Mobile "More Actions" Bottom Sheet Listeners
+        if (mobileMoreBtn) {
+            mobileMoreBtn.onclick = () => {
+                if (mobileActionsSheet) {
+                    mobileActionsSheet.classList.add('active');
+                    updateBackdropState();
+                }
+            };
+        }
+
+        if (closeActionsSheet) {
+            closeActionsSheet.onclick = () => {
+                if (mobileActionsSheet) {
+                    mobileActionsSheet.classList.remove('active');
+                    updateBackdropState();
+                }
+            };
+        }
+
+        // Sheet Action Item Proxies
+        const sheetThemeToggle = document.getElementById('sheetThemeToggle');
+        const sheetThemeIcon = document.getElementById('sheetThemeIcon');
+        const sheetSoundToggle = document.getElementById('sheetSoundToggle');
+        const sheetSoundIcon = document.getElementById('sheetSoundIcon');
+        const sheetZenToggle = document.getElementById('sheetZenToggle');
+        const sheetProofreadToggle = document.getElementById('sheetProofreadToggle');
+        const sheetExportBtn = document.getElementById('sheetExportBtn');
+        const sheetImportBtn = document.getElementById('sheetImportBtn');
+        const sheetSettingsToggle = document.getElementById('sheetSettingsToggle');
+        const sheetInstallBtn = document.getElementById('sheetInstallBtn');
+
+        if (sheetThemeToggle) {
+            sheetThemeToggle.onclick = () => {
+                themeToggle.click();
+                if (sheetThemeIcon) {
+                    sheetThemeIcon.className = theme === 'dark' ? 'ti ti-moon' : 'ti ti-sun';
+                }
+            };
+        }
+
+        if (sheetSoundToggle) {
+            sheetSoundToggle.onclick = () => {
+                soundToggle.click();
+                if (sheetSoundIcon) {
+                    sheetSoundIcon.className = soundEnabled ? 'ti ti-volume' : 'ti ti-volume-off';
+                }
+            };
+        }
+
+        if (sheetZenToggle) {
+            sheetZenToggle.onclick = () => {
+                if (mobileActionsSheet) mobileActionsSheet.classList.remove('active');
+                updateBackdropState();
+                toggleZen();
+            };
+        }
+
+        if (sheetProofreadToggle) {
+            sheetProofreadToggle.onclick = () => {
+                if (mobileActionsSheet) mobileActionsSheet.classList.remove('active');
+                updateBackdropState();
+                proofreadToggleBtn.click();
+            };
+        }
+
+        if (sheetExportBtn) {
+            sheetExportBtn.onclick = () => {
+                if (mobileActionsSheet) mobileActionsSheet.classList.remove('active');
+                updateBackdropState();
+                exportBtn.click();
+            };
+        }
+
+        if (sheetImportBtn) {
+            sheetImportBtn.onclick = () => {
+                if (mobileActionsSheet) mobileActionsSheet.classList.remove('active');
+                updateBackdropState();
+                importFileBtn.click();
+            };
+        }
+
+        if (sheetSettingsToggle) {
+            sheetSettingsToggle.onclick = () => {
+                if (mobileActionsSheet) mobileActionsSheet.classList.remove('active');
+                updateBackdropState();
+                settingsToggle.click();
+            };
+        }
+
+        if (sheetInstallBtn) {
+            sheetInstallBtn.onclick = () => {
+                if (mobileActionsSheet) mobileActionsSheet.classList.remove('active');
+                updateBackdropState();
+                if (installAppBtn) installAppBtn.click();
             };
         }
 
@@ -3735,6 +4152,9 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 }
                 if (customContextMenu && customContextMenu.style.display !== 'none') {
                     customContextMenu.style.display = 'none';
+                }
+                if (mobileActionsSheet && mobileActionsSheet.classList.contains('active')) {
+                    mobileActionsSheet.classList.remove('active');
                 }
                 if (aiDrawer && !aiDrawer.classList.contains('hidden')) {
                     aiDrawer.classList.add('hidden');
