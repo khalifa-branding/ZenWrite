@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <title>ZenWrite - AI Creative Text Editor</title>
     <meta name="description" content="ZenWrite is a modern, responsive, distraction-free markdown text editor powered by Google Gemini AI.">
-    <meta name="theme-color" content="#FAF9F6">
+    <meta name="theme-color" content="#8E6C40">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="ZenWrite">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="favicon.jpg">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -1732,6 +1737,9 @@
             <!-- Documents injected by JS -->
         </nav>
         <div class="sidebar-footer">
+            <button class="sidebar-footer-btn" id="installAppBtn" style="display: none;" aria-label="Install ZenWrite as Progressive Web App">
+                <i class="ti ti-device-mobile-down" aria-hidden="true"></i> Install App
+            </button>
             <button class="sidebar-footer-btn" id="importFileBtn" aria-label="Import Markdown or Text File">
                 <i class="ti ti-file-upload" aria-hidden="true"></i> Import File
             </button>
@@ -3756,6 +3764,47 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         };
 
         importFileBtn.onclick = importFile;
+
+        // --- Progressive Web App (PWA) Service Worker & Install Prompt ---
+        let deferredInstallPrompt = null;
+        const installAppBtn = document.getElementById('installAppBtn');
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((reg) => {
+                        console.log('[ZenWrite PWA] Service Worker registered with scope:', reg.scope);
+                    })
+                    .catch((err) => {
+                        console.warn('[ZenWrite PWA] Service Worker registration failed:', err);
+                    });
+            });
+        }
+
+        // Capture PWA installation prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+            if (installAppBtn) {
+                installAppBtn.style.display = 'flex';
+                installAppBtn.onclick = async () => {
+                    if (deferredInstallPrompt) {
+                        deferredInstallPrompt.prompt();
+                        const { outcome } = await deferredInstallPrompt.userChoice;
+                        console.log(`[ZenWrite PWA] User installation response: ${outcome}`);
+                        deferredInstallPrompt = null;
+                        installAppBtn.style.display = 'none';
+                    }
+                };
+            }
+        });
+
+        window.addEventListener('appinstalled', () => {
+            console.log('[ZenWrite PWA] App installed successfully');
+            if (installAppBtn) installAppBtn.style.display = 'none';
+            deferredInstallPrompt = null;
+        });
 
         // Initialize App
         window.onload = () => {
