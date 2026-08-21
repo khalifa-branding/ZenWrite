@@ -1,0 +1,13 @@
+{
+  "name": "zenwrite-secure",
+  "version": "1.0.0",
+  "description": "Password-protected ZenWrite server for Railway & Cloud deployment",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {}
+}
