@@ -466,6 +466,140 @@
             justify-content: space-between;
         }
 
+        .pane-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pane-action-btn {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: none;
+            letter-spacing: 0.2px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            line-height: 1.4;
+            height: 24px;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        .pane-action-btn:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--accent-color);
+        }
+
+        .pane-action-btn i {
+            font-size: 0.85rem;
+        }
+
+        .pane-action-btn.copied {
+            background-color: var(--diff-ins-bg) !important;
+            color: var(--diff-ins-text) !important;
+            border-color: var(--diff-ins-text) !important;
+        }
+
+        .pane-dropdown {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .pane-dropdown-group {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .pane-dropdown-group .pane-action-btn:first-child {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            border-right: none;
+        }
+
+        .pane-dropdown-group .pane-dropdown-trigger {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            padding: 2px 4px;
+            min-width: 20px;
+            justify-content: center;
+        }
+
+        .pane-dropdown-group .pane-dropdown-trigger i {
+            font-size: 0.75rem;
+            transition: transform 0.2s ease;
+        }
+
+        .pane-dropdown.open .pane-dropdown-trigger i {
+            transform: rotate(180deg);
+        }
+
+        .pane-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 6px 20px var(--shadow-color);
+            min-width: 170px;
+            padding: 4px;
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .pane-dropdown-menu.show {
+            display: flex;
+            animation: fadeInMenu 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeInMenu {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pane-dropdown-item {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.8rem;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-align: left;
+            width: 100%;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+
+        .pane-dropdown-item:hover {
+            background-color: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .pane-dropdown-item i {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .pane-dropdown-item:hover i {
+            color: var(--accent-color);
+        }
+
         .editor-textarea-wrapper {
             flex: 1;
             height: calc(100% - 38px);
@@ -1970,6 +2104,11 @@
             <section class="pane" id="editorPane">
                 <div class="pane-header">
                     <span>Editor (Markdown)</span>
+                    <div class="pane-header-actions">
+                        <button class="pane-action-btn" id="copyMarkdownBtn" title="Copy Markdown (Selected or Full Document)" aria-label="Copy Markdown">
+                            <i class="ti ti-copy" aria-hidden="true"></i> <span>Copy</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="editor-textarea-wrapper">
                     <div class="line-numbers" id="lineNumbers">1</div>
@@ -1981,6 +2120,26 @@
             <section class="pane preview-pane" id="previewPane">
                 <div class="pane-header">
                     <span>Live Preview</span>
+                    <div class="pane-header-actions">
+                        <div class="pane-dropdown" id="previewCopyDropdown">
+                            <div class="pane-dropdown-group">
+                                <button class="pane-action-btn" id="copyRichTextBtn" title="Copy Formatted Rich Text" aria-label="Copy Formatted Rich Text">
+                                    <i class="ti ti-copy" aria-hidden="true"></i> <span>Copy</span>
+                                </button>
+                                <button class="pane-action-btn pane-dropdown-trigger" id="copyPreviewMenuBtn" title="More copy options" aria-label="More copy options" aria-haspopup="true" aria-expanded="false">
+                                    <i class="ti ti-chevron-down" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <div class="pane-dropdown-menu" id="previewCopyMenu" role="menu">
+                                <button class="pane-dropdown-item" id="copyRichTextOption" role="menuitem">
+                                    <i class="ti ti-typography" aria-hidden="true"></i> Copy as Rich Text
+                                </button>
+                                <button class="pane-dropdown-item" id="copyHtmlOption" role="menuitem">
+                                    <i class="ti ti-code" aria-hidden="true"></i> Copy HTML Source
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="preview-content" id="previewContent">
                     <!-- Rendered HTML -->
@@ -4226,6 +4385,174 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             console.log('[ZenWrite PWA] App installed successfully');
             if (installAppBtn) installAppBtn.style.display = 'none';
             deferredInstallPrompt = null;
+        });
+
+        // --- Pane Copy Handlers ---
+        function showCopySuccess(btnElement, message = 'Copied!') {
+            if (!btnElement) return;
+            const originalHTML = btnElement.innerHTML;
+            btnElement.classList.add('copied');
+            btnElement.innerHTML = `<i class="ti ti-check" aria-hidden="true"></i> <span>${message}</span>`;
+            setTimeout(() => {
+                btnElement.classList.remove('copied');
+                btnElement.innerHTML = originalHTML;
+            }, 2000);
+        }
+
+        async function copyMarkdownText() {
+            const btn = document.getElementById('copyMarkdownBtn');
+            let textToCopy = '';
+            if (editorTextarea) {
+                const start = editorTextarea.selectionStart;
+                const end = editorTextarea.selectionEnd;
+                if (start !== end && start !== undefined && end !== undefined) {
+                    textToCopy = editorTextarea.value.substring(start, end);
+                } else {
+                    textToCopy = editorTextarea.value;
+                }
+            }
+
+            if (!textToCopy) return;
+
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(textToCopy);
+                } else {
+                    const temp = document.createElement('textarea');
+                    temp.value = textToCopy;
+                    document.body.appendChild(temp);
+                    temp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(temp);
+                }
+                showCopySuccess(btn, 'Copied!');
+            } catch (err) {
+                console.error('Failed to copy markdown:', err);
+            }
+        }
+
+        async function copyPreviewRichText() {
+            const btn = document.getElementById('copyRichTextBtn');
+            let htmlToCopy = '';
+            let plainTextToCopy = '';
+
+            const sel = window.getSelection();
+            if (sel && sel.rangeCount > 0 && !sel.isCollapsed && previewContent && previewContent.contains(sel.anchorNode)) {
+                const container = document.createElement('div');
+                for (let i = 0; i < sel.rangeCount; i++) {
+                    container.appendChild(sel.getRangeAt(i).cloneContents());
+                }
+                htmlToCopy = container.innerHTML;
+                plainTextToCopy = sel.toString();
+            } else if (previewContent) {
+                htmlToCopy = previewContent.innerHTML;
+                plainTextToCopy = previewContent.innerText || previewContent.textContent || '';
+            }
+
+            if (!htmlToCopy) return;
+
+            try {
+                if (navigator.clipboard && window.ClipboardItem) {
+                    const blobHtml = new Blob([htmlToCopy], { type: 'text/html' });
+                    const blobText = new Blob([plainTextToCopy], { type: 'text/plain' });
+                    const item = new ClipboardItem({
+                        'text/html': blobHtml,
+                        'text/plain': blobText
+                    });
+                    await navigator.clipboard.write([item]);
+                } else if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(plainTextToCopy);
+                } else {
+                    const range = document.createRange();
+                    range.selectNodeContents(previewContent);
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                    document.execCommand('copy');
+                    selection.removeAllRanges();
+                }
+                showCopySuccess(btn, 'Copied!');
+            } catch (err) {
+                console.error('Failed to copy rich text:', err);
+                try {
+                    await navigator.clipboard.writeText(plainTextToCopy);
+                    showCopySuccess(btn, 'Copied Text!');
+                } catch (fallbackErr) {
+                    console.error('Fallback copy failed:', fallbackErr);
+                }
+            }
+        }
+
+        async function copyPreviewHtmlSource() {
+            const btn = document.getElementById('copyRichTextBtn');
+            if (!previewContent) return;
+            const htmlToCopy = previewContent.innerHTML;
+            if (!htmlToCopy) return;
+
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(htmlToCopy);
+                } else {
+                    const temp = document.createElement('textarea');
+                    temp.value = htmlToCopy;
+                    document.body.appendChild(temp);
+                    temp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(temp);
+                }
+                showCopySuccess(btn, 'Copied HTML!');
+            } catch (err) {
+                console.error('Failed to copy HTML source:', err);
+            }
+        }
+
+        // Setup copy event listeners
+        const copyMarkdownBtn = document.getElementById('copyMarkdownBtn');
+        const copyRichTextBtn = document.getElementById('copyRichTextBtn');
+        const copyPreviewMenuBtn = document.getElementById('copyPreviewMenuBtn');
+        const previewCopyDropdown = document.getElementById('previewCopyDropdown');
+        const previewCopyMenu = document.getElementById('previewCopyMenu');
+        const copyRichTextOption = document.getElementById('copyRichTextOption');
+        const copyHtmlOption = document.getElementById('copyHtmlOption');
+
+        if (copyMarkdownBtn) copyMarkdownBtn.onclick = copyMarkdownText;
+        if (copyRichTextBtn) copyRichTextBtn.onclick = copyPreviewRichText;
+
+        if (copyPreviewMenuBtn && previewCopyMenu) {
+            copyPreviewMenuBtn.onclick = (e) => {
+                e.stopPropagation();
+                const isShown = previewCopyMenu.classList.toggle('show');
+                if (previewCopyDropdown) previewCopyDropdown.classList.toggle('open', isShown);
+                copyPreviewMenuBtn.setAttribute('aria-expanded', isShown ? 'true' : 'false');
+            };
+        }
+
+        if (copyRichTextOption) {
+            copyRichTextOption.onclick = (e) => {
+                e.stopPropagation();
+                if (previewCopyMenu) previewCopyMenu.classList.remove('show');
+                if (previewCopyDropdown) previewCopyDropdown.classList.remove('open');
+                if (copyPreviewMenuBtn) copyPreviewMenuBtn.setAttribute('aria-expanded', 'false');
+                copyPreviewRichText();
+            };
+        }
+
+        if (copyHtmlOption) {
+            copyHtmlOption.onclick = (e) => {
+                e.stopPropagation();
+                if (previewCopyMenu) previewCopyMenu.classList.remove('show');
+                if (previewCopyDropdown) previewCopyDropdown.classList.remove('open');
+                if (copyPreviewMenuBtn) copyPreviewMenuBtn.setAttribute('aria-expanded', 'false');
+                copyPreviewHtmlSource();
+            };
+        }
+
+        document.addEventListener('click', (e) => {
+            if (previewCopyDropdown && !previewCopyDropdown.contains(e.target)) {
+                if (previewCopyMenu) previewCopyMenu.classList.remove('show');
+                previewCopyDropdown.classList.remove('open');
+                if (copyPreviewMenuBtn) copyPreviewMenuBtn.setAttribute('aria-expanded', 'false');
+            }
         });
 
         // Initialize App
