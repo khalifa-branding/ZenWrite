@@ -247,74 +247,96 @@ Requirements:
     prompt = `You are a writing assistant. ${promptInstruction}\n\nTarget Text:\n"""\n${textContent}\n"""`;
   }
 
-  // Direct execution on selected model first, followed by all latest candidate models
+  // Valid active Gemini models in order of priority
   let modelsToTry = [
     aiModel,
-    "gemini-3.6-flash",
-    "gemini-3.5-flash",
     "gemini-2.5-flash",
     "gemini-2.0-flash",
-    "gemini-1.5-flash-latest",
     "gemini-1.5-flash",
-    "gemini-pro",
-    "gemini-1.5-pro"
+    "gemini-2.5-pro",
+    "gemini-1.5-pro",
+    "gemini-pro"
   ].filter(Boolean);
   modelsToTry = [...new Set(modelsToTry)];
 
   let lastError = null;
 
+  function parseRetrySeconds(msg) {
+    const match = (msg || '').match(/retry in ([\d\.]+)\s*s/i);
+    if (match && match[1]) {
+      const secs = parseFloat(match[1]);
+      if (!isNaN(secs) && secs > 0 && secs <= 30) return Math.ceil(secs);
+    }
+    return null;
+  }
+
   for (const model of modelsToTry) {
     const apiVersions = ["v1beta", "v1"];
     for (const apiVer of apiVersions) {
       const endpoint = `https://generativelanguage.googleapis.com/${apiVer}/models/${model}:generateContent?key=${apiKey}`;
-      try {
-        const response = await fetch(endpoint, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": apiKey
-          },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{ text: prompt }]
-            }],
-            generationConfig: {
-              temperature: 0.2,
-              maxOutputTokens: 2048
+      
+      const MAX_RETRIES = 3;
+      for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        try {
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-goog-api-key": apiKey
+            },
+            body: JSON.stringify({
+              contents: [{
+                parts: [{ text: prompt }]
+              }],
+              generationConfig: {
+                temperature: 0.2,
+                maxOutputTokens: 2048
+              }
+            })
+          });
+
+          if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            const errMsg = err.error?.message || `HTTP ${response.status}: ${response.statusText}`;
+
+            if (response.status === 404 || errMsg.toLowerCase().includes("not found")) {
+              break;
             }
-          })
-        });
 
-        if (!response.ok) {
-          const err = await response.json().catch(() => ({}));
-          const errMsg = err.error?.message || `HTTP ${response.status}: ${response.statusText}`;
+            const isRateLimit = response.status === 429 || 
+              errMsg.toLowerCase().includes("quota exceeded") ||
+              errMsg.toLowerCase().includes("rate") ||
+              errMsg.toLowerCase().includes("limit");
 
-          if (response.status === 404 || errMsg.toLowerCase().includes("not found")) {
-            continue;
+            const isServerOverload = response.status === 503 || 
+              errMsg.toLowerCase().includes("high demand") || 
+              errMsg.toLowerCase().includes("temporary") || 
+              errMsg.toLowerCase().includes("overloaded");
+
+            if ((isRateLimit || isServerOverload) && attempt < MAX_RETRIES - 1) {
+              const parsedWait = parseRetrySeconds(errMsg);
+              const waitSecs = parsedWait ? Math.min(parsedWait, 10) : Math.pow(2, attempt + 1);
+              console.warn(`[ZenWrite Extension] Busy/Rate-limited on ${model}. Retrying in ${waitSecs}s (Attempt ${attempt + 1}/${MAX_RETRIES})...`);
+              await new Promise(res => setTimeout(res, waitSecs * 1000));
+              continue;
+            }
+
+            if (isRateLimit || isServerOverload) {
+              throw new Error(`CONGESTION:${errMsg}`);
+            }
+            throw new Error(errMsg);
           }
 
-          const isRateLimitOrCongested = response.status === 429 || response.status === 503 || 
-            errMsg.toLowerCase().includes("high demand") || 
-            errMsg.toLowerCase().includes("limit") || 
-            errMsg.toLowerCase().includes("temporary") || 
-            errMsg.toLowerCase().includes("exhausted");
-
-          if (isRateLimitOrCongested && modelsToTry.indexOf(model) < modelsToTry.length - 1) {
-            console.warn(`Model ${model} is congested. Trying fallback...`);
-            throw new Error(`CONGESTION:${errMsg}`);
+          const data = await response.json();
+          const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!responseText) throw new Error("Empty response from AI model.");
+          
+          return responseText.trim();
+        } catch (err) {
+          lastError = err;
+          if (err.message.startsWith("CONGESTION:")) {
+            break;
           }
-          throw new Error(errMsg);
-        }
-
-        const data = await response.json();
-        const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!responseText) throw new Error("Empty response from AI model.");
-        
-        return responseText.trim();
-      } catch (err) {
-        lastError = err;
-        if (err.message.startsWith("CONGESTION:")) {
-          break;
         }
       }
     }
