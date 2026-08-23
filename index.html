@@ -509,6 +509,98 @@
             border-color: var(--diff-ins-text) !important;
         }
 
+        .pane-header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .selection-badge {
+            background-color: var(--accent-glow);
+            color: var(--accent-color);
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 99px;
+            border: 1px solid var(--border-color);
+            text-transform: none;
+            letter-spacing: 0;
+            white-space: nowrap;
+            display: none;
+            align-items: center;
+            gap: 4px;
+            animation: fadeInMenu 0.15s ease-out;
+        }
+
+        .pane-ai-action-btn {
+            background: linear-gradient(135deg, rgba(142, 108, 64, 0.12), rgba(184, 134, 11, 0.08));
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            font-weight: 600;
+            position: relative;
+        }
+
+        .pane-ai-action-btn:hover, .pane-ai-action-btn.active {
+            background: var(--accent-color);
+            color: var(--accent-text);
+            border-color: var(--accent-color);
+            box-shadow: 0 2px 8px var(--accent-glow);
+        }
+
+        .pane-ai-action-btn.has-selection {
+            background: linear-gradient(135deg, var(--accent-color), #B8860B);
+            color: #FFFFFF !important;
+            box-shadow: 0 2px 10px var(--accent-glow);
+            border-color: transparent;
+        }
+
+        .pane-ai-action-btn.has-selection i {
+            color: #FFFFFF !important;
+        }
+
+        .editor-ai-menu {
+            min-width: 230px;
+            max-height: min(440px, calc(100vh - 120px));
+            overflow-y: auto;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 4px 0;
+        }
+
+        .anchored-submenu {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin: 2px 0 4px 16px;
+            padding: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .pane-dropdown-subitem {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.75rem;
+            padding: 5px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: left;
+            width: 100%;
+            transition: background-color 0.15s ease;
+        }
+
+        .pane-dropdown-subitem:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--accent-color);
+        }
+
         .pane-dropdown {
             position: relative;
             display: inline-flex;
@@ -2258,8 +2350,74 @@
             <!-- Editor Pane -->
             <section class="pane" id="editorPane">
                 <div class="pane-header">
-                    <span>Editor (Markdown)</span>
+                    <div class="pane-header-left">
+                        <span>Editor (Markdown)</span>
+                        <span class="selection-badge" id="editorSelectionBadge"><i class="ti ti-check"></i> <span id="editorSelectionCount">0 words</span></span>
+                    </div>
                     <div class="pane-header-actions">
+                        <div class="pane-dropdown" id="editorAiDropdown">
+                            <button class="pane-action-btn pane-ai-action-btn" id="editorAiBtn" title="AI Writing Actions (Selection or Full Document)" aria-label="AI Writing Actions" aria-haspopup="true" aria-expanded="false">
+                                <i class="ti ti-sparkles" aria-hidden="true"></i> <span>AI Actions</span> <i class="ti ti-chevron-down" style="font-size: 0.7rem; margin-left: 2px;"></i>
+                            </button>
+                            <div class="pane-dropdown-menu editor-ai-menu" id="editorAiMenu" role="menu">
+                                <button class="pane-dropdown-item" data-action="grammar" role="menuitem">
+                                    <i class="ti ti-spellcheck"></i> Correct Grammar & Spelling
+                                </button>
+                                <button class="pane-dropdown-item" data-action="rephrase" role="menuitem">
+                                    <i class="ti ti-refresh"></i> Polish & Rephrase
+                                </button>
+                                <button class="pane-dropdown-item" data-action="concise" role="menuitem">
+                                    <i class="ti ti-arrows-minimize"></i> Make Concise
+                                </button>
+                                <button class="pane-dropdown-item" data-action="shorter" role="menuitem">
+                                    <i class="ti ti-scissors"></i> Make Shorter
+                                </button>
+                                <button class="pane-dropdown-item" data-action="expand" role="menuitem">
+                                    <i class="ti ti-arrows-maximize"></i> Elaborate / Expand
+                                </button>
+                                <button class="pane-dropdown-item" data-action="explain" role="menuitem">
+                                    <i class="ti ti-info-circle"></i> Explain Concept
+                                </button>
+                                
+                                <div class="dropdown-divider"></div>
+                                
+                                <!-- Tone Accordion -->
+                                <button class="pane-dropdown-item accordion-trigger" id="anchoredToneTrigger" data-submenu="anchoredToneSubmenu">
+                                    <i class="ti ti-palette"></i> Change Tone <i class="ti ti-chevron-down" style="margin-left: auto; font-size: 0.75rem;"></i>
+                                </button>
+                                <div class="anchored-submenu" id="anchoredToneSubmenu" style="display: none;">
+                                    <button class="pane-dropdown-subitem" data-action="tone-professional">👔 Professional</button>
+                                    <button class="pane-dropdown-subitem" data-action="tone-casual">👕 Casual</button>
+                                    <button class="pane-dropdown-subitem" data-action="tone-persuasive">🎯 Persuasive</button>
+                                    <button class="pane-dropdown-subitem" data-action="tone-friendly">🤝 Friendly</button>
+                                    <button class="pane-dropdown-subitem" data-action="tone-urgent">⚡ Urgent</button>
+                                    <button class="pane-dropdown-subitem" data-action="tone-sarcastic">😏 Sarcastic</button>
+                                </div>
+
+                                <!-- Translate Accordion -->
+                                <button class="pane-dropdown-item accordion-trigger" id="anchoredTranslateTrigger" data-submenu="anchoredTranslateSubmenu">
+                                    <i class="ti ti-language"></i> Translate To <i class="ti ti-chevron-down" style="margin-left: auto; font-size: 0.75rem;"></i>
+                                </button>
+                                <div class="anchored-submenu" id="anchoredTranslateSubmenu" style="display: none;">
+                                    <button class="pane-dropdown-subitem" data-action="translate-es">🇪🇸 Spanish</button>
+                                    <button class="pane-dropdown-subitem" data-action="translate-fr">🇫🇷 French</button>
+                                    <button class="pane-dropdown-subitem" data-action="translate-de">🇩🇪 German</button>
+                                    <button class="pane-dropdown-subitem" data-action="translate-ja">🇯🇵 Japanese</button>
+                                    <button class="pane-dropdown-subitem" data-action="translate-zh">🇨🇳 Chinese</button>
+                                    <button class="pane-dropdown-subitem" data-action="translate-ar">🇸🇦 Arabic</button>
+                                </div>
+
+                                <div class="dropdown-divider"></div>
+
+                                <div class="ai-custom-prompt-wrapper" style="padding: 6px;">
+                                    <input type="text" class="ai-custom-input" id="anchoredCustomInput" placeholder="Custom AI instruction..." style="font-size: 0.78rem; padding: 6px 8px; width: 100%; box-sizing: border-box;">
+                                    <button class="btn btn-primary" id="anchoredCustomSubmitBtn" style="font-size: 0.72rem; padding: 5px 8px; margin-top: 6px; width: 100%;">
+                                        <i class="ti ti-sparkles"></i> Run Instruction
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         <button class="pane-action-btn" id="copyMarkdownBtn" title="Copy Markdown (Selected or Full Document)" aria-label="Copy Markdown">
                             <i class="ti ti-copy" aria-hidden="true"></i> <span>Copy</span>
                         </button>
@@ -2332,48 +2490,6 @@
         <button class="exit-zen-btn" id="exitZenBtn" data-tooltip="Exit Zen Mode">
             <i class="ti ti-minimize"></i>
         </button>
-
-        <!-- Floating AI Selection Trigger -->
-        <button class="ai-floating-btn" id="aiFloatingBtn">
-            <i class="ti ti-sparkles"></i> AI Actions
-        </button>
-
-        <!-- Floating AI Context Menu -->
-        <div class="ai-menu" id="aiMenu">
-            <button class="ai-menu-item" data-action="grammar"><i class="ti ti-spellcheck"></i> Correct Grammar</button>
-            <button class="ai-menu-item" data-action="rephrase"><i class="ti ti-refresh"></i> Rephrase Text</button>
-            <button class="ai-menu-item" data-action="concise"><i class="ti ti-arrows-minimize"></i> Make Concise</button>
-            <button class="ai-menu-item" data-action="shorter"><i class="ti ti-scissors"></i> Make Shorter</button>
-            <button class="ai-menu-item" data-action="expand"><i class="ti ti-arrows-maximize"></i> Elaborate / Expand</button>
-            <button class="ai-menu-item" data-action="explain"><i class="ti ti-info-circle"></i> Explain This</button>
-            
-            <!-- Change Tone Accordion -->
-            <button class="ai-menu-item accordion-trigger" id="toneTrigger" data-submenu="toneSubmenu"><i class="ti ti-palette"></i> Change Tone <i class="ti ti-chevron-down" style="margin-left: auto; font-size: 0.8rem;"></i></button>
-            <div class="ai-submenu" id="toneSubmenu" style="display: none;">
-                <button class="ai-submenu-item" data-action="tone-professional">👔 Professional</button>
-                <button class="ai-submenu-item" data-action="tone-casual">👕 Casual</button>
-                <button class="ai-submenu-item" data-action="tone-persuasive">🎯 Persuasive</button>
-                <button class="ai-submenu-item" data-action="tone-friendly">🤝 Friendly</button>
-                <button class="ai-submenu-item" data-action="tone-urgent">⚡ Urgent</button>
-                <button class="ai-submenu-item" data-action="tone-sarcastic">😏 Sarcastic</button>
-            </div>
-
-            <!-- Translate Accordion -->
-            <button class="ai-menu-item accordion-trigger" id="translateTrigger" data-submenu="translateSubmenu"><i class="ti ti-language"></i> Translate To <i class="ti ti-chevron-down" style="margin-left: auto; font-size: 0.8rem;"></i></button>
-            <div class="ai-submenu" id="translateSubmenu" style="display: none;">
-                <button class="ai-submenu-item" data-action="translate-es">🇪🇸 Spanish</button>
-                <button class="ai-submenu-item" data-action="translate-fr">🇫🇷 French</button>
-                <button class="ai-submenu-item" data-action="translate-de">🇩🇪 German</button>
-                <button class="ai-submenu-item" data-action="translate-ja">🇯🇵 Japanese</button>
-                <button class="ai-submenu-item" data-action="translate-zh">🇨🇳 Chinese</button>
-                <button class="ai-submenu-item" data-action="translate-ar">🇸🇦 Arabic</button>
-            </div>
-
-            <div class="ai-custom-prompt-wrapper">
-                <input type="text" class="ai-custom-input" id="aiCustomInput" placeholder="Custom instruction...">
-                <button class="btn btn-primary" id="aiCustomSubmitBtn" style="font-size: 0.75rem; padding: 6px 10px;">Run Prompt</button>
-            </div>
-        </div>
 
         <!-- Autocomplete Tooltip -->
         <div class="autocomplete-tooltip" id="autocompleteTooltip">
@@ -2590,11 +2706,18 @@
         const readTime = document.getElementById('readTime');
         const saveStatus = document.getElementById('saveStatus');
 
-        // AI specific elements
-        const aiFloatingBtn = document.getElementById('aiFloatingBtn');
-        const aiMenu = document.getElementById('aiMenu');
-        const aiCustomInput = document.getElementById('aiCustomInput');
-        const aiCustomSubmitBtn = document.getElementById('aiCustomSubmitBtn');
+        // Anchored Editor AI Elements
+        const editorAiDropdown = document.getElementById('editorAiDropdown');
+        const editorAiBtn = document.getElementById('editorAiBtn');
+        const editorAiMenu = document.getElementById('editorAiMenu');
+        const editorSelectionBadge = document.getElementById('editorSelectionBadge');
+        const editorSelectionCount = document.getElementById('editorSelectionCount');
+        const anchoredToneTrigger = document.getElementById('anchoredToneTrigger');
+        const anchoredToneSubmenu = document.getElementById('anchoredToneSubmenu');
+        const anchoredTranslateTrigger = document.getElementById('anchoredTranslateTrigger');
+        const anchoredTranslateSubmenu = document.getElementById('anchoredTranslateSubmenu');
+        const anchoredCustomInput = document.getElementById('anchoredCustomInput');
+        const anchoredCustomSubmitBtn = document.getElementById('anchoredCustomSubmitBtn');
         
         const aiDrawer = document.getElementById('aiDrawer');
         const aiDrawerClose = document.getElementById('aiDrawerClose');
@@ -3018,23 +3141,26 @@ Try editing this text, or create a new document!`);
             }
         }
 
-        // --- Selection Floating AI Popover Logic ---
+        // --- Static Contextually Anchored AI Selection Logic ---
         function checkSelection(e) {
             const start = editorTextarea.selectionStart;
             const end = editorTextarea.selectionEnd;
             const text = editorTextarea.value.substring(start, end).trim();
 
-            if (text.length > 2) {
+            if (text.length > 1) {
                 selectedText = text;
                 selectionStart = start;
                 selectionEnd = end;
 
-                // Position the floating AI button
-                const textareaCoords = getSelectionCoords(editorTextarea, start, end);
-                if (textareaCoords) {
-                    aiFloatingBtn.style.left = `${textareaCoords.left}px`;
-                    aiFloatingBtn.style.top = `${textareaCoords.top}px`;
-                    aiFloatingBtn.style.display = 'flex';
+                // Update anchored AI button & badge state in editor header
+                const words = text.split(/\s+/).filter(Boolean).length;
+                if (editorSelectionBadge) {
+                    editorSelectionBadge.style.display = 'inline-flex';
+                    if (editorSelectionCount) editorSelectionCount.textContent = `${words} ${words === 1 ? 'word' : 'words'}`;
+                }
+                if (editorAiBtn) {
+                    editorAiBtn.classList.add('has-selection');
+                    editorAiBtn.setAttribute('title', `AI Actions on selected ${words} words`);
                 }
             } else {
                 hideSelectionUI();
@@ -3042,64 +3168,14 @@ Try editing this text, or create a new document!`);
         }
 
         function hideSelectionUI() {
-            aiFloatingBtn.style.display = 'none';
-            aiMenu.style.display = 'none';
-            aiMenu.querySelectorAll('.ai-submenu').forEach(sm => sm.style.display = 'none');
-            aiMenu.querySelectorAll('.accordion-trigger i.ti-chevron-up').forEach(icon => {
-                icon.className = 'ti ti-chevron-down';
-            });
-        }
-
-        // Calculate coordinates of current text selection in textarea
-        function getSelectionCoords(textarea, start, end) {
-            const { offsetLeft, offsetTop, scrollLeft, scrollTop } = textarea;
-            
-            // Create temporary div to mirror textarea layout and measure positioning
-            const div = document.createElement('div');
-            const style = window.getComputedStyle(textarea);
-            for (let prop of style) {
-                div.style[prop] = style[prop];
+            selectedText = '';
+            selectionStart = 0;
+            selectionEnd = 0;
+            if (editorSelectionBadge) editorSelectionBadge.style.display = 'none';
+            if (editorAiBtn) {
+                editorAiBtn.classList.remove('has-selection');
+                editorAiBtn.setAttribute('title', 'AI Writing Actions (Selection or Full Document)');
             }
-            
-            div.style.position = 'absolute';
-            div.style.visibility = 'hidden';
-            div.style.whiteSpace = 'pre-wrap';
-            div.style.wordBreak = 'break-word';
-            
-            const text = textarea.value;
-            const beforeText = text.substring(0, start);
-            const selectedTextPart = text.substring(start, end);
-            
-            div.innerHTML = beforeText.replace(/&/g, '&amp;').replace(/</g, '&lt;') + 
-                            '<span>' + selectedTextPart.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>';
-            
-            document.body.appendChild(div);
-            
-            const span = div.querySelector('span');
-            if (!span) {
-                document.body.removeChild(div);
-                return null;
-            }
-
-            const textareaRect = textarea.getBoundingClientRect();
-            const spanRect = span.getBoundingClientRect();
-            
-            // Calculate relative offset inside the viewport (centered at selection middle)
-            let left = textareaRect.left + spanRect.left - div.getBoundingClientRect().left - scrollLeft + (spanRect.width / 2);
-            let top = textareaRect.top + spanRect.top - div.getBoundingClientRect().top - scrollTop;
-
-            // Bounds protection for left coordinate (ensuring button doesn't overflow)
-            left = Math.max(textareaRect.left + 65, Math.min(left, textareaRect.right - 65));
-            
-            // Vertical placement with flip detection (opens below if not enough room above)
-            let finalTop = top - 42;
-            if (finalTop < textareaRect.top + 10) {
-                finalTop = top + spanRect.height + 8;
-            }
-            finalTop = Math.max(textareaRect.top + 10, Math.min(finalTop, textareaRect.bottom - 40));
-
-            document.body.removeChild(div);
-            return { left, top: finalTop };
         }
 
         // --- Diff Match and render function ---
@@ -4245,163 +4321,112 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         // Selection Listener
         editorTextarea.onmouseup = checkSelection;
         editorTextarea.onkeyup = checkSelection;
+        editorTextarea.onselect = checkSelection;
 
-        // Click outside selection UI to hide
-        mainWorkspace.addEventListener('mousedown', (e) => {
-            if (e.target !== aiFloatingBtn && !aiFloatingBtn.contains(e.target) && e.target !== aiMenu && !aiMenu.contains(e.target)) {
-                hideSelectionUI();
-            }
-            if (e.target !== editorTextarea) {
-                currentSuggestion = '';
-                autocompleteTooltip.style.display = 'none';
-            }
-        });
-
-        // Floating AI actions button
-        aiFloatingBtn.onclick = (e) => {
-            e.stopPropagation();
-            
-            aiMenu.style.visibility = 'hidden';
-            aiMenu.style.display = 'flex';
-            
-            const btnLeft = parseInt(aiFloatingBtn.style.left) || (window.innerWidth / 2);
-            const btnTop = parseInt(aiFloatingBtn.style.top) || 100;
-            const menuHeight = aiMenu.offsetHeight || 380;
-            const menuWidth = 230;
-            const viewportHeight = window.innerHeight;
-            const viewportWidth = window.innerWidth;
-            
-            // Horizontal clamping
-            let adjustedLeft = btnLeft;
-            if (adjustedLeft - (menuWidth / 2) < 10) adjustedLeft = (menuWidth / 2) + 10;
-            if (adjustedLeft + (menuWidth / 2) > viewportWidth - 10) adjustedLeft = viewportWidth - (menuWidth / 2) - 10;
-            aiMenu.style.left = `${adjustedLeft}px`;
-            
-            // Vertical clamping
-            if (btnTop + 44 + menuHeight > viewportHeight - 20) {
-                // Not enough space below, open menu ABOVE the button
-                const topPos = Math.max(10, btnTop - menuHeight - 8);
-                aiMenu.style.top = `${topPos}px`;
-            } else {
-                // Open menu below the button
-                aiMenu.style.top = `${btnTop + 44}px`;
-            }
-            aiMenu.style.visibility = 'visible';
-        };
-
-        // Toggle submenus on accordion clicks
-        aiMenu.querySelectorAll('.accordion-trigger').forEach(trigger => {
-            trigger.onclick = (e) => {
+        // Toggle Anchored AI Actions dropdown in editor pane header
+        if (editorAiBtn) {
+            editorAiBtn.onclick = (e) => {
                 e.stopPropagation();
-                const submenuId = trigger.getAttribute('data-submenu');
-                const submenu = document.getElementById(submenuId);
-                const isHidden = submenu.style.display === 'none';
-                
-                // Close all submenus first
-                aiMenu.querySelectorAll('.ai-submenu').forEach(sm => sm.style.display = 'none');
-                aiMenu.querySelectorAll('.accordion-trigger i.ti-chevron-up').forEach(icon => {
-                    icon.className = 'ti ti-chevron-down';
-                });
-                
-                // Toggle this submenu
-                if (isHidden) {
-                    submenu.style.display = 'flex';
-                    trigger.querySelector('i:last-child').className = 'ti ti-chevron-up';
+                // Close preview dropdown if open
+                if (previewCopyDropdown) {
+                    previewCopyDropdown.classList.remove('open');
+                    previewCopyMenu.classList.remove('show');
                 }
-
-                // Re-check menu position against viewport bottom
-                const rect = aiMenu.getBoundingClientRect();
-                if (rect.bottom > window.innerHeight - 10) {
-                    const currentTop = parseInt(aiMenu.style.top) || 0;
-                    const diff = rect.bottom - (window.innerHeight - 15);
-                    aiMenu.style.top = `${Math.max(10, currentTop - diff)}px`;
-                }
+                const isOpen = editorAiDropdown.classList.toggle('open');
+                editorAiMenu.classList.toggle('show', isOpen);
+                editorAiBtn.setAttribute('aria-expanded', isOpen);
             };
-        });
+        }
 
-        // Menu items selection handler
-        aiMenu.querySelectorAll('.ai-menu-item:not(.accordion-trigger), .ai-submenu-item').forEach(btn => {
-            btn.onclick = async (e) => {
-                e.stopPropagation();
-                const action = btn.getAttribute('data-action');
-                let promptInstruction = '';
+        // Toggle submenus inside anchored AI menu
+        if (editorAiMenu) {
+            editorAiMenu.querySelectorAll('.accordion-trigger').forEach(trigger => {
+                trigger.onclick = (e) => {
+                    e.stopPropagation();
+                    const submenuId = trigger.getAttribute('data-submenu');
+                    const submenu = document.getElementById(submenuId);
+                    if (!submenu) return;
+                    const isHidden = submenu.style.display === 'none';
 
-                if (action === 'grammar') {
-                    promptInstruction = 'Proofread and correct the spelling, grammar, and sentence structure of the text. Keep all styling intact. Return ONLY the updated corrected text without any extra text or quotes.';
-                } else if (action === 'rephrase') {
-                    promptInstruction = 'Rewrite and polish the target text to elevate its professional quality, clarity, and stylistic flow. Elevate vocabulary, eliminate passive voice, and remove wordiness while retaining all core semantic meanings, variables, and technical terms. Preserve all structural formatting, such as lists, headings, code blocks, and markdown syntax. Ensure the output reads elegantly and naturally. Return ONLY the polished, rewritten text. Do not wrap the output in quotes. Do not include any explanations.';
-                } else if (action === 'concise') {
-                    promptInstruction = 'Make the text more concise and direct. Keep formatting. Return ONLY the direct concise text.';
-                } else if (action === 'shorter') {
-                    promptInstruction = 'Rewrite the text to make it significantly shorter and more concise, keeping only the absolute core message. Return ONLY the shortened text without explanations.';
-                } else if (action === 'expand') {
-                    promptInstruction = 'Expand and elaborate on the text by adding descriptive depth and context. Return ONLY the expanded text with markdown intact.';
-                } else if (action.startsWith('tone-')) {
-                    const tone = action.replace('tone-', '');
-                    promptInstruction = `Rewrite and adjust the tone of the target text to sound ${tone}. Preserve all markdown formatting, headings, and lists. Return ONLY the rewritten text without explanations, greetings, or extra quotes.`;
-                } else if (action.startsWith('translate-')) {
-                    const langCode = action.replace('translate-', '');
-                    let language = 'English';
-                    if (langCode === 'es') language = 'Spanish';
-                    else if (langCode === 'fr') language = 'French';
-                    else if (langCode === 'de') language = 'German';
-                    else if (langCode === 'ja') language = 'Japanese';
-                    else if (langCode === 'zh') language = 'Chinese';
-                    else if (langCode === 'ar') language = 'Arabic';
-                    
-                    promptInstruction = `Translate the target text into ${language}. Preserve all markdown formatting, links, and HTML structure. Return ONLY the translation without any conversational remarks.`;
-                }
+                    // Close all other submenus first
+                    editorAiMenu.querySelectorAll('.anchored-submenu').forEach(sm => sm.style.display = 'none');
+                    editorAiMenu.querySelectorAll('.accordion-trigger i:last-child').forEach(icon => {
+                        icon.className = 'ti ti-chevron-down';
+                    });
 
-                if (action === 'explain') {
-                    hideSelectionUI();
-                    
-                    // Show explanation loading inside AI drawer
-                    aiPrompt.parentElement.style.display = 'none';
-                    aiDraftBtn.style.display = 'none';
-                    document.querySelector('.ai-drawer-title').innerHTML = '<i class="ti ti-info-circle"></i> AI Explainer';
-                    aiOutputBox.innerHTML = '<div class="loading-pulse"><div class="pulse-dot"></div><div class="pulse-dot"></div><div class="pulse-dot"></div></div><p style="text-align: center; color: var(--text-secondary); margin-top: 8px;">Consulting Gemini AI...</p>';
-                    aiDrawer.classList.remove('hidden');
-                    proofreaderDrawer.classList.add('hidden');
-                    
-                    const explanationPrompt = "Explain the following text or concept in a concise, informative manner. Focus on definitions, background context, and clear explanations. Keep it under 150 words.";
-                    const response = await runGeminiAI(explanationPrompt, selectedText);
-                    if (response) {
-                        showAIExplanation(selectedText, response);
-                    } else {
-                        resetAIDrawerToDrafting();
+                    // Toggle this submenu
+                    if (isHidden) {
+                        submenu.style.display = 'flex';
+                        const icon = trigger.querySelector('i:last-child');
+                        if (icon) icon.className = 'ti ti-chevron-up';
                     }
-                    return;
-                }
+                };
+            });
+        }
 
-                hideSelectionUI();
-                
-                // Show loading modal/overlay with skeleton layout
-                diffContent.innerHTML = `
-                <div style="display: flex; gap: 16px; width: 100%;" aria-hidden="true">
-                    <div class="skeleton-card" style="flex: 1;"><div class="skeleton-line short"></div><div class="skeleton-line full"></div><div class="skeleton-line medium"></div></div>
-                    <div class="skeleton-card" style="flex: 1;"><div class="skeleton-line short"></div><div class="skeleton-line full"></div><div class="skeleton-line medium"></div></div>
-                </div>
-                <p style="text-align: center; color: var(--text-secondary); margin-top: 8px;" role="status" aria-live="polite">Consulting Gemini AI...</p>`;
-                diffModalOverlay.style.display = 'flex';
+        // Unified AI action runner
+        async function runUnifiedAIAction(action, customPrompt = '') {
+            if (editorAiDropdown) {
+                editorAiDropdown.classList.remove('open');
+                editorAiMenu.classList.remove('show');
+                editorAiBtn.setAttribute('aria-expanded', 'false');
+            }
 
-                const response = await runGeminiAI(promptInstruction, selectedText, editorTextarea.value);
+            const targetText = selectedText || editorTextarea.value.trim();
+            if (!targetText) {
+                alert("Please type or select some text before using AI Actions.");
+                return;
+            }
+
+            let promptInstruction = '';
+            if (action === 'grammar') {
+                promptInstruction = 'Proofread and correct the spelling, grammar, and sentence structure of the text. Keep all styling intact. Return ONLY the updated corrected text without any extra text or quotes.';
+            } else if (action === 'rephrase') {
+                promptInstruction = 'Rewrite and polish the target text to elevate its professional quality, clarity, and stylistic flow. Elevate vocabulary, eliminate passive voice, and remove wordiness while retaining all core semantic meanings, variables, and technical terms. Preserve all structural formatting, such as lists, headings, code blocks, and markdown syntax. Ensure the output reads elegantly and naturally. Return ONLY the polished, rewritten text. Do not wrap the output in quotes. Do not include any explanations.';
+            } else if (action === 'concise') {
+                promptInstruction = 'Make the text more concise and direct. Keep formatting. Return ONLY the direct concise text.';
+            } else if (action === 'shorter') {
+                promptInstruction = 'Rewrite the text to make it significantly shorter and more concise, keeping only the absolute core message. Return ONLY the shortened text without explanations.';
+            } else if (action === 'expand') {
+                promptInstruction = 'Expand and elaborate on the text by adding descriptive depth and context. Return ONLY the expanded text with markdown intact.';
+            } else if (action.startsWith('tone-')) {
+                const tone = action.replace('tone-', '');
+                promptInstruction = `Rewrite and adjust the tone of the target text to sound ${tone}. Preserve all markdown formatting, headings, and lists. Return ONLY the rewritten text without explanations, greetings, or extra quotes.`;
+            } else if (action.startsWith('translate-')) {
+                const langCode = action.replace('translate-', '');
+                let language = 'English';
+                if (langCode === 'es') language = 'Spanish';
+                else if (langCode === 'fr') language = 'French';
+                else if (langCode === 'de') language = 'German';
+                else if (langCode === 'ja') language = 'Japanese';
+                else if (langCode === 'zh') language = 'Chinese';
+                else if (langCode === 'ar') language = 'Arabic';
+                promptInstruction = `Translate the target text into ${language}. Preserve all markdown formatting, links, and HTML structure. Return ONLY the translation without any conversational remarks.`;
+            } else if (action === 'custom') {
+                promptInstruction = `Modify the text based on this specific instruction: "${customPrompt}". Return ONLY the modified text with markdown intact. Do not add conversational explanations.`;
+            }
+
+            if (action === 'explain') {
+                // Show explanation inside dedicated AI drawer
+                aiPrompt.parentElement.style.display = 'none';
+                aiDraftBtn.style.display = 'none';
+                document.querySelector('.ai-drawer-title').innerHTML = '<i class="ti ti-info-circle"></i> AI Explainer';
+                aiOutputBox.innerHTML = '<div class="loading-pulse"><div class="pulse-dot"></div><div class="pulse-dot"></div><div class="pulse-dot"></div></div><p style="text-align: center; color: var(--text-secondary); margin-top: 8px;">Consulting Gemini AI...</p>';
+                aiDrawer.classList.remove('hidden');
+                proofreaderDrawer.classList.add('hidden');
+                if (typeof updateBackdropState === 'function') updateBackdropState();
+
+                const explanationPrompt = "Explain the following text or concept in a concise, informative manner. Focus on definitions, background context, and clear explanations. Keep it under 150 words.";
+                const response = await runGeminiAI(explanationPrompt, targetText);
                 if (response) {
-                    proposedText = response;
-                    diffContent.innerHTML = renderDiff(selectedText, proposedText);
+                    showAIExplanation(targetText, response);
                 } else {
-                    diffModalOverlay.style.display = 'none';
+                    resetAIDrawerToDrafting();
                 }
-            };
-        });
+                return;
+            }
 
-        // Custom prompt run handler
-        aiCustomSubmitBtn.onclick = async (e) => {
-            e.stopPropagation();
-            const instruction = aiCustomInput.value.trim();
-            if (!instruction) return;
-
-            hideSelectionUI();
-
+            // Show diff modal
             diffContent.innerHTML = `
             <div style="display: flex; gap: 16px; width: 100%;" aria-hidden="true">
                 <div class="skeleton-card" style="flex: 1;"><div class="skeleton-line short"></div><div class="skeleton-line full"></div><div class="skeleton-line medium"></div></div>
@@ -4410,16 +4435,49 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             <p style="text-align: center; color: var(--text-secondary); margin-top: 8px;" role="status" aria-live="polite">Consulting Gemini AI...</p>`;
             diffModalOverlay.style.display = 'flex';
 
-            const promptInstruction = `Modify the text based on this specific instruction: "${instruction}". Return ONLY the modified text with markdown intact. Do not add conversational explanations.`;
-            const response = await runGeminiAI(promptInstruction, selectedText, editorTextarea.value);
+            const response = await runGeminiAI(promptInstruction, targetText, editorTextarea.value);
             if (response) {
                 proposedText = response;
-                diffContent.innerHTML = renderDiff(selectedText, proposedText);
+                diffContent.innerHTML = renderDiff(targetText, proposedText);
             } else {
                 diffModalOverlay.style.display = 'none';
             }
-            aiCustomInput.value = '';
-        };
+        }
+
+        // Attach action handlers for dropdown items & subitems
+        if (editorAiMenu) {
+            editorAiMenu.querySelectorAll('.pane-dropdown-item:not(.accordion-trigger), .pane-dropdown-subitem').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    const action = btn.getAttribute('data-action');
+                    if (action) runUnifiedAIAction(action);
+                };
+            });
+        }
+
+        // Custom prompt submit handler
+        if (anchoredCustomSubmitBtn) {
+            anchoredCustomSubmitBtn.onclick = (e) => {
+                e.stopPropagation();
+                const instruction = anchoredCustomInput.value.trim();
+                if (!instruction) return;
+                runUnifiedAIAction('custom', instruction);
+                anchoredCustomInput.value = '';
+            };
+        }
+
+        if (anchoredCustomInput) {
+            anchoredCustomInput.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const instruction = anchoredCustomInput.value.trim();
+                    if (!instruction) return;
+                    runUnifiedAIAction('custom', instruction);
+                    anchoredCustomInput.value = '';
+                }
+            };
+        }
 
         // Diff modal buttons
         const copyDiffBtn = document.getElementById('copyDiffBtn');
@@ -4746,6 +4804,11 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 if (previewCopyMenu) previewCopyMenu.classList.remove('show');
                 previewCopyDropdown.classList.remove('open');
                 if (copyPreviewMenuBtn) copyPreviewMenuBtn.setAttribute('aria-expanded', 'false');
+            }
+            if (editorAiDropdown && !editorAiDropdown.contains(e.target)) {
+                if (editorAiMenu) editorAiMenu.classList.remove('show');
+                editorAiDropdown.classList.remove('open');
+                if (editorAiBtn) editorAiBtn.setAttribute('aria-expanded', 'false');
             }
         });
 
