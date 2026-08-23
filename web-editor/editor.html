@@ -2650,34 +2650,31 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label" for="apiKeyInput">Gemini API Key</label>
+                    <label class="form-label" for="apiKeyInput">Gemini API Key(s) <span style="font-size: 0.72rem; font-weight: normal; color: var(--accent-color);">(Supports 1 or multiple keys separated by commas for auto-failover)</span></label>
                     <div style="position: relative; display: flex; align-items: center;">
-                        <input type="password" class="form-input" id="apiKeyInput" placeholder="AIzaSy..." style="padding-right: 42px;" aria-label="Gemini API Key">
+                        <input type="password" class="form-input" id="apiKeyInput" placeholder="Paste 1 or multiple keys: AIzaSy..., AIzaSy..." style="padding-right: 42px;" aria-label="Gemini API Key">
                         <button type="button" id="toggleApiKeyVisBtn" style="position: absolute; right: 8px; background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 6px; font-size: 1.1rem;" title="Show/Hide API Key" aria-label="Show or Hide API Key">
                             <i class="ti ti-eye" aria-hidden="true"></i>
                         </button>
                     </div>
                     <div id="apiKeyStatusMsg" style="margin-top: 6px; font-size: 0.8rem; display: none;" role="status" aria-live="polite"></div>
                     <small style="color: var(--text-secondary); margin-top: 4px; display: block;">
-                        Saved locally in browser storage. Get a free key from <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--accent-color); font-weight: 600; text-decoration: underline;">Google AI Studio</a>.
+                        Saved locally in browser storage. Get free keys from <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--accent-color); font-weight: 600; text-decoration: underline;">Google AI Studio</a>.
                     </small>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="modelSelect">AI Model</label>
                     <select class="form-select" id="modelSelect" aria-label="Select AI Model">
-                        <option value="gemini-3.6-flash" selected>Gemini 3.6 Flash (Latest / High Speed)</option>
-                        <option value="gemini-3.5-flash">Gemini 3.5 Flash (Fast & Stable)</option>
-                        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                        <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                        <option value="gemini-pro">Gemini Pro (Legacy)</option>
+                        <option value="gemini-2.0-flash" selected>Gemini 2.0 Flash (Recommended / 1,500 RPD)</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (Rock Solid / 1,500 RPD)</option>
+                        <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash-8B (High Speed / 1,500 RPD)</option>
+                        <option value="gemini-1.5-pro">Gemini 1.5 Pro (Deep Reasoning / 50 RPD)</option>
                         <option value="custom">Custom Model ID...</option>
                     </select>
                 </div>
                 <div class="form-group" id="customModelGroup" style="display: none; margin-top: 10px;">
                     <label class="form-label" for="customModelInput">Custom Model ID</label>
-                    <input type="text" class="form-input" id="customModelInput" placeholder="e.g. gemini-1.5-flash-8b" aria-label="Custom Model ID">
+                    <input type="text" class="form-input" id="customModelInput" placeholder="e.g. gemini-2.0-flash-lite" aria-label="Custom Model ID">
                 </div>
             </div>
             <div class="modal-footer">
@@ -2998,7 +2995,11 @@
                 if (apiKey === 'AQ.Ab8RN6Jl_5ww3Z02h-ca0lrlGsMtscLodyaqXJM1_HJDe7J5kA') {
                     apiKey = '';
                 }
-                aiModel = settings.aiModel || 'gemini-3.6-flash';
+                aiModel = settings.aiModel || 'gemini-2.0-flash';
+                // Auto-migrate legacy or unallocated model names to official production Gemini 2.0 Flash
+                if (aiModel.startsWith('gemini-3.') || aiModel.startsWith('gemini-2.5') || aiModel === 'gemini-pro') {
+                    aiModel = 'gemini-2.0-flash';
+                }
                 
                 // Set HTML attributes
                 document.documentElement.setAttribute('data-theme', theme);
@@ -3312,16 +3313,26 @@ Try editing this text, or create a new document!`);
             return diffHtml;
         }
 
-        // --- Call Gemini API ---
-        async function runGeminiAI(promptInstruction, textContent, fullText = '') {
-            // Check active state, input box, or storage
-            if (!apiKey && apiKeyInput && apiKeyInput.value) {
-                apiKey = apiKeyInput.value.replace(/^["']|["']$/g, '').trim();
-            }
-            apiKey = (apiKey || '').replace(/^["']|["']$/g, '').trim();
+        // Global Smart Key Ring & Cooldown Tracker
+        const keyCooldowns = new Map(); // key -> timestamp (ms) when cooldown expires
 
-            if (!apiKey) {
-                alert("⚠️ Please add your Gemini API Key in Settings to use the AI Writing Assistant.\n\nGet a free key from: https://aistudio.google.com/app/apikey");
+        function getAvailableApiKeys() {
+            let raw = (apiKeyInput && apiKeyInput.value) ? apiKeyInput.value : apiKey;
+            if (!raw) raw = '';
+            // Split by commas, newlines, semicolons, or pipe
+            const rawKeys = raw.split(/[\n,;|\s]+/)
+                .map(k => k.replace(/^["']|["']$/g, '').trim())
+                .filter(Boolean);
+            
+            // Deduplicate keys
+            return [...new Set(rawKeys)];
+        }
+
+        // --- Call Gemini API with Multi-Key & Multi-Model Smart Failover ---
+        async function runGeminiAI(promptInstruction, textContent, fullText = '') {
+            const keys = getAvailableApiKeys();
+            if (keys.length === 0) {
+                alert("⚠️ Please add your Gemini API Key in Settings to use the AI Writing Assistant.\n\nGet free keys from: https://aistudio.google.com/app/apikey");
                 if (settingsModal) {
                     settingsModal.style.display = 'flex';
                     if (apiKeyInput) apiKeyInput.focus();
@@ -3347,49 +3358,51 @@ Instruction: ${promptInstruction}
 Requirements:
 1. ONLY modify the SPECIFIC section of text requested. Do not change the surrounding document.
 2. The revised section MUST blend in seamlessly with the surrounding document context. Match its exact tone, style, level of detail, vocabulary, and formatting.
-3. Return ONLY the modified section of text. Do not wrap the output in quotes. Do not add any introductory, transition, or explanatory remarks (e.g., do not say "Here is the revised text:").`;
+3. Return ONLY the modified section of text. Do not wrap the output in quotes. Do not add any introductory, transition, or explanatory remarks.`;
             } else {
                 prompt = `You are a writing assistant. ${promptInstruction}\n\nTarget Text:\n"""\n${textContent}\n"""`;
             }
 
-            // Valid active Gemini models in order of priority (Stable production models)
-            let modelsToTry = [
-                aiModel,
+            // Production-verified Google Gemini model fallback chain (each has independent quotas on Google AI Studio)
+            let primaryModel = aiModel;
+            if (!primaryModel || primaryModel.startsWith('gemini-3.') || primaryModel.startsWith('gemini-2.5') || primaryModel === 'gemini-pro') {
+                primaryModel = 'gemini-2.0-flash';
+                aiModel = 'gemini-2.0-flash';
+                saveToLocalStorage();
+            }
+
+            const modelsToTry = [...new Set([
+                primaryModel,
                 'gemini-2.0-flash',
                 'gemini-1.5-flash',
+                'gemini-1.5-flash-8b',
                 'gemini-1.5-pro'
-            ].filter(Boolean);
-            modelsToTry = [...new Set(modelsToTry)];
+            ])].filter(Boolean);
 
             let lastError = null;
 
-            // Helper to parse retry delay from Google error message (e.g. "Please retry in 10.7s")
-            function parseRetrySeconds(msg) {
-                const match = msg.match(/retry in ([\d\.]+)\s*s/i);
-                if (match && match[1]) {
-                    const secs = parseFloat(match[1]);
-                    if (!isNaN(secs) && secs > 0 && secs <= 30) return Math.ceil(secs);
-                }
-                return null;
-            }
-
+            // Multi-Key × Multi-Model Resilient Execution Grid
             for (const model of modelsToTry) {
                 const apiVersions = ['v1beta', 'v1'];
                 for (const apiVer of apiVersions) {
-                    const endpoint = `https://generativelanguage.googleapis.com/${apiVer}/models/${model}:generateContent?key=${apiKey}`;
-                    
-                    const MAX_RETRIES = 2;
-                    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+                    // Try all available keys in the pool
+                    for (let kIdx = 0; kIdx < keys.length; kIdx++) {
+                        const currentKey = keys[kIdx];
+
+                        // Check if key is currently cooling down
+                        const cooldownUntil = keyCooldowns.get(currentKey) || 0;
+                        if (cooldownUntil > Date.now() && keys.length > 1) {
+                            continue; // Skip cooling key and immediately try next key
+                        }
+
+                        const endpoint = `https://generativelanguage.googleapis.com/${apiVer}/models/${model}:generateContent?key=${currentKey}`;
+
                         try {
                             const response = await fetch(endpoint, {
                                 method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
+                                headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
-                                    contents: [{
-                                        parts: [{ text: prompt }]
-                                    }],
+                                    contents: [{ parts: [{ text: prompt }] }],
                                     generationConfig: {
                                         temperature: 0.2,
                                         maxOutputTokens: 2048
@@ -3401,34 +3414,19 @@ Requirements:
                                 const err = await response.json().catch(() => ({}));
                                 const errMsg = err.error?.message || `HTTP ${response.status}: ${response.statusText}`;
 
-                                // If model not found on this api version -> skip to next candidate immediately
                                 if (response.status === 404 || errMsg.toLowerCase().includes('not found')) {
-                                    break;
+                                    break; // Model not on this apiVer, try next apiVer
                                 }
 
-                                const isRateLimit = response.status === 429 || 
-                                    errMsg.toLowerCase().includes('quota exceeded') ||
-                                    errMsg.toLowerCase().includes('resource_exhausted');
-
-                                const isServerOverload = response.status === 503 || 
-                                    errMsg.toLowerCase().includes('high demand') || 
-                                    errMsg.toLowerCase().includes('temporary') || 
-                                    errMsg.toLowerCase().includes('overloaded');
-
-                                if ((isRateLimit || isServerOverload) && attempt < MAX_RETRIES - 1) {
-                                    const parsedWait = parseRetrySeconds(errMsg);
-                                    const waitSecs = parsedWait ? Math.min(parsedWait, 10) : Math.pow(2, attempt + 1);
-                                    console.warn(`[ZenWrite AI] Busy/Rate-limited on ${model}. Retrying in ${waitSecs}s (Attempt ${attempt + 1}/${MAX_RETRIES})...`);
+                                if (response.status === 429 || errMsg.toLowerCase().includes('quota') || errMsg.toLowerCase().includes('rate')) {
+                                    // Parse retry seconds from Google if provided
+                                    const match = errMsg.match(/retry in ([\d\.]+)\s*s/i);
+                                    const retrySecs = match && match[1] ? Math.ceil(parseFloat(match[1])) : 60;
+                                    keyCooldowns.set(currentKey, Date.now() + (retrySecs * 1000));
                                     
-                                    const statusElements = document.querySelectorAll('#diffContent p, .loading-pulse + p, #autocompleteText');
-                                    statusElements.forEach(el => {
-                                        if (el && el.textContent) {
-                                            el.textContent = `Google AI is busy. Retrying in ${waitSecs}s...`;
-                                        }
-                                    });
-
-                                    await new Promise(res => setTimeout(res, waitSecs * 1000));
-                                    continue;
+                                    console.warn(`[ZenWrite AI] Key #${kIdx + 1} rate-limited on ${model}. Auto-failing over to next key/model in Smart Key Ring...`);
+                                    lastError = new Error(`[${model}] ${errMsg}`);
+                                    continue; // Try next key in pool immediately
                                 }
 
                                 throw new Error(`[${model}] ${errMsg}`);
@@ -3438,26 +3436,23 @@ Requirements:
                             const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
                             if (!responseText) throw new Error("Empty response from AI model.");
 
-                            // Successfully found working model! Cache it as default
-                            if (aiModel !== model) {
+                            // Successfully generated response! Cache working model
+                            if (aiModel !== model && !model.startsWith('gemini-3.')) {
                                 aiModel = model;
                                 saveToLocalStorage();
                             }
                             return responseText.trim();
                         } catch (err) {
                             lastError = err;
-                            break;
                         }
                     }
                 }
             }
 
-            const finalErrMsg = lastError ? lastError.message : 'Unknown connection error';
-            
-            // Show exact transparent Google API error details so users know precisely what went wrong
-            alert(`⚠️ Google Gemini API Error:\n\n${finalErrMsg}\n\nKey Recommendations:\n1. Make sure your key was created at https://aistudio.google.com/app/apikey (choose "Create key in new project")\n2. Set AI Model to "Gemini 2.0 Flash" or "Gemini 1.5 Flash" in Settings ⚙️\n3. If in an unsupported country, a VPN may be required for Google AI Studio.`);
+            const finalErrMsg = lastError ? lastError.message : 'All keys and models in pool were busy or quota-exhausted.';
+            alert(`⚠️ Google Gemini API Notice:\n\n${finalErrMsg}\n\n💡 Permanent Fix Recommendations:\n1. Switch AI Model to "Gemini 2.0 Flash" or "Gemini 1.5 Flash" in Settings ⚙️ (both have 1,500 requests/day free allowance).\n2. You can add multiple free API keys in Settings separated by commas (ZenWrite will auto-rotate and failover between them automatically).\n3. Make sure your key was created at https://aistudio.google.com/app/apikey (choose "Create key in new project").`);
 
-            if (settingsModal && (finalErrMsg.toLowerCase().includes('key') || finalErrMsg.toLowerCase().includes('auth') || finalErrMsg.toLowerCase().includes('credential') || finalErrMsg.toLowerCase().includes('quota'))) {
+            if (settingsModal) {
                 settingsModal.style.display = 'flex';
                 if (apiKeyInput) apiKeyInput.focus();
             }
@@ -3820,11 +3815,12 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             saveToLocalStorage();
 
             const statusEl = document.getElementById('apiKeyStatusMsg');
-            if (!apiKey) {
+            const keys = getAvailableApiKeys();
+            if (keys.length === 0) {
                 if (statusEl) {
                     statusEl.style.display = 'block';
                     statusEl.style.color = '#EF4444';
-                    statusEl.innerHTML = '<i class="ti ti-alert-circle"></i> Please enter an API key.';
+                    statusEl.innerHTML = '<i class="ti ti-alert-circle"></i> Please enter at least 1 Gemini API key.';
                 }
                 return;
             }
@@ -3832,37 +3828,53 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             if (statusEl) {
                 statusEl.style.display = 'block';
                 statusEl.style.color = 'var(--text-secondary)';
-                statusEl.innerHTML = '<i class="ti ti-loader rotate"></i> Testing key with Google AI...';
+                statusEl.innerHTML = `<i class="ti ti-loader rotate"></i> Testing ${keys.length} key(s) with Google AI...`;
             }
 
             saveSettingsBtn.disabled = true;
             try {
-                // Test real generation quota directly with Google Gemini
-                const testModel = aiModel === 'custom' ? (customModelInput.value.trim() || 'gemini-2.0-flash') : aiModel;
-                const testResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${testModel}:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: "hi" }] }],
-                        generationConfig: { maxOutputTokens: 5 }
-                    })
-                });
+                // Test the primary key with Google Gemini
+                let activeModel = aiModel === 'custom' ? (customModelInput.value.trim() || 'gemini-2.0-flash') : aiModel;
+                if (!activeModel || activeModel.startsWith('gemini-3.') || activeModel.startsWith('gemini-2.5')) {
+                    activeModel = 'gemini-2.0-flash';
+                    aiModel = 'gemini-2.0-flash';
+                    modelSelect.value = 'gemini-2.0-flash';
+                    saveToLocalStorage();
+                }
 
-                if (testResp.ok) {
+                let successCount = 0;
+                let lastErr = '';
+                for (const k of keys) {
+                    const testResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${k}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: "hi" }] }],
+                            generationConfig: { maxOutputTokens: 5 }
+                        })
+                    });
+
+                    if (testResp.ok) {
+                        successCount++;
+                    } else {
+                        const errData = await testResp.json().catch(() => ({}));
+                        lastErr = errData.error?.message || `HTTP ${testResp.status}`;
+                    }
+                }
+
+                if (successCount > 0) {
                     if (statusEl) {
                         statusEl.style.color = '#10B981';
-                        statusEl.innerHTML = `<i class="ti ti-circle-check"></i> Key is 100% active and working! (${testModel})`;
+                        statusEl.innerHTML = `<i class="ti ti-circle-check"></i> ${successCount} key(s) active & ready in Smart Key Ring! (${activeModel})`;
                     }
                     setTimeout(() => {
                         settingsModal.style.display = 'none';
                         if (statusEl) statusEl.style.display = 'none';
-                    }, 1200);
+                    }, 1400);
                 } else {
-                    const errData = await testResp.json().catch(() => ({}));
-                    const msg = errData.error?.message || `HTTP ${testResp.status}`;
                     if (statusEl) {
                         statusEl.style.color = '#EF4444';
-                        statusEl.innerHTML = `<i class="ti ti-alert-circle"></i> Google API Error (${testResp.status}):<br><span style="font-size: 0.78rem; font-weight: normal; word-break: break-word;">${msg}</span>`;
+                        statusEl.innerHTML = `<i class="ti ti-alert-circle"></i> Google API Error:<br><span style="font-size: 0.78rem; font-weight: normal; word-break: break-word;">${lastErr}</span>`;
                     }
                 }
             } catch (err) {

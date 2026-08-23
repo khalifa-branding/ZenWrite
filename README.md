@@ -61,5 +61,7 @@ To save your team members from registering their own individual keys, you can ha
 
 ---
 
-## 🛡️ Outage Resiliency & Failover
-The API caller is equipped with an automatic **dual-model fallback system** (`gemini-3.6-flash` and `gemini-3.5-flash`). If Google experiences temporary high demand or rate-limit blocks on one model, ZenWrite will automatically retry using the fallback model in the background without causing errors.
+## 🛡️ Outage Resiliency & Smart Key Ring Failover
+ZenWrite is engineered with enterprise-grade API resiliency:
+- **Smart Multi-Key Auto-Rotation ("Key Ring")**: Paste one or multiple free Gemini keys in Settings. ZenWrite automatically load-balances and routes requests across the pool. If any key experiences a temporary 429 rate limit, ZenWrite instantly fails over to the next ready key with zero user interruption.
+- **Cross-Model Independent Quota Ladder**: Automatically routes requests across **`gemini-2.0-flash`**, **`gemini-1.5-flash`**, and **`gemini-1.5-flash-8b`**, leveraging independent 1,500 Requests/Day free quota buckets on Google AI Studio.
