@@ -2665,13 +2665,18 @@
                 <div class="form-group">
                     <label class="form-label" for="modelSelect">AI Model</label>
                     <select class="form-select" id="modelSelect" aria-label="Select AI Model">
-                        <option value="gemini-3.6-flash" selected>Gemini 3.6 Flash (Official Live Production)</option>
+                        <option value="auto" selected>⚡ Smart Auto-Failover (Cycles all models to maximize free quota)</option>
+                        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite (High Speed / 10 RPM)</option>
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash (Balanced / 5 RPM)</option>
+                        <option value="gemini-3.7-flash">Gemini 3.7 Flash (Latest / 5 RPM)</option>
+                        <option value="gemini-3.6-flash">Gemini 3.6 Flash (5 RPM)</option>
+                        <option value="antigravity">Antigravity (High Quota / 100 RPD / 60 RPM)</option>
                         <option value="custom">Custom Model ID...</option>
                     </select>
                 </div>
                 <div class="form-group" id="customModelGroup" style="display: none; margin-top: 10px;">
                     <label class="form-label" for="customModelInput">Custom Model ID</label>
-                    <input type="text" class="form-input" id="customModelInput" placeholder="e.g. gemini-3.6-flash" aria-label="Custom Model ID">
+                    <input type="text" class="form-input" id="customModelInput" placeholder="e.g. gemini-2.5-flash-lite" aria-label="Custom Model ID">
                 </div>
             </div>
             <div class="modal-footer">
@@ -2992,10 +2997,10 @@
                 if (apiKey === 'AQ.Ab8RN6Jl_5ww3Z02h-ca0lrlGsMtscLodyaqXJM1_HJDe7J5kA') {
                     apiKey = '';
                 }
-                aiModel = settings.aiModel || 'gemini-3.6-flash';
-                // Auto-migrate deprecated model names to official live production Gemini 3.6 Flash
-                if (aiModel.includes('2.0') || aiModel.includes('1.5') || aiModel === 'gemini-pro' || aiModel.includes('3.5')) {
-                    aiModel = 'gemini-3.6-flash';
+                aiModel = settings.aiModel || 'auto';
+                // Auto-migrate deprecated model names to auto
+                if (aiModel.includes('2.0') || aiModel.includes('1.5') || aiModel === 'gemini-pro') {
+                    aiModel = 'auto';
                 }
                 
                 // Set HTML attributes
@@ -3312,7 +3317,14 @@ Try editing this text, or create a new document!`);
 
         // Global Smart Key Ring, Cooldown Tracker & Dynamic Live Model Discovery
         const keyCooldowns = new Map(); // key -> timestamp (ms) when cooldown expires
-        let discoveredActiveModels = ['gemini-3.6-flash'];
+        let discoveredActiveModels = [
+            'gemini-2.5-flash-lite',
+            'gemini-2.5-flash',
+            'gemini-3.7-flash',
+            'gemini-3.6-flash',
+            'gemini-3.5-flash',
+            'antigravity'
+        ];
 
         function getAvailableApiKeys() {
             let raw = (apiKeyInput && apiKeyInput.value) ? apiKeyInput.value : apiKey;
@@ -3327,7 +3339,7 @@ Try editing this text, or create a new document!`);
         }
 
         async function fetchLiveGeminiModels(key) {
-            if (!key) return ['gemini-3.6-flash'];
+            if (!key) return discoveredActiveModels;
             try {
                 const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
                 if (resp.ok) {
@@ -3339,15 +3351,15 @@ Try editing this text, or create a new document!`);
                             .filter(name => !name.includes('embedding') && !name.includes('aqa') && !name.includes('imagen') && !name.includes('tts'));
                         
                         if (valid.length > 0) {
-                            discoveredActiveModels = valid;
-                            return valid;
+                            discoveredActiveModels = [...new Set([...discoveredActiveModels, ...valid])];
+                            return discoveredActiveModels;
                         }
                     }
                 }
             } catch (e) {
                 console.warn('[ZenWrite AI] Could not query live models endpoint', e);
             }
-            return ['gemini-3.6-flash'];
+            return discoveredActiveModels;
         }
 
         // --- Call Gemini API with Multi-Key & Multi-Model Smart Failover ---
@@ -3385,19 +3397,28 @@ Requirements:
                 prompt = `You are a writing assistant. ${promptInstruction}\n\nTarget Text:\n"""\n${textContent}\n"""`;
             }
 
-            // Google Official Live Production Model (gemini-3.6-flash) + Dynamic Failover Chain
+            // Resilient failover priority chain across all models available on the Google AI Studio account
+            const defaultModelPriority = [
+                'gemini-2.5-flash-lite',
+                'gemini-2.5-flash',
+                'gemini-3.7-flash',
+                'gemini-3.6-flash',
+                'gemini-3.5-flash',
+                'antigravity'
+            ];
+
             let primaryModel = aiModel;
-            if (!primaryModel || primaryModel.includes('2.0') || primaryModel.includes('1.5') || primaryModel === 'gemini-pro' || primaryModel.includes('3.5')) {
-                primaryModel = 'gemini-3.6-flash';
-                aiModel = 'gemini-3.6-flash';
-                saveToLocalStorage();
+            if (!primaryModel || primaryModel.includes('2.0') || primaryModel.includes('1.5') || primaryModel === 'gemini-pro') {
+                primaryModel = 'auto';
+                aiModel = 'auto';
             }
 
-            const modelsToTry = [...new Set([
-                primaryModel,
-                'gemini-3.6-flash',
-                ...discoveredActiveModels
-            ])].filter(Boolean);
+            let modelsToTry = [];
+            if (primaryModel === 'auto') {
+                modelsToTry = [...new Set([...defaultModelPriority, ...discoveredActiveModels])];
+            } else {
+                modelsToTry = [...new Set([primaryModel, ...defaultModelPriority, ...discoveredActiveModels])];
+            }
 
             let lastError = null;
 
@@ -3435,7 +3456,7 @@ Requirements:
                                 const errMsg = err.error?.message || `HTTP ${response.status}: ${response.statusText}`;
 
                                 if (response.status === 404 || errMsg.toLowerCase().includes('not found') || errMsg.toLowerCase().includes('no longer available')) {
-                                    break; // Model not on this apiVer/deprecated, try next model
+                                    break; // Model not on this apiVer/deprecated, try next model in chain
                                 }
 
                                 if (response.status === 429 || errMsg.toLowerCase().includes('quota') || errMsg.toLowerCase().includes('rate')) {
@@ -3444,9 +3465,9 @@ Requirements:
                                     const retrySecs = match && match[1] ? Math.ceil(parseFloat(match[1])) : 60;
                                     keyCooldowns.set(currentKey, Date.now() + (retrySecs * 1000));
                                     
-                                    console.warn(`[ZenWrite AI] Key #${kIdx + 1} rate-limited on ${model}. Auto-failing over to next key/model in Smart Key Ring...`);
+                                    console.warn(`[ZenWrite AI] Model ${model} rate-limited or key #${kIdx + 1} quota reached. Auto-failing over to next model/key in Smart Key Ring...`);
                                     lastError = new Error(`[${model}] ${errMsg}`);
-                                    continue; // Try next key in pool immediately
+                                    continue; // Try next key/model in pool immediately
                                 }
 
                                 throw new Error(`[${model}] ${errMsg}`);
@@ -3456,11 +3477,6 @@ Requirements:
                             const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
                             if (!responseText) throw new Error("Empty response from AI model.");
 
-                            // Successfully generated response! Cache working model
-                            if (aiModel !== model) {
-                                aiModel = model;
-                                saveToLocalStorage();
-                            }
                             return responseText.trim();
                         } catch (err) {
                             lastError = err;
@@ -3470,7 +3486,7 @@ Requirements:
             }
 
             const finalErrMsg = lastError ? lastError.message : 'All keys and models in pool were busy or quota-exhausted.';
-            alert(`⚠️ Google Gemini API Notice:\n\n${finalErrMsg}\n\n💡 Permanent Fix Recommendations:\n1. Use "Gemini 3.6 Flash" in Settings ⚙️ (Google's official live model).\n2. You can add multiple free API keys in Settings separated by commas (ZenWrite will auto-rotate and failover between them automatically).\n3. Make sure your key was created at https://aistudio.google.com/app/apikey (choose "Create key in new project").`);
+            alert(`⚠️ Google Gemini API Notice:\n\n${finalErrMsg}\n\n💡 Recommendations:\n1. Keep AI Model set to "⚡ Smart Auto-Failover" in Settings ⚙️ (cycles across all models to maximize your free allowance).\n2. You can add 2 or 3 free API keys in Settings separated by commas to get 500+ requests/day.`);
 
             if (settingsModal) {
                 settingsModal.style.display = 'flex';
@@ -3858,38 +3874,46 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                     await fetchLiveGeminiModels(keys[0]);
                 }
 
-                let activeModel = aiModel === 'custom' ? (customModelInput.value.trim() || 'gemini-3.6-flash') : aiModel;
-                if (!activeModel || activeModel.includes('2.0') || activeModel.includes('1.5') || activeModel === 'gemini-pro' || activeModel.includes('3.5')) {
-                    activeModel = 'gemini-3.6-flash';
-                    aiModel = 'gemini-3.6-flash';
-                    modelSelect.value = 'gemini-3.6-flash';
-                    saveToLocalStorage();
-                }
+                const modelsToTest = aiModel === 'custom' 
+                    ? [(customModelInput.value.trim() || 'gemini-2.5-flash-lite')] 
+                    : (aiModel === 'auto' ? ['gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'antigravity'] : [aiModel]);
 
                 let successCount = 0;
+                let activeModelFound = '';
                 let lastErr = '';
-                for (const k of keys) {
-                    const testResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${k}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: "hi" }] }],
-                            generationConfig: { maxOutputTokens: 5 }
-                        })
-                    });
 
-                    if (testResp.ok) {
-                        successCount++;
-                    } else {
-                        const errData = await testResp.json().catch(() => ({}));
-                        lastErr = errData.error?.message || `HTTP ${testResp.status}`;
+                for (const k of keys) {
+                    let keyWorks = false;
+                    for (const testModel of modelsToTest) {
+                        try {
+                            const testResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${testModel}:generateContent?key=${k}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    contents: [{ parts: [{ text: "hi" }] }],
+                                    generationConfig: { maxOutputTokens: 5 }
+                                })
+                            });
+
+                            if (testResp.ok) {
+                                keyWorks = true;
+                                if (!activeModelFound) activeModelFound = testModel;
+                                break;
+                            } else {
+                                const errData = await testResp.json().catch(() => ({}));
+                                lastErr = `[${testModel}] ${errData.error?.message || `HTTP ${testResp.status}`}`;
+                            }
+                        } catch (e) {
+                            lastErr = e.message;
+                        }
                     }
+                    if (keyWorks) successCount++;
                 }
 
                 if (successCount > 0) {
                     if (statusEl) {
                         statusEl.style.color = '#10B981';
-                        statusEl.innerHTML = `<i class="ti ti-circle-check"></i> ${successCount} key(s) active & ready in Smart Key Ring! (${activeModel})`;
+                        statusEl.innerHTML = `<i class="ti ti-circle-check"></i> ${successCount} key(s) verified & ready! (${activeModelFound})`;
                     }
                     setTimeout(() => {
                         settingsModal.style.display = 'none';
@@ -3898,7 +3922,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 } else {
                     if (statusEl) {
                         statusEl.style.color = '#EF4444';
-                        statusEl.innerHTML = `<i class="ti ti-alert-circle"></i> Google API Error:<br><span style="font-size: 0.78rem; font-weight: normal; word-break: break-word;">${lastErr}</span>`;
+                        statusEl.innerHTML = `<i class="ti ti-alert-circle"></i> Google API Quota Note:<br><span style="font-size: 0.78rem; font-weight: normal; word-break: break-word;">${lastErr}</span>`;
                     }
                 }
             } catch (err) {
