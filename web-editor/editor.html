@@ -3421,19 +3421,20 @@ Requirements:
             }
 
             let lastError = null;
+            let shortestRetryWait = null;
 
             // Multi-Key × Multi-Model Resilient Execution Grid
             for (const model of modelsToTry) {
                 const apiVersions = ['v1beta', 'v1'];
                 for (const apiVer of apiVersions) {
-                    // Try all available keys in the pool
                     for (let kIdx = 0; kIdx < keys.length; kIdx++) {
                         const currentKey = keys[kIdx];
+                        const cooldownKey = `${currentKey}:${model}`;
 
-                        // Check if key is currently cooling down
-                        const cooldownUntil = keyCooldowns.get(currentKey) || 0;
+                        // Check if this specific key+model is currently cooling down
+                        const cooldownUntil = keyCooldowns.get(cooldownKey) || 0;
                         if (cooldownUntil > Date.now() && keys.length > 1) {
-                            continue; // Skip cooling key and immediately try next key
+                            continue; // Skip cooling key+model combo and try next key
                         }
 
                         const endpoint = `https://generativelanguage.googleapis.com/${apiVer}/models/${model}:generateContent?key=${currentKey}`;
@@ -3456,18 +3457,21 @@ Requirements:
                                 const errMsg = err.error?.message || `HTTP ${response.status}: ${response.statusText}`;
 
                                 if (response.status === 404 || errMsg.toLowerCase().includes('not found') || errMsg.toLowerCase().includes('no longer available')) {
-                                    break; // Model not on this apiVer/deprecated, try next model in chain
+                                    continue; // Model not on this apiVer, try next apiVer/model
                                 }
 
-                                if (response.status === 429 || errMsg.toLowerCase().includes('quota') || errMsg.toLowerCase().includes('rate')) {
-                                    // Parse retry seconds from Google if provided
+                                if (response.status === 429 || errMsg.toLowerCase().includes('quota') || errMsg.toLowerCase().includes('rate') || errMsg.toLowerCase().includes('resource_exhausted')) {
                                     const match = errMsg.match(/retry in ([\d\.]+)\s*s/i);
-                                    const retrySecs = match && match[1] ? Math.ceil(parseFloat(match[1])) : 60;
-                                    keyCooldowns.set(currentKey, Date.now() + (retrySecs * 1000));
+                                    const retrySecs = match && match[1] ? Math.ceil(parseFloat(match[1])) : 30;
+                                    keyCooldowns.set(cooldownKey, Date.now() + (retrySecs * 1000));
                                     
-                                    console.warn(`[ZenWrite AI] Model ${model} rate-limited or key #${kIdx + 1} quota reached. Auto-failing over to next model/key in Smart Key Ring...`);
+                                    if (shortestRetryWait === null || retrySecs < shortestRetryWait) {
+                                        shortestRetryWait = retrySecs;
+                                    }
+
+                                    console.warn(`[ZenWrite AI] ${model} on Key #${kIdx + 1} rate-limited (${retrySecs}s). Failing over to next key/model...`);
                                     lastError = new Error(`[${model}] ${errMsg}`);
-                                    continue; // Try next key/model in pool immediately
+                                    continue; // Try next key/model immediately!
                                 }
 
                                 throw new Error(`[${model}] ${errMsg}`);
@@ -3485,8 +3489,39 @@ Requirements:
                 }
             }
 
+            // If we have a short rate-limit wait (e.g. <= 30 seconds), automatically wait and retry once before alerting!
+            if (shortestRetryWait && shortestRetryWait <= 30) {
+                const statusElements = document.querySelectorAll('#diffContent p, .loading-pulse + p, #autocompleteText');
+                statusElements.forEach(el => {
+                    if (el) el.textContent = `Google rate limit active. Automatically retrying in ${shortestRetryWait}s...`;
+                });
+
+                await new Promise(r => setTimeout(r, shortestRetryWait * 1000));
+                
+                // Retry once
+                for (const model of modelsToTry) {
+                    for (const k of keys) {
+                        try {
+                            const retryResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${k}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    contents: [{ parts: [{ text: prompt }] }],
+                                    generationConfig: { temperature: 0.2, maxOutputTokens: 2048 }
+                                })
+                            });
+                            if (retryResp.ok) {
+                                const retryData = await retryResp.json();
+                                const retryText = retryData.candidates?.[0]?.content?.parts?.[0]?.text;
+                                if (retryText) return retryText.trim();
+                            }
+                        } catch (e) {}
+                    }
+                }
+            }
+
             const finalErrMsg = lastError ? lastError.message : 'All keys and models in pool were busy or quota-exhausted.';
-            alert(`⚠️ Google Gemini API Notice:\n\n${finalErrMsg}\n\n💡 Recommendations:\n1. Keep AI Model set to "⚡ Smart Auto-Failover" in Settings ⚙️ (cycles across all models to maximize your free allowance).\n2. You can add 2 or 3 free API keys in Settings separated by commas to get 500+ requests/day.`);
+            alert(`⚠️ Google Gemini Quota Limit:\n\n${finalErrMsg}\n\n💡 How to get Unlimited Usage:\n1. Google Cloud enforces quotas PER PROJECT (not per key). If all 4 keys are in the same project ("ZenWrite"), they share the same 5 RPM / 20 RPD quota.\n2. In https://aistudio.google.com/app/apikey, click "Create API Key" and choose "Create key in new project" (e.g. ZenWrite-2, ZenWrite-3). Each project gets an entirely separate, fresh 20-100 RPD bucket!`);
 
             if (settingsModal) {
                 settingsModal.style.display = 'flex';
