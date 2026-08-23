@@ -3352,15 +3352,12 @@ Requirements:
                 prompt = `You are a writing assistant. ${promptInstruction}\n\nTarget Text:\n"""\n${textContent}\n"""`;
             }
 
-            // Valid active Gemini models in order of priority
+            // Valid active Gemini models in order of priority (Stable production models)
             let modelsToTry = [
                 aiModel,
-                'gemini-2.5-flash',
                 'gemini-2.0-flash',
                 'gemini-1.5-flash',
-                'gemini-2.5-pro',
-                'gemini-1.5-pro',
-                'gemini-pro'
+                'gemini-1.5-pro'
             ].filter(Boolean);
             modelsToTry = [...new Set(modelsToTry)];
 
@@ -3381,14 +3378,13 @@ Requirements:
                 for (const apiVer of apiVersions) {
                     const endpoint = `https://generativelanguage.googleapis.com/${apiVer}/models/${model}:generateContent?key=${apiKey}`;
                     
-                    const MAX_RETRIES = 3;
+                    const MAX_RETRIES = 2;
                     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
                         try {
                             const response = await fetch(endpoint, {
                                 method: 'POST',
                                 headers: {
-                                    'Content-Type': 'application/json',
-                                    'x-goog-api-key': apiKey
+                                    'Content-Type': 'application/json'
                                 },
                                 body: JSON.stringify({
                                     contents: [{
@@ -3412,8 +3408,7 @@ Requirements:
 
                                 const isRateLimit = response.status === 429 || 
                                     errMsg.toLowerCase().includes('quota exceeded') ||
-                                    errMsg.toLowerCase().includes('rate') ||
-                                    errMsg.toLowerCase().includes('limit');
+                                    errMsg.toLowerCase().includes('resource_exhausted');
 
                                 const isServerOverload = response.status === 503 || 
                                     errMsg.toLowerCase().includes('high demand') || 
@@ -3425,7 +3420,6 @@ Requirements:
                                     const waitSecs = parsedWait ? Math.min(parsedWait, 10) : Math.pow(2, attempt + 1);
                                     console.warn(`[ZenWrite AI] Busy/Rate-limited on ${model}. Retrying in ${waitSecs}s (Attempt ${attempt + 1}/${MAX_RETRIES})...`);
                                     
-                                    // Smoothly update UI status if visible
                                     const statusElements = document.querySelectorAll('#diffContent p, .loading-pulse + p, #autocompleteText');
                                     statusElements.forEach(el => {
                                         if (el && el.textContent) {
@@ -3437,10 +3431,7 @@ Requirements:
                                     continue;
                                 }
 
-                                if (isRateLimit || isServerOverload) {
-                                    throw new Error(`CONGESTION:${errMsg}`);
-                                }
-                                throw new Error(errMsg);
+                                throw new Error(`[${model}] ${errMsg}`);
                             }
 
                             const data = await response.json();
@@ -3455,24 +3446,18 @@ Requirements:
                             return responseText.trim();
                         } catch (err) {
                             lastError = err;
-                            if (err.message.startsWith('CONGESTION:')) {
-                                break;
-                            }
+                            break;
                         }
                     }
                 }
             }
 
-            const finalErrMsg = lastError ? lastError.message.replace(/^CONGESTION:/, '') : 'Unknown connection error';
+            const finalErrMsg = lastError ? lastError.message : 'Unknown connection error';
             
-            // If it's a rate limit error after retries, show a concise actionable message instead of raw JSON
-            if (finalErrMsg.toLowerCase().includes('quota') || finalErrMsg.toLowerCase().includes('rate') || finalErrMsg.toLowerCase().includes('limit')) {
-                alert("⚠️ Google Gemini Free Quota Reached:\n\nThe free tier allows ~15-20 requests/min. Please wait 10 seconds and try again, or add a fresh key in Settings ⚙️.");
-            } else {
-                alert(`⚠️ Google Gemini API Notice:\n\n${finalErrMsg}\n\nMake sure your key was created at https://aistudio.google.com/app/apikey`);
-            }
+            // Show exact transparent Google API error details so users know precisely what went wrong
+            alert(`⚠️ Google Gemini API Error:\n\n${finalErrMsg}\n\nKey Recommendations:\n1. Make sure your key was created at https://aistudio.google.com/app/apikey (choose "Create key in new project")\n2. Set AI Model to "Gemini 2.0 Flash" or "Gemini 1.5 Flash" in Settings ⚙️\n3. If in an unsupported country, a VPN may be required for Google AI Studio.`);
 
-            if (settingsModal && (finalErrMsg.toLowerCase().includes('key') || finalErrMsg.toLowerCase().includes('auth') || finalErrMsg.toLowerCase().includes('credential'))) {
+            if (settingsModal && (finalErrMsg.toLowerCase().includes('key') || finalErrMsg.toLowerCase().includes('auth') || finalErrMsg.toLowerCase().includes('credential') || finalErrMsg.toLowerCase().includes('quota'))) {
                 settingsModal.style.display = 'flex';
                 if (apiKeyInput) apiKeyInput.focus();
             }
@@ -3852,25 +3837,32 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
 
             saveSettingsBtn.disabled = true;
             try {
-                const listResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`, {
-                    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey }
+                // Test real generation quota directly with Google Gemini
+                const testModel = aiModel === 'custom' ? (customModelInput.value.trim() || 'gemini-2.0-flash') : aiModel;
+                const testResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${testModel}:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: "hi" }] }],
+                        generationConfig: { maxOutputTokens: 5 }
+                    })
                 });
 
-                if (listResp.ok) {
+                if (testResp.ok) {
                     if (statusEl) {
                         statusEl.style.color = '#10B981';
-                        statusEl.innerHTML = `<i class="ti ti-circle-check"></i> Key is valid & active! (${aiModel})`;
+                        statusEl.innerHTML = `<i class="ti ti-circle-check"></i> Key is 100% active and working! (${testModel})`;
                     }
                     setTimeout(() => {
                         settingsModal.style.display = 'none';
                         if (statusEl) statusEl.style.display = 'none';
                     }, 1200);
                 } else {
-                    const errData = await listResp.json().catch(() => ({}));
-                    const msg = errData.error?.message || `HTTP ${listResp.status}`;
+                    const errData = await testResp.json().catch(() => ({}));
+                    const msg = errData.error?.message || `HTTP ${testResp.status}`;
                     if (statusEl) {
                         statusEl.style.color = '#EF4444';
-                        statusEl.innerHTML = `<i class="ti ti-alert-circle"></i> Google Error: ${msg}`;
+                        statusEl.innerHTML = `<i class="ti ti-alert-circle"></i> Google API Error (${testResp.status}):<br><span style="font-size: 0.78rem; font-weight: normal; word-break: break-word;">${msg}</span>`;
                     }
                 }
             } catch (err) {
