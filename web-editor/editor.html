@@ -2407,6 +2407,8 @@
     <!-- Main Workspace -->
     <main class="main-workspace" id="mainWorkspace">
         
+        <div id="a11yAnnouncer" class="sr-only" aria-live="polite" aria-atomic="true" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;"></div>
+        
         <!-- Header Bar -->
         <header class="workspace-header" role="banner">
             <div class="header-left">
@@ -2441,7 +2443,10 @@
             <section class="pane" id="editorPane">
                 <div class="pane-header">
                     <div class="pane-header-left">
-                        <span>Editor (Markdown)</span>
+                        <span>Editor</span>
+                        <span class="context-sense-badge" id="contextSenseBadge" title="Real-time Content-Aware Detection" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; padding: 2px 8px; border-radius: 12px; background: rgba(59, 130, 246, 0.1); color: var(--accent-color); border: 1px solid rgba(59, 130, 246, 0.2); font-weight: 500;">
+                            <i class="ti ti-scan" id="contextSenseIcon"></i> <span id="contextSenseText">Markdown Prose</span>
+                        </span>
                         <span class="selection-badge" id="editorSelectionBadge"><i class="ti ti-check"></i> <span id="editorSelectionCount">0 words</span></span>
                     </div>
                     <div class="pane-header-actions">
@@ -2450,6 +2455,7 @@
                                 <i class="ti ti-sparkles" aria-hidden="true"></i> <span>AI Actions</span> <i class="ti ti-chevron-down" style="font-size: 0.7rem; margin-left: 2px;"></i>
                             </button>
                             <div class="pane-dropdown-menu editor-ai-menu" id="editorAiMenu" role="menu">
+                                <div id="adaptiveActionsGroup" class="adaptive-actions-group" style="display: none; padding-bottom: 4px; border-bottom: 1px solid var(--border-color); margin-bottom: 4px;"></div>
                                 <button class="pane-dropdown-item" data-action="perfect-prompt" role="menuitem" style="color: var(--accent-color); font-weight: 600;">
                                     <i class="ti ti-wand"></i> Perfect Prompt
                                 </button>
@@ -3163,6 +3169,11 @@ Try editing this text, or create a new document!`);
             // Line numbers mapping
             const lines = content.split('\n');
             lineNumbers.innerHTML = lines.map((_, i) => i + 1).join('<br>');
+
+            // Real-time Content Awareness Sensing
+            if (typeof updateContentSenseUI === 'function') {
+                updateContentSenseUI();
+            }
         }
 
         // Trigger autosave debounced
@@ -3239,6 +3250,169 @@ Try editing this text, or create a new document!`);
             }
         }
 
+        // --- Enterprise Content-Aware Sensing & Classification Engine (CAIS) ---
+        const ContentSense = {
+            PATTERNS: {
+                SECRETS: [
+                    /(?:akiasia|asia)[a-z0-9]{16}/i,
+                    /gh[pousr]_[a-zA-Z0-9]{36,}/,
+                    /ai-za[0-9a-zA-Z-_]{35}/i,
+                    /sk-[a-zA-Z0-9]{32,}/,
+                    /-----BEGIN (?:RSA |EC |DSA )?PRIVATE KEY-----/,
+                    /eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}/
+                ],
+                JSON: /^\s*[\{\[][\s\S]*[\}\]]\s*$/,
+                SQL: /\b(SELECT|INSERT\s+INTO|UPDATE\s+\w+|DELETE\s+FROM|CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|FROM\s+\w+|WHERE\s+\w+|GROUP\s+BY|ORDER\s+BY|HAVING)\b/i,
+                CODE: /\b(function\s*\(|function\s+\w+|def\s+\w+|class\s+\w+|const\s+\w+\s*=|let\s+\w+\s*=|var\s+\w+\s*=|import\s+.*from|export\s+default|public\s+static\s+void|interface\s+\w+|type\s+\w+\s*=|<\/?[a-z][\s\S]*>)/i,
+                SPEC: /^(?:#{1,6}\s+.*|\|[^\n\r|]+\|[^\n\r|]+\||\s*[-*]\s+\[[ xX]\]\s+.*|\s*[-*]\s+Requirements?:?)/m,
+                PROMPT: /(?:You are a|Persona & Role|Task Objective|Context & Background|Specific Rules & Constraints|Expected Output Format|<USER_REQUEST>|\[PROMPT\]|\{\{.*\}\})/i,
+                EMAIL: /(?:Dear\s+[A-Z]|Hi\s+[A-Z]|Hello\s+[A-Z]|Best\s+regards|Sincerely|Thanks\s+and\s+regards|Please\s+find\s+attached|Subject:)/i
+            },
+
+            analyze(text) {
+                if (!text || typeof text !== 'string' || text.trim() === '') {
+                    return { modality: 'PROSE', label: 'Markdown Prose', hasSecrets: false, icon: 'ti-file-text', actions: [] };
+                }
+
+                const trimmed = text.trim();
+                const hasSecrets = this.PATTERNS.SECRETS.some(rx => rx.test(trimmed));
+
+                // 1. JSON
+                if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+                    try {
+                        JSON.parse(trimmed);
+                        return { modality: 'JSON', label: 'JSON / Schema', hasSecrets, icon: 'ti-braces', actions: [
+                            { action: 'format-json', label: 'Format & Lint JSON', icon: 'ti-code', primary: true },
+                            { action: 'explain', label: 'Explain Data Schema', icon: 'ti-info-circle' }
+                        ]};
+                    } catch (e) {}
+                }
+
+                // 2. Prompt Engineering
+                if (this.PATTERNS.PROMPT.test(trimmed)) {
+                    return { modality: 'PROMPT', label: 'AI System Prompt', hasSecrets, icon: 'ti-wand', actions: [
+                        { action: 'perfect-prompt', label: 'Perfect Prompt (5-Part)', icon: 'ti-wand', primary: true },
+                        { action: 'rephrase', label: 'Sharpen Instructions', icon: 'ti-refresh' },
+                        { action: 'concise', label: 'Make Concise', icon: 'ti-arrows-minimize' }
+                    ]};
+                }
+
+                // 3. SQL Query
+                const sqlMatches = (trimmed.match(this.PATTERNS.SQL) || []).length;
+                if (sqlMatches >= 1) {
+                    return { modality: 'SQL', label: 'SQL Query Block', hasSecrets, icon: 'ti-database', actions: [
+                        { action: 'format-sql', label: 'Format & Optimize SQL', icon: 'ti-database', primary: true },
+                        { action: 'explain', label: 'Explain SQL Query', icon: 'ti-info-circle' }
+                    ]};
+                }
+
+                // 4. Code / Script
+                if (this.PATTERNS.CODE.test(trimmed)) {
+                    return { modality: 'CODE', label: 'Code / Script', hasSecrets, icon: 'ti-code', actions: [
+                        { action: 'rephrase', label: 'Refactor & Clean Code', icon: 'ti-sparkles', primary: true },
+                        { action: 'explain', label: 'Explain Code Logic', icon: 'ti-info-circle' }
+                    ]};
+                }
+
+                // 5. Technical Specification
+                if (this.PATTERNS.SPEC.test(trimmed)) {
+                    return { modality: 'SPEC', label: 'Technical Spec / Markdown', hasSecrets, icon: 'ti-file-code', actions: [
+                        { action: 'rephrase', label: 'Polish Technical Clarity', icon: 'ti-refresh', primary: true },
+                        { action: 'grammar', label: 'Correct Grammar & Style', icon: 'ti-checks' },
+                        { action: 'concise', label: 'Make Concise', icon: 'ti-arrows-minimize' }
+                    ]};
+                }
+
+                // 6. Business Email
+                if (this.PATTERNS.EMAIL.test(trimmed)) {
+                    return { modality: 'EMAIL', label: 'Business Correspondence', hasSecrets, icon: 'ti-mail', actions: [
+                        { action: 'tone-professional', label: '👔 Executive Tone Polish', icon: 'ti-palette', primary: true },
+                        { action: 'grammar', label: 'Correct Grammar & Flow', icon: 'ti-checks' },
+                        { action: 'concise', label: 'Make Direct & Actionable', icon: 'ti-arrows-minimize' }
+                    ]};
+                }
+
+                return { modality: 'PROSE', label: 'Markdown Prose', hasSecrets, icon: 'ti-file-text', actions: [
+                    { action: 'rephrase', label: 'Polish & Rephrase', icon: 'ti-refresh', primary: true },
+                    { action: 'grammar', label: 'Correct Grammar & Spelling', icon: 'ti-checks' },
+                    { action: 'perfect-prompt', label: 'Perfect Prompt', icon: 'ti-wand' }
+                ]};
+            }
+        };
+
+        function announceA11y(message) {
+            const announcer = document.getElementById('a11yAnnouncer');
+            if (announcer) {
+                announcer.textContent = '';
+                setTimeout(() => { announcer.textContent = message; }, 50);
+            }
+        }
+
+        let currentDetectedModality = 'PROSE';
+
+        function updateContentSenseUI() {
+            const textToAnalyze = selectedText || editorTextarea.value;
+            const sense = ContentSense.analyze(textToAnalyze);
+            
+            const badge = document.getElementById('contextSenseBadge');
+            const icon = document.getElementById('contextSenseIcon');
+            const textEl = document.getElementById('contextSenseText');
+            
+            if (badge && textEl && icon) {
+                if (sense.hasSecrets) {
+                    badge.style.background = 'rgba(239, 68, 68, 0.15)';
+                    badge.style.color = '#EF4444';
+                    badge.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                    icon.className = 'ti ti-shield-lock';
+                    textEl.textContent = `${sense.label} (⚠️ Secrets detected)`;
+                } else {
+                    badge.style.background = 'rgba(59, 130, 246, 0.1)';
+                    badge.style.color = 'var(--accent-color)';
+                    badge.style.borderColor = 'rgba(59, 130, 246, 0.2)';
+                    icon.className = `ti ${sense.icon}`;
+                    textEl.textContent = sense.label;
+                }
+            }
+
+            if (currentDetectedModality !== sense.modality) {
+                currentDetectedModality = sense.modality;
+                announceA11y(`Content modality detected: ${sense.label}`);
+            }
+        }
+
+        function renderAdaptiveActions() {
+            const container = document.getElementById('adaptiveActionsGroup');
+            if (!container) return;
+            const textToAnalyze = selectedText || editorTextarea.value;
+            const sense = ContentSense.analyze(textToAnalyze);
+            
+            if (!sense.actions || sense.actions.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            let html = `<div style="font-size: 0.68rem; text-transform: uppercase; color: var(--accent-color); font-weight: 700; padding: 4px 8px 2px 8px; display: flex; align-items: center; gap: 4px;">
+                <i class="ti ${sense.icon}"></i> Recommended for ${sense.label}:
+            </div>`;
+
+            sense.actions.forEach(item => {
+                html += `<button class="pane-dropdown-item adaptive-item" data-action="${item.action}" role="menuitem" style="color: ${item.primary ? 'var(--accent-color)' : 'var(--text-primary)'}; font-weight: ${item.primary ? '600' : 'normal'};">
+                    <i class="ti ${item.icon}"></i> ${item.label}
+                </button>`;
+            });
+
+            container.innerHTML = html;
+
+            container.querySelectorAll('.adaptive-item').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    const action = btn.getAttribute('data-action');
+                    if (action) runUnifiedAIAction(action);
+                };
+            });
+        }
+
         // --- Static Contextually Anchored AI Selection Logic ---
         function checkSelection(e) {
             const start = editorTextarea.selectionStart;
@@ -3263,6 +3437,8 @@ Try editing this text, or create a new document!`);
             } else {
                 hideSelectionUI();
             }
+
+            updateContentSenseUI();
         }
 
         function hideSelectionUI() {
@@ -3274,6 +3450,7 @@ Try editing this text, or create a new document!`);
                 editorAiBtn.classList.remove('has-selection');
                 editorAiBtn.setAttribute('title', 'AI Writing Actions (Selection or Full Document)');
             }
+            updateContentSenseUI();
         }
 
         // --- Diff Match and render function ---
@@ -4519,6 +4696,9 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 const isOpen = editorAiDropdown.classList.toggle('open');
                 editorAiMenu.classList.toggle('show', isOpen);
                 editorAiBtn.setAttribute('aria-expanded', isOpen);
+                if (isOpen && typeof renderAdaptiveActions === 'function') {
+                    renderAdaptiveActions();
+                }
             };
         }
 
@@ -4562,9 +4742,22 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 return;
             }
 
+            // Enterprise DLP Pre-Flight Inspection
+            if (typeof ContentSense !== 'undefined') {
+                const sense = ContentSense.analyze(targetText);
+                if (sense.hasSecrets) {
+                    const proceed = confirm("⚠️ Security Notice:\n\nPotential API keys, tokens, or credentials detected in the target text. ZenWrite executes client-side, but sending active credentials to external AI endpoints is not recommended.\n\nDo you wish to proceed?");
+                    if (!proceed) return;
+                }
+            }
+
             let promptInstruction = '';
             if (action === 'perfect-prompt') {
                 promptInstruction = 'You are a world-class Prompt Engineer. Analyze and transform the following rough idea, draft task, or user prompt into an exquisitely engineered, high-performing master prompt. Structure it clearly with: 1) Persona & Role, 2) Task Objective, 3) Context & Background, 4) Specific Rules & Constraints, and 5) Expected Output Format. Return ONLY the perfected, engineered prompt ready to use. Do not wrap the whole response in triple backticks or include conversational introductory notes.';
+            } else if (action === 'format-json') {
+                promptInstruction = 'Format, clean, indent, and validate the following JSON data. Ensure strict valid JSON output with standard 2-space indentation. Return ONLY the formatted JSON without conversational text or backtick wraps.';
+            } else if (action === 'format-sql') {
+                promptInstruction = 'Format, clean, optimize, and indent the following SQL query following standard SQL capitalizations and best practices. Return ONLY the formatted SQL code without extra conversational text.';
             } else if (action === 'grammar') {
                 promptInstruction = 'Proofread and correct the spelling, grammar, and sentence structure of the text. Keep all styling intact. Return ONLY the updated corrected text without any extra text or quotes.';
             } else if (action === 'rephrase') {

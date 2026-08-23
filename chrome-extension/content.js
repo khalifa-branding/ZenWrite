@@ -56,6 +56,43 @@ function getFullContext() {
   return "";
 }
 
+// Enterprise Content-Aware Sensing & Classification Engine (CAIS)
+const ContentSense = {
+  PATTERNS: {
+    SECRETS: [
+      /(?:akiasia|asia)[a-z0-9]{16}/i,
+      /gh[pousr]_[a-zA-Z0-9]{36,}/,
+      /ai-za[0-9a-zA-Z-_]{35}/i,
+      /sk-[a-zA-Z0-9]{32,}/,
+      /-----BEGIN (?:RSA |EC |DSA )?PRIVATE KEY-----/,
+      /eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}/
+    ],
+    JSON: /^\s*[\{\[][\s\S]*[\}\]]\s*$/,
+    SQL: /\b(SELECT|INSERT\s+INTO|UPDATE\s+\w+|DELETE\s+FROM|CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|FROM\s+\w+|WHERE\s+\w+|GROUP\s+BY|ORDER\s+BY|HAVING)\b/i,
+    CODE: /\b(function\s*\(|function\s+\w+|def\s+\w+|class\s+\w+|const\s+\w+\s*=|let\s+\w+\s*=|var\s+\w+\s*=|import\s+.*from|export\s+default|public\s+static\s+void|interface\s+\w+|type\s+\w+\s*=|<\/?[a-z][\s\S]*>)/i,
+    SPEC: /^(?:#{1,6}\s+.*|\|[^\n\r|]+\|[^\n\r|]+\||\s*[-*]\s+\[[ xX]\]\s+.*|\s*[-*]\s+Requirements?:?)/m,
+    PROMPT: /(?:You are a|Persona & Role|Task Objective|Context & Background|Specific Rules & Constraints|Expected Output Format|<USER_REQUEST>|\[PROMPT\]|\{\{.*\}\})/i,
+    EMAIL: /(?:Dear\s+[A-Z]|Hi\s+[A-Z]|Hello\s+[A-Z]|Best\s+regards|Sincerely|Thanks\s+and\s+regards|Please\s+find\s+attached|Subject:)/i
+  },
+
+  analyze(text) {
+    if (!text || typeof text !== 'string' || text.trim() === '') {
+      return { modality: 'PROSE', label: 'Prose', hasSecrets: false };
+    }
+    const trimmed = text.trim();
+    const hasSecrets = this.PATTERNS.SECRETS.some(rx => rx.test(trimmed));
+    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+      try { JSON.parse(trimmed); return { modality: 'JSON', label: 'JSON Data', hasSecrets }; } catch (e) {}
+    }
+    if (this.PATTERNS.PROMPT.test(trimmed)) return { modality: 'PROMPT', label: 'AI Prompt', hasSecrets };
+    if ((trimmed.match(this.PATTERNS.SQL) || []).length >= 1) return { modality: 'SQL', label: 'SQL Query', hasSecrets };
+    if (this.PATTERNS.CODE.test(trimmed)) return { modality: 'CODE', label: 'Code Script', hasSecrets };
+    if (this.PATTERNS.SPEC.test(trimmed)) return { modality: 'SPEC', label: 'Technical Spec', hasSecrets };
+    if (this.PATTERNS.EMAIL.test(trimmed)) return { modality: 'EMAIL', label: 'Business Email', hasSecrets };
+    return { modality: 'PROSE', label: 'Prose', hasSecrets };
+  }
+};
+
 // Modal HTML generation
 function createOverlayModal() {
   // Check if modal already exists
@@ -67,8 +104,11 @@ function createOverlayModal() {
   modal.className = "zenwrite-reset"; // prefix styles to prevent site style contamination
   modal.innerHTML = `
     <div class="zenwrite-modal-card">
-      <div class="zenwrite-modal-header">
-        <span class="zenwrite-title">✨ ZenWrite AI Suggestions</span>
+      <div class="zenwrite-modal-header" style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="zenwrite-title">✨ ZenWrite AI</span>
+          <span id="zenwrite-context-badge" style="font-size: 11px; padding: 2px 7px; border-radius: 10px; background: rgba(139,92,246,0.15); color: #A78BFA; border: 1px solid rgba(139,92,246,0.3); font-weight: 500;">Prose</span>
+        </div>
         <button class="zenwrite-close-btn" id="zenwrite-btn-close">&times;</button>
       </div>
       <div class="zenwrite-modal-body">
@@ -194,8 +234,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return;
   }
 
+  const updateBadge = (text) => {
+    const badge = document.getElementById("zenwrite-context-badge");
+    if (badge && text) {
+      const sense = ContentSense.analyze(text);
+      badge.textContent = sense.label;
+      if (sense.hasSecrets) {
+        badge.style.color = '#EF4444';
+        badge.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+        badge.style.background = 'rgba(239, 68, 68, 0.15)';
+        badge.textContent = `${sense.label} (⚠️ Secrets)`;
+      } else {
+        badge.style.color = '#A78BFA';
+        badge.style.borderColor = 'rgba(139, 92, 246, 0.3)';
+        badge.style.background = 'rgba(139, 92, 246, 0.15)';
+      }
+    }
+  };
+
   if (message.type === "SHOW_LOADING") {
     showModal();
+    updateBadge(message.text || "");
     document.getElementById("zenwrite-loading").style.display = "block";
     document.getElementById("zenwrite-custom-prompt").style.display = "none";
     document.getElementById("zenwrite-diff-container").style.display = "none";
@@ -204,6 +263,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   
   else if (message.type === "GET_CUSTOM_PROMPT") {
     showModal();
+    updateBadge(message.selectionText || "");
     document.getElementById("zenwrite-loading").style.display = "none";
     document.getElementById("zenwrite-custom-prompt").style.display = "block";
     document.getElementById("zenwrite-diff-container").style.display = "none";
@@ -232,6 +292,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   
   else if (message.type === "SHOW_DIFF") {
     showModal();
+    updateBadge(message.originalText || "");
     document.getElementById("zenwrite-loading").style.display = "none";
     document.getElementById("zenwrite-custom-prompt").style.display = "none";
     document.getElementById("zenwrite-diff-container").style.display = "block";
