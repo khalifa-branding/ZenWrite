@@ -1775,75 +1775,146 @@
             border-color: var(--accent-color);
         }
 
-        /* Tablet & Mobile Media Queries */
-        @media (max-width: 1024px) {
+        /* ==========================================================================
+           COMPREHENSIVE MULTI-DEVICE RESPONSIVE DESIGN & FLUID GRID SYSTEM
+           ========================================================================== */
+
+        /* 1. Large Displays & 4K Ultra-wide Desktops (1440px+) */
+        @media (min-width: 1440px) {
             :root {
-                --sidebar-width: 250px;
-                --ai-drawer-width: 300px;
+                --sidebar-width: 300px;
+                --ai-drawer-width: 380px;
+            }
+            .preview-content {
+                padding: 32px 48px;
+                max-width: 960px;
+                margin: 0 auto;
+                font-size: 1.05rem;
+            }
+            .editor-textarea {
+                padding: 28px;
+                font-size: 1rem;
             }
             .active-doc-title-input {
-                max-width: 200px;
+                max-width: 320px;
+                font-size: 1.1rem;
+            }
+            .zen-active .editor-textarea-wrapper {
+                max-width: 860px;
             }
         }
 
+        /* 2. Standard Laptops & Tablets Landscape (1025px - 1439px) */
+        @media (max-width: 1439px) and (min-width: 1025px) {
+            .preview-content {
+                padding: 24px 32px;
+            }
+            .active-doc-title-input {
+                max-width: 240px;
+            }
+        }
+
+        /* 3. Medium Tablets & iPad Pro (769px - 1024px) */
+        @media (max-width: 1024px) {
+            :root {
+                --sidebar-width: 260px;
+                --ai-drawer-width: 320px;
+            }
+            .workspace-header {
+                padding: 0 16px;
+                height: 54px;
+            }
+            .active-doc-title-input {
+                max-width: 180px;
+            }
+            .preview-content {
+                padding: 20px 24px;
+            }
+            .editor-textarea {
+                padding: 18px 20px;
+            }
+        }
+
+        /* 4. Small Tablets & Mobile Smartphones (<= 768px) */
         @media (max-width: 768px) {
             :root {
-                --sidebar-width: 280px;
-                --ai-drawer-width: min(340px, 90vw);
+                --sidebar-width: min(300px, 85vw);
+                --ai-drawer-width: min(360px, 92vw);
             }
 
-            body {
-                height: 100vh;
+            html, body {
+                height: 100%;
                 height: 100dvh;
                 min-height: -webkit-fill-available;
+                overflow-x: hidden;
             }
 
+            .main-workspace {
+                height: 100%;
+                height: 100dvh;
+                padding-bottom: env(safe-area-inset-bottom, 0px);
+            }
+
+            /* Off-canvas Overlay Sidebar */
             .sidebar {
                 position: fixed;
                 top: 0;
                 bottom: 0;
                 left: 0;
                 height: 100%;
-                z-index: 50;
+                height: 100dvh;
+                z-index: 150;
                 box-shadow: 0 10px 40px var(--shadow-color);
                 transform: translateX(0);
+                padding-top: env(safe-area-inset-top, 0px);
+                padding-bottom: env(safe-area-inset-bottom, 0px);
+                padding-left: env(safe-area-inset-left, 0px);
             }
 
             .sidebar.hidden {
-                transform: translateX(calc(-1 * var(--sidebar-width)));
+                transform: translateX(-105%);
             }
 
+            /* Off-canvas AI & Proofreader Drawers */
             .ai-drawer, .proofreader-drawer {
                 position: fixed;
                 top: 0;
                 bottom: 0;
                 right: 0;
                 height: 100%;
+                height: 100dvh;
                 width: var(--ai-drawer-width);
-                z-index: 50;
-                box-shadow: 0 10px 40px var(--shadow-color);
+                max-width: 100vw;
+                z-index: 150;
+                box-shadow: -10px 0 40px var(--shadow-color);
                 transform: translateX(0);
+                padding-top: env(safe-area-inset-top, 0px);
+                padding-bottom: env(safe-area-inset-bottom, 0px);
+                padding-right: env(safe-area-inset-right, 0px);
             }
 
             .ai-drawer.hidden, .proofreader-drawer.hidden {
-                transform: translateX(100%);
+                transform: translateX(105%);
             }
 
             .workspace-header {
                 padding: 0 12px;
-                height: 54px;
+                padding-top: env(safe-area-inset-top, 0px);
+                padding-left: max(12px, env(safe-area-inset-left, 0px));
+                padding-right: max(12px, env(safe-area-inset-right, 0px));
+                height: 52px;
                 gap: 8px;
             }
 
             .header-left {
-                gap: 8px !important;
+                gap: 6px !important;
                 flex: 1;
                 min-width: 0;
             }
 
             .active-doc-title-input {
-                font-size: 0.95rem;
-                max-width: 130px;
+                font-size: 0.92rem;
+                max-width: clamp(100px, 35vw, 160px);
                 padding: 4px 6px;
             }
 
@@ -1868,9 +1939,9 @@
 
             .icon-btn {
                 padding: 6px;
-                min-width: 40px;
-                min-height: 40px;
-                font-size: 1.2rem;
+                min-width: 38px;
+                min-height: 38px;
+                font-size: 1.15rem;
             }
 
             .mobile-view-switcher {
@@ -1879,12 +1950,19 @@
 
             .mobile-format-toolbar {
                 display: flex;
+                padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
+                padding-left: max(8px, env(safe-area-inset-left, 0px));
+                padding-right: max(8px, env(safe-area-inset-right, 0px));
+                -webkit-overflow-scrolling: touch;
+                scroll-behavior: smooth;
             }
 
             /* Responsive Single Pane / Switcher Mode */
             .editor-container {
                 position: relative;
                 flex: 1;
+                height: calc(100% - 52px - 32px);
+                min-height: 0;
             }
 
             .pane {
@@ -1907,16 +1985,20 @@
 
             .editor-textarea {
                 padding: 16px;
-                font-size: 1rem;
+                font-size: 0.98rem;
                 line-height: 1.65;
             }
 
             .preview-content {
-                padding: 20px 16px;
+                padding: 18px 16px;
+                font-size: 0.98rem;
             }
 
             .workspace-footer {
                 padding: 0 12px;
+                padding-left: max(12px, env(safe-area-inset-left, 0px));
+                padding-right: max(12px, env(safe-area-inset-right, 0px));
+                padding-bottom: env(safe-area-inset-bottom, 0px);
                 font-size: 0.75rem;
                 height: 32px;
             }
@@ -1928,21 +2010,24 @@
 
             .modal {
                 max-width: calc(100vw - 20px);
-                max-height: calc(100vh - 40px);
-                max-height: calc(100dvh - 40px);
+                max-height: calc(100dvh - 30px);
                 padding: 20px 16px;
                 border-radius: 16px;
             }
 
             .diff-modal {
-                max-width: calc(100vw - 20px);
-                max-height: calc(100vh - 40px);
-                max-height: calc(100dvh - 40px);
+                max-width: calc(100vw - 16px);
+                max-height: calc(100dvh - 30px);
                 padding: 18px 14px;
                 border-radius: 16px;
             }
+
+            .diff-container {
+                max-height: calc(50dvh - 40px);
+            }
         }
 
+        /* 5. Compact Mobile Smartphones (<= 480px) */
         @media (max-width: 480px) {
             .logo {
                 font-size: 1.1rem;
@@ -1956,28 +2041,98 @@
             }
             .workspace-header {
                 padding: 0 8px;
+                height: 48px;
             }
             .active-doc-title-input {
-                max-width: 95px;
+                max-width: clamp(80px, 30vw, 120px);
                 font-size: 0.85rem;
             }
             .pane-header {
-                padding: 6px 12px;
-                font-size: 0.75rem;
+                padding: 6px 10px;
+                font-size: 0.72rem;
+                height: 34px;
             }
-            /* Hide line numbers on small phones for maximum edge-to-edge width */
+            .pane-action-btn {
+                padding: 2px 6px;
+                font-size: 0.7rem;
+                height: 22px;
+            }
             .line-numbers {
                 display: none !important;
             }
             .editor-textarea {
-                padding: 14px 14px !important;
+                padding: 12px 10px !important;
+                font-size: 0.92rem;
+            }
+            .preview-content {
+                padding: 14px 12px;
+                font-size: 0.94rem;
             }
             .sheet-grid {
                 grid-template-columns: repeat(3, 1fr);
-                gap: 10px;
+                gap: 8px;
+            }
+            .sheet-item-btn {
+                padding: 10px 4px;
+                font-size: 0.72rem;
             }
             .ai-menu, .custom-context-menu {
-                max-width: calc(100vw - 24px);
+                max-width: calc(100vw - 16px);
+            }
+        }
+
+        /* 6. Ultra-Compact Mobile Phones (<= 360px) */
+        @media (max-width: 360px) {
+            .view-switch-btn {
+                padding: 4px 6px;
+                font-size: 0.72rem;
+            }
+            .pane-action-btn span {
+                display: none;
+            }
+            .pane-action-btn {
+                padding: 2px 4px;
+                min-width: 22px;
+                justify-content: center;
+            }
+            .pane-dropdown-group .pane-dropdown-trigger {
+                padding: 2px 3px;
+                min-width: 16px;
+            }
+            .sheet-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* 7. Mobile Landscape Orientation (Low Height) */
+        @media (orientation: landscape) and (max-height: 500px) {
+            .workspace-header {
+                height: 40px;
+            }
+            .pane-header {
+                height: 28px;
+                padding: 2px 10px;
+            }
+            .mobile-format-toolbar {
+                padding: 2px 8px;
+                min-height: 32px;
+            }
+            .format-btn {
+                min-height: 28px;
+                min-width: 28px;
+                padding: 2px 8px;
+                font-size: 0.75rem;
+            }
+            .workspace-footer {
+                height: 24px;
+                font-size: 0.7rem;
+            }
+            .modal, .diff-modal {
+                max-height: calc(100dvh - 16px);
+                padding: 12px 14px;
+            }
+            .diff-container {
+                max-height: calc(50dvh - 20px);
             }
         }
 
