@@ -2200,82 +2200,64 @@
                 display: flex !important;
             }
 
-            /* Pane Header on Mobile */
+            /* Hide redundant pane sub-header on mobile to eliminate double-header stacking & text wrapping */
             .pane-header {
-                height: 46px;
-                padding: 0 12px;
-                border-bottom: 1px solid var(--border-color);
+                display: none !important;
             }
 
-            .pane-header-left span {
-                font-size: 0.8rem;
-                font-weight: 700;
+            /* Full-height Editor wrapper on mobile */
+            .editor-textarea-wrapper {
+                height: 100% !important;
             }
 
-            .pane-action-btn {
-                min-height: 38px;
-                padding: 6px 12px;
-                font-size: 0.82rem;
-                border-radius: 8px;
-                touch-action: manipulation;
-            }
-
-            .editor-ai-menu {
-                position: fixed !important;
-                top: 60px !important;
-                right: 12px !important;
-                left: 12px !important;
-                max-width: calc(100vw - 24px) !important;
-                width: auto !important;
-                max-height: calc(80dvh - 60px) !important;
-                box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4) !important;
-                border-radius: 14px !important;
-                z-index: 350 !important;
-            }
-
-            .pane-dropdown-item {
-                min-height: 42px;
-                padding: 8px 12px;
-                font-size: 0.88rem;
-            }
-
-            /* Editor Textarea on Mobile */
+            /* Hide line numbers gutter on mobile to maximize horizontal width */
             .line-numbers {
-                width: 36px;
-                font-size: 0.82rem;
-                padding: 16px 4px 16px 0;
+                display: none !important;
             }
 
             .editor-textarea {
-                padding: 16px 12px;
+                padding: 18px 16px !important;
                 font-size: 16px !important;
-                line-height: 1.65;
+                line-height: 1.65 !important;
             }
 
             .preview-content {
-                padding: 20px 16px;
-                font-size: 1rem;
-                line-height: 1.7;
+                padding: 20px 16px !important;
+                font-size: 1.05rem !important;
+                line-height: 1.7 !important;
             }
 
             /* Bottom Formatting Bar */
             .mobile-format-toolbar {
                 display: flex !important;
+                align-items: center;
+                gap: 6px;
+                padding: 8px 12px;
+                background: var(--bg-secondary);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border-top: 1px solid var(--border-color);
             }
 
-            /* Footer */
+            .mobile-word-badge {
+                margin-left: auto;
+                flex: 0 0 auto;
+                font-family: 'Outfit', sans-serif;
+                font-size: 0.74rem;
+                font-weight: 600;
+                color: var(--text-secondary);
+                background: var(--bg-tertiary);
+                border: 1px solid var(--border-color);
+                padding: 4px 10px;
+                border-radius: 20px;
+                display: flex;
+                align-items: center;
+                white-space: nowrap;
+            }
+
+            /* Hide redundant desktop footer on mobile to reclaim vertical screen height */
             .workspace-footer {
-                padding: 0 12px;
-                padding-left: max(12px, env(safe-area-inset-left, 0px));
-                padding-right: max(12px, env(safe-area-inset-right, 0px));
-                padding-bottom: env(safe-area-inset-bottom, 0px);
-                font-size: 0.75rem;
-                height: 32px;
-            }
-
-            .footer-left span:nth-child(2),
-            .footer-left span:nth-child(3) {
-                display: none;
+                display: none !important;
             }
 
             .modal {
@@ -2622,6 +2604,7 @@
             <button type="button" class="format-btn" data-format="task" aria-label="Task Checkbox"><i class="ti ti-checkbox" aria-hidden="true"></i></button>
             <button type="button" class="format-btn" data-format="link" aria-label="Insert Link"><i class="ti ti-link" aria-hidden="true"></i></button>
             <button type="button" class="format-btn format-ai-btn" id="mobileAiFormatBtn" aria-label="AI Writing Prompt"><i class="ti ti-sparkles" aria-hidden="true"></i> AI</button>
+            <span class="mobile-word-badge" id="mobileWordBadge">0 words</span>
         </div>
 
         <!-- Footer -->
@@ -3217,6 +3200,11 @@ Try editing this text, or create a new document!`);
             wordCount.textContent = `Words: ${words}`;
             charCount.textContent = `Characters: ${chars}`;
             readTime.textContent = `Read Time: ${readingTime} min`;
+
+            const mobileWordBadge = document.getElementById('mobileWordBadge');
+            if (mobileWordBadge) {
+                mobileWordBadge.textContent = `${words} ${words === 1 ? 'word' : 'words'}`;
+            }
 
             // Line numbers mapping
             const lines = content.split('\n');
