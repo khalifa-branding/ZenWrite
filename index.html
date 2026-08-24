@@ -2828,7 +2828,7 @@
     <div class="mobile-backdrop" id="mobileBackdrop" aria-hidden="true"></div>
 
     <!-- Sidebar (Document Management) -->
-    <aside class="sidebar" id="sidebar" aria-label="Document Management Sidebar">
+    <aside class="sidebar hidden" id="sidebar" aria-label="Document Management Sidebar">
         <div class="sidebar-header">
             <h1 class="logo"><i class="ti ti-feather" aria-hidden="true"></i> ZenWrite</h1>
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -3534,7 +3534,7 @@
                 renderEditor();
                 renderDocList();
             }
-            if (window.innerWidth <= 768 && sidebar) {
+            if (sidebar) {
                 sidebar.classList.add('hidden');
                 if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
                 if (typeof updateBackdropState === 'function') updateBackdropState();
