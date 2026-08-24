@@ -6348,7 +6348,11 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 if (promptStudioStatusBadge) promptStudioStatusBadge.style.display = 'none';
 
                 try {
-                    const generated = await runGeminiAPI(systemInstruction, rawTask);
+                    const generated = await runGeminiAI(systemInstruction, rawTask);
+                    if (!generated) {
+                        promptStudioOutputBox.innerHTML = '<div class="ai-output-placeholder">Generation was not completed. Check your Gemini API Key in Settings.</div>';
+                        return;
+                    }
                     promptStudioOutputBox.textContent = generated;
                     if (promptStudioActions) promptStudioActions.style.display = 'flex';
                     if (promptStudioStatusBadge) promptStudioStatusBadge.style.display = 'inline';
