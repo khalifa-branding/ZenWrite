@@ -331,25 +331,100 @@
             overflow: hidden;
         }
 
-        .menu-toggle-btn {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 1.4rem;
+        /* Left Edge Expand Tab (Hint for Collapsed Sidebar) */
+        .sidebar-edge-tab {
+            position: fixed;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%) translateX(0);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-left: none;
+            border-radius: 0 10px 10px 0;
+            padding: 10px 5px;
+            color: var(--accent-color);
             cursor: pointer;
+            z-index: 15;
             display: flex;
+            flex-direction: column;
             align-items: center;
+            gap: 6px;
+            box-shadow: 2px 4px 16px rgba(0, 0, 0, 0.25);
+            transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease, padding 0.15s ease, opacity 0.2s ease;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .sidebar-edge-tab:hover {
+            background: var(--accent-glow);
+            padding-right: 8px;
+            transform: translateY(-50%) translateX(2px);
+        }
+
+        .sidebar-edge-tab .edge-tab-text {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+            color: var(--text-secondary);
+            font-size: 0.68rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .sidebar-edge-tab:hover .edge-tab-text {
+            color: var(--accent-color);
+        }
+
+        .zen-active .sidebar-edge-tab {
+            display: none !important;
+        }
+
+        /* Menu Toggle Button Styling */
+        .menu-toggle-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             border-radius: 8px;
-            padding: 8px;
-            min-width: 44px;
-            min-height: 44px;
+            padding: 6px 12px;
+            min-height: 38px;
             justify-content: center;
-            transition: background-color 0.2s ease, color 0.2s ease;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .menu-toggle-btn i {
+            font-size: 1.15rem;
+            color: var(--accent-color);
         }
 
         .menu-toggle-btn:hover {
-            background-color: var(--bg-secondary);
-            color: var(--text-primary);
+            background-color: var(--accent-glow);
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .menu-toggle-label {
+            display: inline-block;
+        }
+
+        @media (max-width: 640px) {
+            .menu-toggle-label {
+                display: none;
+            }
+            .menu-toggle-btn {
+                padding: 6px 8px;
+            }
         }
 
         .active-doc-title-input {
@@ -2855,6 +2930,12 @@
         </div>
     </aside>
 
+    <!-- Left Gutter Expand Handle (Visible when Sidebar is Collapsed) -->
+    <button type="button" class="sidebar-edge-tab" id="sidebarEdgeTab" data-tooltip="Open Documents (Ctrl+\)" aria-label="Open Documents Sidebar">
+        <i class="ti ti-chevron-right" aria-hidden="true"></i>
+        <span class="edge-tab-text">Docs</span>
+    </button>
+
     <!-- Main Workspace -->
     <main class="main-workspace" id="mainWorkspace">
         
@@ -2863,7 +2944,10 @@
         <!-- Header Bar -->
         <header class="workspace-header" role="banner">
             <div class="header-left">
-                <button class="menu-toggle-btn" id="menuToggle" data-tooltip="Toggle Sidebar" aria-label="Toggle Navigation Sidebar" aria-expanded="false" aria-controls="sidebar"><i class="ti ti-menu-2" aria-hidden="true"></i></button>
+                <button class="menu-toggle-btn" id="menuToggle" data-tooltip="Documents & Files (Ctrl+\)" aria-label="Toggle Navigation Sidebar" aria-expanded="false" aria-controls="sidebar">
+                    <i class="ti ti-layout-sidebar" aria-hidden="true"></i>
+                    <span class="menu-toggle-label">Documents</span>
+                </button>
                 <input type="text" class="active-doc-title-input" id="activeDocTitle" value="Untitled Document" placeholder="Rename document..." aria-label="Active Document Title">
                 
                 <!-- Mobile Segmented View Switcher -->
@@ -5014,7 +5098,36 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         const closeActionsSheet = document.getElementById('closeActionsSheet');
         const mobileMoreBtn = document.getElementById('mobileMoreBtn');
 
+        const sidebarEdgeTab = document.getElementById('sidebarEdgeTab');
+
+        function updateSidebarEdgeTabState() {
+            if (!sidebarEdgeTab) return;
+            const isHidden = sidebar && sidebar.classList.contains('hidden');
+            const isZen = document.body.classList.contains('zen-active');
+            if (isHidden && !isZen) {
+                sidebarEdgeTab.style.transform = 'translateY(-50%) translateX(0)';
+                sidebarEdgeTab.style.opacity = '1';
+                sidebarEdgeTab.style.pointerEvents = 'auto';
+            } else {
+                sidebarEdgeTab.style.transform = 'translateY(-50%) translateX(-100%)';
+                sidebarEdgeTab.style.opacity = '0';
+                sidebarEdgeTab.style.pointerEvents = 'none';
+            }
+        }
+
+        if (sidebarEdgeTab) {
+            sidebarEdgeTab.onclick = () => {
+                if (sidebar) {
+                    sidebar.classList.remove('hidden');
+                    if (menuToggle) menuToggle.setAttribute('aria-expanded', 'true');
+                    updateBackdropState();
+                    if (navigator.vibrate) navigator.vibrate(10);
+                }
+            };
+        }
+
         function updateBackdropState() {
+            updateSidebarEdgeTabState();
             if (window.innerWidth <= 768) {
                 const sidebarOpen = sidebar && !sidebar.classList.contains('hidden');
                 const aiOpen = aiDrawer && !aiDrawer.classList.contains('hidden');
@@ -6537,16 +6650,28 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             }
         });
 
+        // Keyboard Shortcut: Toggle Sidebar with Ctrl+\ or Cmd+\ or Ctrl+B
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && (e.key === '\\' || e.code === 'Backslash' || (e.key && e.key.toLowerCase() === 'b'))) {
+                if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') && e.key && e.key.toLowerCase() === 'b') {
+                    return; // Preserve Ctrl+B for bold in text inputs
+                }
+                e.preventDefault();
+                if (menuToggle) menuToggle.click();
+            }
+        });
+
         // Initialize App
         window.onload = () => {
             loadFromLocalStorage();
+            if (sidebar) sidebar.classList.add('hidden');
+            if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
             if (window.innerWidth <= 768) {
-                if (sidebar) sidebar.classList.add('hidden');
                 if (aiDrawer) aiDrawer.classList.add('hidden');
-                if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
                 if (previewPane) previewPane.style.display = '';
             }
             if (typeof updateBackdropState === 'function') updateBackdropState();
+            if (typeof updateSidebarEdgeTabState === 'function') updateSidebarEdgeTabState();
         };
 
     </script>
