@@ -752,6 +752,13 @@
             position: relative;
             display: flex;
             overflow: hidden;
+            transition: background-color 0.18s ease, outline 0.18s ease;
+        }
+
+        .editor-textarea-wrapper.drag-active {
+            outline: 2px dashed var(--accent-color);
+            outline-offset: -4px;
+            background-color: var(--accent-glow);
         }
 
         .line-numbers {
@@ -4549,6 +4556,49 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+        }
+
+        // --- Drag-and-Drop File Import Support ---
+        const textareaWrapper = document.querySelector('.editor-textarea-wrapper');
+        if (textareaWrapper) {
+            ['dragenter', 'dragover'].forEach(eventName => {
+                textareaWrapper.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    textareaWrapper.classList.add('drag-active');
+                });
+            });
+
+            ['dragleave', 'dragend', 'drop'].forEach(eventName => {
+                textareaWrapper.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    textareaWrapper.classList.remove('drag-active');
+                });
+            });
+
+            textareaWrapper.addEventListener('drop', (e) => {
+                const files = e.dataTransfer?.files;
+                if (!files || files.length === 0) return;
+                const file = files[0];
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const content = event.target?.result;
+                    if (typeof content === 'string') {
+                        const prev = { content: editorTextarea.value, start: 0, end: 0 };
+                        editorTextarea.value = content;
+                        const cleanName = file.name.replace(/\.[^/.]+$/, "");
+                        if (activeDocTitle && (!activeDocTitle.value || activeDocTitle.value.startsWith('Untitled'))) {
+                            activeDocTitle.value = cleanName;
+                        }
+                        renderEditor();
+                        triggerAutosave();
+                        showUndoToast(`Imported ${file.name}`, prev);
+                        if (navigator.vibrate) navigator.vibrate(15);
+                    }
+                };
+                reader.readAsText(file);
+            });
         }
 
         function importFile() {

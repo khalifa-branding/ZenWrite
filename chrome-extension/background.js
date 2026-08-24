@@ -8,8 +8,22 @@ chrome.runtime.onInstalled.addListener(() => {
 
   chrome.contextMenus.create({
     parentId: "zenwrite-parent",
+    id: "zenwrite-counter-prompt",
+    title: "🤖 Agent Counter-Prompt",
+    contexts: ["selection", "editable"]
+  });
+
+  chrome.contextMenus.create({
+    parentId: "zenwrite-parent",
+    id: "zenwrite-perfect-prompt",
+    title: "✨ 5-Part Master Prompt",
+    contexts: ["selection", "editable"]
+  });
+
+  chrome.contextMenus.create({
+    parentId: "zenwrite-parent",
     id: "zenwrite-grammar",
-    title: "✨ Correct Grammar",
+    title: "🪄 Correct Grammar",
     contexts: ["selection", "editable"]
   });
 
@@ -138,7 +152,50 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     const fullContext = request.fullContext;
 
     let promptInstruction = "";
-    if (action === "zenwrite-grammar") {
+    if (action === "zenwrite-counter-prompt") {
+      promptInstruction = `You are an expert AI Agent Director and Prompt Engineer. The user is collaborating with an autonomous AI coding agent in a CLI/IDE terminal (such as Antigravity, Cursor, Claude Code, Aider, or Codex).
+
+The user has highlighted the AI agent's latest response/output. Your task is to generate a context-aware, highly actionable NEXT-TURN COUNTER-PROMPT that the user can copy and paste directly back into the agent's terminal without reading, analyzing, or manually drafting a reply.
+
+Goal: Acknowledge the plan/step proposed by the agent, confirm approval with no unnecessary delay, and give direct, imperative instructions to execute and implement the changes immediately.
+
+Structure the generated counter-prompt cleanly as:
+1. Short direct confirmation/evaluation of the current step.
+2. Numbered list of concrete next actions/commands the agent must execute.
+3. Explicit constraints (e.g. preserve working code, run integrity checks, keep comments).
+
+Formatting rules:
+- Return ONLY the exact counter-prompt text ready to paste into the terminal.
+- Do not wrap the entire response in triple backticks.
+- Do not include conversational introductory remarks like "Here is your counter prompt:".
+- Make it authoritative, concise, and unambiguous.`;
+    } else if (action === "zenwrite-perfect-prompt") {
+      promptInstruction = `You are a world-class Prompt Engineer and AI Alignment Specialist. Your expertise lies in dissecting vague, rough, or unstructured user requests and transforming them into highly optimized, reliable, and context-aware master prompts.
+
+Your objective is to take the rough draft or task description provided by the user and engineer it into a high-performing, production-ready master prompt following this exact 5-part structural blueprint:
+
+# PERSONA & ROLE
+[Define a highly specific, expert persona for the AI with deep domain authority]
+
+# TASK OBJECTIVE
+[State clearly and concisely what the AI must accomplish using active, imperative verbs]
+
+# CONTEXT & BACKGROUND
+[Provide the necessary situational awareness, problem space, and operational context]
+
+# SPECIFIC RULES & CONSTRAINTS
+- [Constraint 1: Required Methodology & Inclusion Criteria]
+- [Constraint 2: Negative Constraints - What to Avoid]
+- [Constraint 3: Edge Case & Quality Guidelines]
+- [Constraint 4: Tone, Depth, and Technical Rigor]
+
+# EXPECTED OUTPUT FORMAT
+[Define the exact structure, layout, or markdown/JSON schema of the final response]
+
+Meta-Engineering Rules:
+- Use clear bracket placeholders like [Insert Text Here] or [Variable] for dynamic inputs.
+- No Conversational Filler: Output ONLY the engineered master prompt. Do not wrap the whole response in triple backticks or include conversational introductory/concluding remarks.`;
+    } else if (action === "zenwrite-grammar") {
       promptInstruction = "Proofread and correct the spelling, grammar, and sentence structure of the text. Keep all styling intact. Return ONLY the updated corrected text without any extra text or quotes.";
     } else if (action === "zenwrite-rephrase") {
       promptInstruction = "Rewrite and polish the target text to elevate its professional quality, clarity, and stylistic flow. Elevate vocabulary, eliminate passive voice, and remove wordiness while retaining all core semantic meanings, variables, and technical terms. Preserve all structural formatting, such as lists, headings, code blocks, and markdown syntax. Ensure the output reads elegantly and naturally. Return ONLY the polished, rewritten text. Do not wrap the output in quotes. Do not include any explanations.";
