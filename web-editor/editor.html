@@ -751,6 +751,7 @@
         }
 
         .line-numbers {
+            display: none;
             width: 52px;
             flex-shrink: 0;
             background-color: var(--bg-secondary);
@@ -765,6 +766,10 @@
             overflow-y: hidden;
             overflow-x: hidden;
             box-sizing: border-box;
+        }
+
+        body.show-line-numbers .line-numbers {
+            display: block;
         }
 
         .editor-textarea {
@@ -2142,7 +2147,7 @@
             .header-actions #soundToggle,
             .header-actions #splitToggle,
             .header-actions #zenToggle,
-            .header-actions #proofreadToggleBtn,
+            .header-actions #headerCopyDropdown,
             .header-actions #aiDrawerToggle,
             .header-actions #settingsToggle {
                 display: none !important;
@@ -2450,8 +2455,25 @@
                 <button class="icon-btn" id="soundToggle" data-tooltip="Typewriter Sounds" aria-label="Toggle Typewriter Sound Effects"><i class="ti ti-volume" aria-hidden="true"></i></button>
                 <button class="icon-btn" id="splitToggle" data-tooltip="Toggle Preview" aria-label="Toggle Markdown Preview Pane"><i class="ti ti-layout-columns" aria-hidden="true"></i></button>
                 <button class="icon-btn" id="zenToggle" data-tooltip="Zen Focus Mode" aria-label="Toggle Fullscreen Zen Focus Mode"><i class="ti ti-maximize" aria-hidden="true"></i></button>
-                <button class="icon-btn" id="proofreadToggleBtn" data-tooltip="AI Proofreader" aria-label="Open AI Proofreader Drawer"><i class="ti ti-checklist" aria-hidden="true"></i></button>
-                <button class="icon-btn" id="aiDrawerToggle" data-tooltip="AI Writing Assistant" aria-label="Open AI Writing Assistant Drawer"><i class="ti ti-sparkles" aria-hidden="true"></i></button>
+                
+                <!-- Unified Header Clipboard Copy Dropdown -->
+                <div class="pane-dropdown" id="headerCopyDropdown">
+                    <button class="icon-btn" id="headerCopyBtn" data-tooltip="Copy Content" aria-label="Copy document or selection" aria-haspopup="true" aria-expanded="false"><i class="ti ti-copy" aria-hidden="true"></i></button>
+                    <div class="pane-dropdown-menu" id="headerCopyMenu" role="menu" style="width: 210px; right: 0;">
+                        <div class="dropdown-section-title" role="presentation">Clipboard Export</div>
+                        <button class="pane-dropdown-item" id="copyMarkdownOption" role="menuitem" tabindex="-1">
+                            <i class="ti ti-markdown" aria-hidden="true"></i> <span>Copy Markdown</span>
+                        </button>
+                        <button class="pane-dropdown-item" id="copyRichTextOption" role="menuitem" tabindex="-1">
+                            <i class="ti ti-typography" aria-hidden="true"></i> <span>Copy Rich Text</span>
+                        </button>
+                        <button class="pane-dropdown-item" id="copyHtmlOption" role="menuitem" tabindex="-1">
+                            <i class="ti ti-code" aria-hidden="true"></i> <span>Copy HTML Source</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button class="icon-btn" id="aiDrawerToggle" data-tooltip="AI Assistant & Audit" aria-label="Open AI Assistant Drawer"><i class="ti ti-sparkles" aria-hidden="true"></i></button>
                 <button class="icon-btn" id="settingsToggle" data-tooltip="Settings" aria-label="Open Application Settings"><i class="ti ti-settings" aria-hidden="true"></i></button>
                 <button class="icon-btn mobile-more-btn" id="mobileMoreBtn" data-tooltip="More Actions" aria-label="Open Quick Actions Menu"><i class="ti ti-dots" aria-hidden="true"></i></button>
             </div>
@@ -2464,9 +2486,6 @@
                 <div class="pane-header">
                     <div class="pane-header-left">
                         <span>Editor</span>
-                        <span class="context-sense-badge" id="contextSenseBadge" title="Real-time Content-Aware Detection" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; padding: 2px 8px; border-radius: 12px; background: rgba(59, 130, 246, 0.1); color: var(--accent-color); border: 1px solid rgba(59, 130, 246, 0.2); font-weight: 500;">
-                            <i class="ti ti-scan" id="contextSenseIcon"></i> <span id="contextSenseText">Markdown Prose</span>
-                        </span>
                         <span class="selection-badge" id="editorSelectionBadge"><i class="ti ti-check"></i> <span id="editorSelectionCount">0 words</span></span>
                     </div>
                     <div class="pane-header-actions">
@@ -2488,51 +2507,19 @@
 
                                 <div class="dropdown-divider" role="separator"></div>
 
-                                <div class="dropdown-section-title" role="presentation">Transform & Edit</div>
-                                <button class="pane-dropdown-item" data-action="grammar" role="menuitem" tabindex="-1">
-                                    <i class="ti ti-checks" aria-hidden="true"></i> <span>Correct Grammar & Spelling</span>
-                                </button>
+                                <div class="dropdown-section-title" role="presentation">Transform & Polish</div>
                                 <button class="pane-dropdown-item" data-action="rephrase" role="menuitem" tabindex="-1">
                                     <i class="ti ti-refresh" aria-hidden="true"></i> <span>Polish & Rephrase</span>
                                 </button>
-                                <button class="pane-dropdown-item" data-action="concise" role="menuitem" tabindex="-1">
-                                    <i class="ti ti-arrows-minimize" aria-hidden="true"></i> <span>Make Concise</span>
+                                <button class="pane-dropdown-item" data-action="grammar" role="menuitem" tabindex="-1">
+                                    <i class="ti ti-checks" aria-hidden="true"></i> <span>Correct Grammar & Spelling</span>
                                 </button>
-                                <button class="pane-dropdown-item" data-action="shorter" role="menuitem" tabindex="-1">
-                                    <i class="ti ti-scissors" aria-hidden="true"></i> <span>Make Shorter</span>
+                                <button class="pane-dropdown-item" data-action="concise" role="menuitem" tabindex="-1">
+                                    <i class="ti ti-scissors" aria-hidden="true"></i> <span>Make Shorter / Direct</span>
                                 </button>
                                 <button class="pane-dropdown-item" data-action="expand" role="menuitem" tabindex="-1">
                                     <i class="ti ti-arrows-maximize" aria-hidden="true"></i> <span>Elaborate / Expand</span>
                                 </button>
-
-                                <div class="dropdown-divider" role="separator"></div>
-
-                                <div class="dropdown-section-title" role="presentation">Tone & Language</div>
-                                <!-- Tone Accordion -->
-                                <button class="pane-dropdown-item accordion-trigger" id="anchoredToneTrigger" data-submenu="anchoredToneSubmenu" role="menuitem" aria-haspopup="true" aria-expanded="false" tabindex="-1">
-                                    <i class="ti ti-palette" aria-hidden="true"></i> <span>Change Tone</span> <i class="ti ti-chevron-down" style="margin-left: auto; font-size: 0.75rem;"></i>
-                                </button>
-                                <div class="anchored-submenu" id="anchoredToneSubmenu" style="display: none;" role="menu">
-                                    <button class="pane-dropdown-subitem" data-action="tone-professional" role="menuitem" tabindex="-1">👔 Professional</button>
-                                    <button class="pane-dropdown-subitem" data-action="tone-casual" role="menuitem" tabindex="-1">👕 Casual</button>
-                                    <button class="pane-dropdown-subitem" data-action="tone-persuasive" role="menuitem" tabindex="-1">🎯 Persuasive</button>
-                                    <button class="pane-dropdown-subitem" data-action="tone-friendly" role="menuitem" tabindex="-1">🤝 Friendly</button>
-                                    <button class="pane-dropdown-subitem" data-action="tone-urgent" role="menuitem" tabindex="-1">⚡ Urgent</button>
-                                    <button class="pane-dropdown-subitem" data-action="tone-sarcastic" role="menuitem" tabindex="-1">😏 Sarcastic</button>
-                                </div>
-
-                                <!-- Translate Accordion -->
-                                <button class="pane-dropdown-item accordion-trigger" id="anchoredTranslateTrigger" data-submenu="anchoredTranslateSubmenu" role="menuitem" aria-haspopup="true" aria-expanded="false" tabindex="-1">
-                                    <i class="ti ti-language" aria-hidden="true"></i> <span>Translate To</span> <i class="ti ti-chevron-down" style="margin-left: auto; font-size: 0.75rem;"></i>
-                                </button>
-                                <div class="anchored-submenu" id="anchoredTranslateSubmenu" style="display: none;" role="menu">
-                                    <button class="pane-dropdown-subitem" data-action="translate-es" role="menuitem" tabindex="-1">🇪🇸 Spanish</button>
-                                    <button class="pane-dropdown-subitem" data-action="translate-fr" role="menuitem" tabindex="-1">🇫🇷 French</button>
-                                    <button class="pane-dropdown-subitem" data-action="translate-de" role="menuitem" tabindex="-1">🇩🇪 German</button>
-                                    <button class="pane-dropdown-subitem" data-action="translate-ja" role="menuitem" tabindex="-1">🇯🇵 Japanese</button>
-                                    <button class="pane-dropdown-subitem" data-action="translate-zh" role="menuitem" tabindex="-1">🇨🇳 Chinese</button>
-                                    <button class="pane-dropdown-subitem" data-action="translate-ar" role="menuitem" tabindex="-1">🇸🇦 Arabic</button>
-                                </div>
 
                                 <div class="dropdown-divider" role="separator"></div>
 
@@ -2549,10 +2536,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <button class="pane-action-btn" id="copyMarkdownBtn" title="Copy Markdown (Selected or Full Document)" aria-label="Copy Markdown">
-                            <i class="ti ti-copy" aria-hidden="true"></i> <span>Copy</span>
-                        </button>
                     </div>
                 </div>
                 <div class="editor-textarea-wrapper">
@@ -2565,28 +2548,9 @@
             <section class="pane preview-pane" id="previewPane">
                 <div class="pane-header">
                     <span>Live Preview</span>
-                    <div class="pane-header-actions">
-                        <div class="pane-dropdown" id="previewCopyDropdown">
-                            <div class="pane-dropdown-group">
-                                <button class="pane-action-btn" id="copyRichTextBtn" title="Copy Formatted Rich Text" aria-label="Copy Formatted Rich Text">
-                                    <i class="ti ti-copy" aria-hidden="true"></i> <span>Copy</span>
-                                </button>
-                                <button class="pane-action-btn pane-dropdown-trigger" id="copyPreviewMenuBtn" title="More copy options" aria-label="More copy options" aria-haspopup="true" aria-expanded="false">
-                                    <i class="ti ti-chevron-down" aria-hidden="true"></i>
-                                </button>
-                            </div>
-                            <div class="pane-dropdown-menu" id="previewCopyMenu" role="menu">
-                                <button class="pane-dropdown-item" id="copyRichTextOption" role="menuitem">
-                                    <i class="ti ti-typography" aria-hidden="true"></i> Copy as Rich Text
-                                </button>
-                                <button class="pane-dropdown-item" id="copyHtmlOption" role="menuitem">
-                                    <i class="ti ti-code" aria-hidden="true"></i> Copy HTML Source
-                                </button>
-                            </div>
-                        </div>
-                    </div>
                 </div>
                 <div class="preview-content" id="previewContent">
+                    <!-- Rendered HTML -->
                     <!-- Rendered HTML -->
                 </div>
             </section>
@@ -2631,13 +2595,26 @@
         </div>
     </main>
 
-    <!-- Sidebar AI Drafting Drawer -->
+    <!-- Unified Sidebar AI Intelligence Hub -->
     <aside class="ai-drawer hidden" id="aiDrawer">
-        <div class="ai-drawer-header">
-            <h2 class="ai-drawer-title"><i class="ti ti-sparkles"></i> AI Drafting</h2>
-            <button class="icon-btn" id="aiDrawerClose" style="border: none;"><i class="ti ti-x"></i></button>
+        <div class="ai-drawer-header" style="flex-direction: column; align-items: stretch; gap: 12px; padding: 16px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <h2 class="ai-drawer-title" id="aiDrawerTitle"><i class="ti ti-sparkles"></i> AI Assistant</h2>
+                <button class="icon-btn" id="aiDrawerClose" style="border: none;" aria-label="Close AI Drawer"><i class="ti ti-x"></i></button>
+            </div>
+            <!-- Mode Switcher Tabs -->
+            <div class="mobile-view-switcher" style="display: flex; width: 100%; border-radius: 8px;" role="tablist">
+                <button class="view-switch-btn active" id="aiAssistantTab" role="tab" aria-selected="true" style="flex: 1; justify-content: center;">
+                    <i class="ti ti-sparkles"></i> Assist & Draft
+                </button>
+                <button class="view-switch-btn" id="aiProofreadTab" role="tab" aria-selected="false" style="flex: 1; justify-content: center;">
+                    <i class="ti ti-checklist"></i> Audit & Proofread
+                </button>
+            </div>
         </div>
-        <div class="ai-drawer-body">
+
+        <!-- Tab 1: AI Drafting View -->
+        <div class="ai-drawer-body" id="aiDraftingView">
             <div class="form-group">
                 <label class="form-label" for="aiPrompt">What would you like the AI to draft?</label>
                 <textarea class="ai-prompt-area" id="aiPrompt" placeholder="e.g. Write a professional introduction explaining the benefits of local data privacy in AI editors..."></textarea>
@@ -2656,15 +2633,9 @@
                 <i class="ti ti-arrow-left"></i> Insert at Cursor
             </button>
         </div>
-    </aside>
 
-    <!-- AI Proofreader Drawer -->
-    <aside class="ai-drawer hidden" id="proofreaderDrawer" style="border-left: 1px solid var(--border-color);">
-        <div class="ai-drawer-header">
-            <h2 class="ai-drawer-title"><i class="ti ti-checklist"></i> AI Proofreader</h2>
-            <button class="icon-btn" id="proofreaderDrawerClose" style="border: none; background: none; color: var(--text-secondary); cursor: pointer;"><i class="ti ti-x"></i></button>
-        </div>
-        <div class="ai-drawer-body" id="proofreaderDrawerBody">
+        <!-- Tab 2: Proofreader & Audit View -->
+        <div class="ai-drawer-body" id="aiProofreadView" style="display: none;">
             <button class="btn btn-primary" id="proofreaderScanBtn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <i class="ti ti-scan"></i> Scan Document
             </button>
@@ -2717,6 +2688,13 @@
                 <div class="form-group" id="customModelGroup" style="display: none; margin-top: 10px;">
                     <label class="form-label" for="customModelInput">Custom Model ID</label>
                     <input type="text" class="form-input" id="customModelInput" placeholder="e.g. gemini-2.5-flash-lite" aria-label="Custom Model ID">
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                    <div>
+                        <label class="form-label" for="showLineNumbersToggle" style="margin-bottom: 2px; cursor: pointer;">Show Line Numbers</label>
+                        <small style="color: var(--text-secondary); display: block;">Display vertical line numbering gutter in editor</small>
+                    </div>
+                    <input type="checkbox" id="showLineNumbersToggle" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent-color);">
                 </div>
             </div>
             <div class="modal-footer">
@@ -3047,6 +3025,11 @@
                 // Set HTML attributes
                 document.documentElement.setAttribute('data-theme', theme);
                 updateUIState();
+            }
+
+            const savedLineNumbers = localStorage.getItem('zenwrite_show_line_numbers');
+            if (typeof applyLineNumbersSetting === 'function') {
+                applyLineNumbersSetting(savedLineNumbers === 'true');
             }
 
             if (savedDocs) {
@@ -3768,7 +3751,7 @@ Requirements:
             `;
             
             aiDrawer.classList.remove('hidden');
-            proofreaderDrawer.classList.add('hidden');
+            if (typeof setAiDrawerTab === 'function') setAiDrawerTab('assist');
             
             document.getElementById('aiExplainerBackBtn').onclick = () => {
                 resetAIDrawerToDrafting();
@@ -3821,25 +3804,19 @@ Requirements:
         }
 
         // Toggles
-        const proofreaderDrawer = document.getElementById('proofreaderDrawer');
-        const proofreadToggleBtn = document.getElementById('proofreadToggleBtn');
-        const proofreaderDrawerClose = document.getElementById('proofreaderDrawerClose');
         const proofreaderScanBtn = document.getElementById('proofreaderScanBtn');
         const proofreaderSuggestions = document.getElementById('proofreaderSuggestions');
         const proofreaderStatus = document.getElementById('proofreaderStatus');
 
-        proofreadToggleBtn.onclick = () => {
-            proofreaderDrawer.classList.toggle('hidden');
-            if (!proofreaderDrawer.classList.contains('hidden')) {
-                aiDrawer.classList.add('hidden');
+        function openAiProofreadMode() {
+            if (aiDrawer) {
+                aiDrawer.classList.remove('hidden');
+                if (typeof setAiDrawerTab === 'function') {
+                    setAiDrawerTab('proofread');
+                }
+                if (typeof updateBackdropState === 'function') updateBackdropState();
             }
-            if (typeof updateBackdropState === 'function') updateBackdropState();
-        };
-
-        proofreaderDrawerClose.onclick = () => {
-            proofreaderDrawer.classList.add('hidden');
-            if (typeof updateBackdropState === 'function') updateBackdropState();
-        };
+        }
 
         proofreaderScanBtn.onclick = async () => {
             const documentText = editorTextarea.value.trim();
@@ -4345,7 +4322,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                     document.querySelector('.ai-drawer-title').innerHTML = '<i class="ti ti-info-circle"></i> AI Explainer';
                     aiOutputBox.innerHTML = '<div class="loading-pulse"><div class="pulse-dot"></div><div class="pulse-dot"></div><div class="pulse-dot"></div></div><p style="text-align: center; color: var(--text-secondary); margin-top: 8px;">Consulting Gemini AI...</p>';
                     aiDrawer.classList.remove('hidden');
-                    proofreaderDrawer.classList.add('hidden');
+                    if (typeof setAiDrawerTab === 'function') setAiDrawerTab('assist');
                     
                     const explanationPrompt = "Explain the following text or concept in a concise, informative manner. Focus on definitions, background context, and clear explanations. Keep it under 150 words.";
                     const response = await runGeminiAI(explanationPrompt, selectedText);
@@ -4405,9 +4382,8 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             if (window.innerWidth <= 768) {
                 const sidebarOpen = sidebar && !sidebar.classList.contains('hidden');
                 const aiOpen = aiDrawer && !aiDrawer.classList.contains('hidden');
-                const proofOpen = proofreaderDrawer && !proofreaderDrawer.classList.contains('hidden');
                 const sheetOpen = mobileActionsSheet && mobileActionsSheet.classList.contains('active');
-                if (sidebarOpen || aiOpen || proofOpen || sheetOpen) {
+                if (sidebarOpen || aiOpen || sheetOpen) {
                     if (mobileBackdrop) mobileBackdrop.classList.add('active');
                 } else {
                     if (mobileBackdrop) mobileBackdrop.classList.remove('active');
@@ -4421,7 +4397,6 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             mobileBackdrop.onclick = () => {
                 if (sidebar) sidebar.classList.add('hidden');
                 if (aiDrawer) aiDrawer.classList.add('hidden');
-                if (proofreaderDrawer) proofreaderDrawer.classList.add('hidden');
                 if (mobileActionsSheet) mobileActionsSheet.classList.remove('active');
                 if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
                 updateBackdropState();
@@ -4523,7 +4498,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             mobileAiFormatBtn.onclick = () => {
                 aiDrawer.classList.toggle('hidden');
                 if (!aiDrawer.classList.contains('hidden')) {
-                    proofreaderDrawer.classList.add('hidden');
+                    if (typeof setAiDrawerTab === 'function') setAiDrawerTab('assist');
                     if (aiPrompt) aiPrompt.focus();
                 }
                 updateBackdropState();
@@ -4591,7 +4566,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             sheetProofreadToggle.onclick = () => {
                 if (mobileActionsSheet) mobileActionsSheet.classList.remove('active');
                 updateBackdropState();
-                proofreadToggleBtn.click();
+                openAiProofreadMode();
             };
         }
 
@@ -5056,9 +5031,6 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         // AI Drawer side panel toggle
         aiDrawerToggle.onclick = () => {
             aiDrawer.classList.toggle('hidden');
-            if (!aiDrawer.classList.contains('hidden')) {
-                proofreaderDrawer.classList.add('hidden');
-            }
             if (typeof updateBackdropState === 'function') updateBackdropState();
         };
 
@@ -5117,9 +5089,6 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 }
                 if (aiDrawer && !aiDrawer.classList.contains('hidden')) {
                     aiDrawer.classList.add('hidden');
-                }
-                if (proofreaderDrawer && !proofreaderDrawer.classList.contains('hidden')) {
-                    proofreaderDrawer.classList.add('hidden');
                 }
                 if (window.innerWidth <= 768 && sidebar && !sidebar.classList.contains('hidden')) {
                     sidebar.classList.add('hidden');
@@ -5187,7 +5156,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             deferredInstallPrompt = null;
         });
 
-        // --- Pane Copy Handlers ---
+        // --- Unified Header Clipboard Copy Controller ---
         function showCopySuccess(btnElement, message = 'Copied!') {
             if (!btnElement) return;
             const originalHTML = btnElement.innerHTML;
@@ -5200,7 +5169,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         }
 
         async function copyMarkdownText() {
-            const btn = document.getElementById('copyMarkdownBtn');
+            const btn = document.getElementById('headerCopyBtn');
             let textToCopy = '';
             if (editorTextarea) {
                 const start = editorTextarea.selectionStart;
@@ -5232,7 +5201,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         }
 
         async function copyPreviewRichText() {
-            const btn = document.getElementById('copyRichTextBtn');
+            const btn = document.getElementById('headerCopyBtn');
             let htmlToCopy = '';
             let plainTextToCopy = '';
 
@@ -5284,7 +5253,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         }
 
         async function copyPreviewHtmlSource() {
-            const btn = document.getElementById('copyRichTextBtn');
+            const btn = document.getElementById('headerCopyBtn');
             if (!previewContent) return;
             const htmlToCopy = previewContent.innerHTML;
             if (!htmlToCopy) return;
@@ -5306,33 +5275,43 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             }
         }
 
-        // Setup copy event listeners
-        const copyMarkdownBtn = document.getElementById('copyMarkdownBtn');
-        const copyRichTextBtn = document.getElementById('copyRichTextBtn');
-        const copyPreviewMenuBtn = document.getElementById('copyPreviewMenuBtn');
-        const previewCopyDropdown = document.getElementById('previewCopyDropdown');
-        const previewCopyMenu = document.getElementById('previewCopyMenu');
+        // Setup unified header copy dropdown
+        const headerCopyBtn = document.getElementById('headerCopyBtn');
+        const headerCopyDropdown = document.getElementById('headerCopyDropdown');
+        const headerCopyMenu = document.getElementById('headerCopyMenu');
+        const copyMarkdownOption = document.getElementById('copyMarkdownOption');
         const copyRichTextOption = document.getElementById('copyRichTextOption');
         const copyHtmlOption = document.getElementById('copyHtmlOption');
 
-        if (copyMarkdownBtn) copyMarkdownBtn.onclick = copyMarkdownText;
-        if (copyRichTextBtn) copyRichTextBtn.onclick = copyPreviewRichText;
-
-        if (copyPreviewMenuBtn && previewCopyMenu) {
-            copyPreviewMenuBtn.onclick = (e) => {
+        if (headerCopyBtn && headerCopyMenu) {
+            headerCopyBtn.onclick = (e) => {
                 e.stopPropagation();
-                const isShown = previewCopyMenu.classList.toggle('show');
-                if (previewCopyDropdown) previewCopyDropdown.classList.toggle('open', isShown);
-                copyPreviewMenuBtn.setAttribute('aria-expanded', isShown ? 'true' : 'false');
+                if (editorAiDropdown) {
+                    editorAiDropdown.classList.remove('open');
+                    if (editorAiMenu) editorAiMenu.classList.remove('show');
+                }
+                const isShown = headerCopyMenu.classList.toggle('show');
+                if (headerCopyDropdown) headerCopyDropdown.classList.toggle('open', isShown);
+                headerCopyBtn.setAttribute('aria-expanded', isShown ? 'true' : 'false');
+            };
+        }
+
+        if (copyMarkdownOption) {
+            copyMarkdownOption.onclick = (e) => {
+                e.stopPropagation();
+                if (headerCopyMenu) headerCopyMenu.classList.remove('show');
+                if (headerCopyDropdown) headerCopyDropdown.classList.remove('open');
+                if (headerCopyBtn) headerCopyBtn.setAttribute('aria-expanded', 'false');
+                copyMarkdownText();
             };
         }
 
         if (copyRichTextOption) {
             copyRichTextOption.onclick = (e) => {
                 e.stopPropagation();
-                if (previewCopyMenu) previewCopyMenu.classList.remove('show');
-                if (previewCopyDropdown) previewCopyDropdown.classList.remove('open');
-                if (copyPreviewMenuBtn) copyPreviewMenuBtn.setAttribute('aria-expanded', 'false');
+                if (headerCopyMenu) headerCopyMenu.classList.remove('show');
+                if (headerCopyDropdown) headerCopyDropdown.classList.remove('open');
+                if (headerCopyBtn) headerCopyBtn.setAttribute('aria-expanded', 'false');
                 copyPreviewRichText();
             };
         }
@@ -5340,18 +5319,71 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         if (copyHtmlOption) {
             copyHtmlOption.onclick = (e) => {
                 e.stopPropagation();
-                if (previewCopyMenu) previewCopyMenu.classList.remove('show');
-                if (previewCopyDropdown) previewCopyDropdown.classList.remove('open');
-                if (copyPreviewMenuBtn) copyPreviewMenuBtn.setAttribute('aria-expanded', 'false');
+                if (headerCopyMenu) headerCopyMenu.classList.remove('show');
+                if (headerCopyDropdown) headerCopyDropdown.classList.remove('open');
+                if (headerCopyBtn) headerCopyBtn.setAttribute('aria-expanded', 'false');
                 copyPreviewHtmlSource();
             };
         }
 
+        // --- Unified AI Assistant Drawer Tabs ---
+        const aiAssistantTab = document.getElementById('aiAssistantTab');
+        const aiProofreadTab = document.getElementById('aiProofreadTab');
+        const aiDraftingView = document.getElementById('aiDraftingView');
+        const aiProofreadView = document.getElementById('aiProofreadView');
+        const aiDrawerTitle = document.getElementById('aiDrawerTitle');
+
+        function setAiDrawerTab(tabName) {
+            if (tabName === 'proofread') {
+                if (aiProofreadTab) {
+                    aiProofreadTab.classList.add('active');
+                    aiProofreadTab.setAttribute('aria-selected', 'true');
+                }
+                if (aiAssistantTab) {
+                    aiAssistantTab.classList.remove('active');
+                    aiAssistantTab.setAttribute('aria-selected', 'false');
+                }
+                if (aiProofreadView) aiProofreadView.style.display = 'flex';
+                if (aiDraftingView) aiDraftingView.style.display = 'none';
+                if (aiDrawerTitle) aiDrawerTitle.innerHTML = '<i class="ti ti-checklist"></i> AI Proofreader';
+            } else {
+                if (aiAssistantTab) {
+                    aiAssistantTab.classList.add('active');
+                    aiAssistantTab.setAttribute('aria-selected', 'true');
+                }
+                if (aiProofreadTab) {
+                    aiProofreadTab.classList.remove('active');
+                    aiProofreadTab.setAttribute('aria-selected', 'false');
+                }
+                if (aiDraftingView) aiDraftingView.style.display = 'flex';
+                if (aiProofreadView) aiProofreadView.style.display = 'none';
+                if (aiDrawerTitle) aiDrawerTitle.innerHTML = '<i class="ti ti-sparkles"></i> AI Assistant';
+            }
+        }
+
+        if (aiAssistantTab) aiAssistantTab.onclick = () => setAiDrawerTab('assist');
+        if (aiProofreadTab) aiProofreadTab.onclick = () => setAiDrawerTab('proofread');
+
+        // --- Line Numbers Setting Controller ---
+        const showLineNumbersToggle = document.getElementById('showLineNumbersToggle');
+        function applyLineNumbersSetting(show) {
+            document.body.classList.toggle('show-line-numbers', show);
+            if (showLineNumbersToggle) showLineNumbersToggle.checked = show;
+        }
+
+        if (showLineNumbersToggle) {
+            showLineNumbersToggle.onchange = (e) => {
+                const isChecked = e.target.checked;
+                applyLineNumbersSetting(isChecked);
+                localStorage.setItem('zenwrite_show_line_numbers', isChecked ? 'true' : 'false');
+            };
+        }
+
         document.addEventListener('click', (e) => {
-            if (previewCopyDropdown && !previewCopyDropdown.contains(e.target)) {
-                if (previewCopyMenu) previewCopyMenu.classList.remove('show');
-                previewCopyDropdown.classList.remove('open');
-                if (copyPreviewMenuBtn) copyPreviewMenuBtn.setAttribute('aria-expanded', 'false');
+            if (headerCopyDropdown && !headerCopyDropdown.contains(e.target)) {
+                if (headerCopyMenu) headerCopyMenu.classList.remove('show');
+                headerCopyDropdown.classList.remove('open');
+                if (headerCopyBtn) headerCopyBtn.setAttribute('aria-expanded', 'false');
             }
             if (editorAiDropdown && !editorAiDropdown.contains(e.target)) {
                 if (editorAiMenu) editorAiMenu.classList.remove('show');
@@ -5366,7 +5398,6 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             if (window.innerWidth <= 768) {
                 if (sidebar) sidebar.classList.add('hidden');
                 if (aiDrawer) aiDrawer.classList.add('hidden');
-                if (proofreaderDrawer) proofreaderDrawer.classList.add('hidden');
                 if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
                 if (previewPane) previewPane.style.display = '';
             }
