@@ -2199,10 +2199,10 @@
         }
 
         .pill-action-btn {
-            min-height: 40px;
-            min-width: 40px;
+            min-height: 44px;
+            min-width: 44px;
             padding: 6px 12px;
-            border-radius: 20px;
+            border-radius: 22px;
             border: none;
             background: transparent;
             color: var(--text-primary);
@@ -3470,6 +3470,38 @@
             }).join('');
 
             return html;
+        }
+
+        // --- Resilient Universal Clipboard Copy Helper ---
+        async function copyTextToClipboard(text) {
+            if (!text) return false;
+            if (navigator.clipboard && window.isSecureContext && typeof navigator.clipboard.writeText === 'function') {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                } catch (e) {
+                    console.warn('[ZenWrite Clipboard] Clipboard API failed/blocked, trying fallback:', e);
+                }
+            }
+            try {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.top = '-9999px';
+                textarea.style.left = '-9999px';
+                textarea.style.opacity = '0';
+                textarea.setAttribute('readonly', '');
+                document.body.appendChild(textarea);
+                textarea.focus();
+                textarea.select();
+                textarea.setSelectionRange(0, text.length);
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textarea);
+                return successful;
+            } catch (err) {
+                console.error('[ZenWrite Clipboard] Fallback copy failed:', err);
+                return false;
+            }
         }
 
         // --- Document Management Functions ---
@@ -6222,35 +6254,53 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             return `You are an expert AI Agent Director and Prompt Engineer. The user is collaborating with an autonomous AI coding agent in a CLI/IDE terminal (such as Antigravity, Cursor, Claude Code, Aider, or Codex).\\n\\nThe user has pasted the AI agent's latest response/output. Your task is to generate a context-aware, highly actionable NEXT-TURN COUNTER-PROMPT that the user can copy and paste directly back into the agent's terminal without reading, analyzing, or manually drafting a reply.\\n\\n${goalGuidance}\\n\\nStructure the generated counter-prompt cleanly as:\\n1. Short direct confirmation/evaluation of the current step.\\n2. Numbered list of concrete next actions/commands the agent must execute.\\n3. Explicit constraints (e.g. preserve working code, run integrity checks, keep comments).\\n\\nFormatting rules:\\n- Return ONLY the exact counter-prompt text ready to paste into the terminal.\\n- Do not wrap the entire response in triple backticks.\\n- Do not include conversational introductory remarks like "Here is your counter prompt:".\\n- Make it authoritative, concise, and unambiguous.`;
         }
 
+        // Optimized O(1) bounded string sampler & heuristic classifier
         function isAIAgentResponse(text) {
-            if (!text || text.length < 35) return false;
-            const patterns = [
+            if (!text || typeof text !== 'string' || text.trim().length < 40) return false;
+            
+            // Performance optimization: sample head and tail for large text (>8KB)
+            // AI agent messages, plans, and turn-taking prompts reside at the head/tail.
+            const textSample = text.length > 8000
+                ? (text.slice(0, 4000) + '\n' + text.slice(-4000))
+                : text;
+
+            // High-confidence explicit structural markers
+            const explicitPatterns = [
                 /\[diff_block_start\]/i,
-                /### Proposed Changes/i,
-                /## User Review Required/i,
-                /## Open Questions/i,
-                /## Verification Plan/i,
-                /The command exited with code/i,
-                /files changed, \d+ insertions/i,
-                /To https:\/\/github\.com/i,
-                /Would you like me to (proceed|execute|implement|continue)/i,
-                /Do you want me to/i,
-                /I have (completed|implemented|created|updated|fixed)/i,
-                /Here is the (plan|implementation|walkthrough|summary)/i,
-                /Traceback \(most recent call last\)/i,
-                /SyntaxError:|TypeError:|ReferenceError:|Error:/i,
-                /PASS |FAIL |npm test|pytest|vitest/i,
+                /###?\s*Proposed Changes/i,
+                /##?\s*User Review Required/i,
+                /##?\s*Open Questions/i,
+                /##?\s*Verification Plan/i,
+                /<USER_REQUEST>/i,
+                /<CONTEXT_SUMMARY>/i,
+                /<ADDITIONAL_METADATA>/i,
+                /The command exited with code \d+/i,
                 /PERSONA & ROLE/i,
-                /# TASK OBJECTIVE/i,
-                /Let me know if you would like/i,
-                /Shall I proceed with/i
+                /# TASK OBJECTIVE/i
             ];
-            return patterns.some(pattern => pattern.test(text));
+
+            if (explicitPatterns.some(p => p.test(textSample))) {
+                return true;
+            }
+
+            // Conversational & Agent turn-taking directives (require multi-word agent phrasing)
+            const turnTakingPatterns = [
+                /\b(?:Would you like me to|Do you want me to|Shall I)\s+(?:proceed|continue|implement|execute|apply|make|commit|refactor|test)\b/i,
+                /\b(?:I have|I've)\s+(?:completed|implemented|created|updated|fixed|resolved|refactored)\s+the\b/i,
+                /\bHere is the\s+(?:plan|implementation plan|walkthrough|summary|proposed diff)\b/i,
+                /\bLet me know if you would like\s+(?:me to|any adjustments|further)\b/i,
+                /\bPlease review the proposed\s+(?:changes|plan|modifications)\b/i,
+                /\bI am ready to\s+(?:proceed|implement|execute|continue)\b/i
+            ];
+
+            return turnTakingPatterns.some(p => p.test(textSample));
         }
 
-        // Smart Paste Listener for AI Agent Output Detection
+        // Smart Paste Listener for AI Agent Output Detection (Debounced & Non-Blocking)
+        let pasteClassifyTimer = null;
         editorTextarea.addEventListener('paste', () => {
-            setTimeout(() => {
+            if (pasteClassifyTimer) clearTimeout(pasteClassifyTimer);
+            pasteClassifyTimer = setTimeout(() => {
                 const val = editorTextarea.value;
                 if (isAIAgentResponse(val)) {
                     const banner = document.getElementById('agentPromptBanner');
@@ -6259,7 +6309,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                         if (navigator.vibrate) navigator.vibrate(15);
                     }
                 }
-            }, 120);
+            }, 100);
         });
 
         // Banner Button Handlers
@@ -6367,14 +6417,12 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             promptStudioCopyBtn.onclick = async () => {
                 const text = promptStudioOutputBox.textContent;
                 if (!text) return;
-                try {
-                    await navigator.clipboard.writeText(text);
+                const copied = await copyTextToClipboard(text);
+                if (copied) {
                     const orig = promptStudioCopyBtn.innerHTML;
                     promptStudioCopyBtn.innerHTML = '<i class="ti ti-check"></i> Copied!';
                     if (navigator.vibrate) navigator.vibrate(15);
                     setTimeout(() => { promptStudioCopyBtn.innerHTML = orig; }, 1500);
-                } catch (err) {
-                    console.error("Failed to copy:", err);
                 }
             };
         }
