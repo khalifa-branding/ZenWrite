@@ -786,7 +786,7 @@
             font-family: 'Fira Code', monospace;
             font-size: 0.95rem; /* Matches line-numbers font-size */
             line-height: 1.6;   /* Matches line-numbers line-height */
-            padding: 20px;
+            padding: 24px;
             resize: none;
             outline: none;
             tab-size: 4;
@@ -807,6 +807,8 @@
             font-family: 'Inter', sans-serif;
             font-size: 1rem;
             color: var(--text-primary);
+            box-sizing: border-box;
+            width: 100%;
         }
 
         /* Markdown Styling inside preview */
@@ -2072,10 +2074,10 @@
                 --ai-drawer-width: 380px;
             }
             .preview-content {
-                padding: 32px 48px;
-                max-width: 960px;
-                margin: 0 auto;
+                padding: 28px;
                 font-size: 1.05rem;
+                width: 100%;
+                box-sizing: border-box;
             }
             .editor-textarea {
                 padding: 28px;
