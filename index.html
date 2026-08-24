@@ -644,12 +644,17 @@
             top: calc(100% + 6px);
             right: 0;
             background-color: var(--bg-primary);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            box-shadow: 0 6px 20px var(--shadow-color);
-            min-width: 170px;
-            padding: 4px;
-            z-index: 100;
+            border-radius: 12px;
+            box-shadow: 0 16px 36px -4px var(--shadow-color), 0 4px 12px rgba(0, 0, 0, 0.06);
+            width: 280px;
+            max-width: calc(100vw - 24px);
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 6px;
+            z-index: 1000;
             display: none;
             flex-direction: column;
             gap: 2px;
@@ -665,41 +670,74 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        .dropdown-section-title {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-secondary);
+            padding: 6px 8px 2px;
+            user-select: none;
+        }
+
+        .dropdown-kbd {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.68rem;
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1px 5px;
+            margin-left: auto;
+        }
+
         .pane-dropdown-item {
             background: none;
             border: none;
             color: var(--text-primary);
             font-family: 'Outfit', sans-serif;
-            font-size: 0.82rem;
+            font-size: 0.84rem;
             font-weight: 500;
-            padding: 7px 10px;
-            border-radius: 6px;
+            padding: 7px 9px;
+            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 9px;
             text-align: left;
             width: 100%;
             box-sizing: border-box;
             white-space: nowrap;
-            transition: background-color 0.15s ease, color 0.15s ease;
+            transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+            outline: none;
         }
 
-        .pane-dropdown-item:hover {
+        .pane-dropdown-item:hover,
+        .pane-dropdown-item:focus-visible,
+        .pane-dropdown-item.focused {
             background-color: var(--bg-secondary);
             color: var(--accent-color);
+        }
+
+        .pane-dropdown-item:focus-visible {
+            box-shadow: inset 0 0 0 1.5px var(--accent-color);
+        }
+
+        .pane-dropdown-item:active {
+            transform: scale(0.98);
         }
 
         .pane-dropdown-item i {
             font-size: 1rem;
             color: var(--accent-color);
-            width: 20px;
+            width: 18px;
             text-align: center;
             flex-shrink: 0;
             transition: transform 0.15s ease;
         }
 
-        .pane-dropdown-item:hover i {
+        .pane-dropdown-item:hover i,
+        .pane-dropdown-item:focus-visible i {
             transform: scale(1.1);
         }
 
@@ -2454,64 +2492,77 @@
                             <button class="pane-action-btn pane-ai-action-btn" id="editorAiBtn" title="AI Writing Actions (Selection or Full Document)" aria-label="AI Writing Actions" aria-haspopup="true" aria-expanded="false">
                                 <i class="ti ti-sparkles" aria-hidden="true"></i> <span>AI Actions</span> <i class="ti ti-chevron-down" style="font-size: 0.7rem; margin-left: 2px;"></i>
                             </button>
-                            <div class="pane-dropdown-menu editor-ai-menu" id="editorAiMenu" role="menu">
+                            <div class="pane-dropdown-menu editor-ai-menu" id="editorAiMenu" role="menu" aria-labelledby="editorAiBtn" aria-orientation="vertical" tabindex="-1">
                                 <div id="adaptiveActionsGroup" class="adaptive-actions-group" style="display: none; padding-bottom: 4px; border-bottom: 1px solid var(--border-color); margin-bottom: 4px;"></div>
-                                <button class="pane-dropdown-item" data-action="perfect-prompt" role="menuitem" style="color: var(--accent-color); font-weight: 600;">
-                                    <i class="ti ti-wand"></i> Perfect Prompt
-                                </button>
-                                <button class="pane-dropdown-item" data-action="grammar" role="menuitem">
-                                    <i class="ti ti-checks"></i> Correct Grammar & Spelling
-                                </button>
-                                <button class="pane-dropdown-item" data-action="rephrase" role="menuitem">
-                                    <i class="ti ti-refresh"></i> Polish & Rephrase
-                                </button>
-                                <button class="pane-dropdown-item" data-action="concise" role="menuitem">
-                                    <i class="ti ti-arrows-minimize"></i> Make Concise
-                                </button>
-                                <button class="pane-dropdown-item" data-action="shorter" role="menuitem">
-                                    <i class="ti ti-scissors"></i> Make Shorter
-                                </button>
-                                <button class="pane-dropdown-item" data-action="expand" role="menuitem">
-                                    <i class="ti ti-arrows-maximize"></i> Elaborate / Expand
-                                </button>
-                                <button class="pane-dropdown-item" data-action="explain" role="menuitem">
-                                    <i class="ti ti-info-circle"></i> Explain Concept
-                                </button>
                                 
-                                <div class="dropdown-divider"></div>
-                                
+                                <div class="dropdown-section-title" role="presentation">Draft & Compose</div>
+                                <button class="pane-dropdown-item" data-action="continue" role="menuitem" tabindex="-1">
+                                    <i class="ti ti-pencil" aria-hidden="true"></i> <span>Continue Writing</span>
+                                    <kbd class="dropdown-kbd">Alt+\</kbd>
+                                </button>
+                                <button class="pane-dropdown-item" data-action="perfect-prompt" role="menuitem" tabindex="-1" style="color: var(--accent-color); font-weight: 600;">
+                                    <i class="ti ti-wand" aria-hidden="true"></i> <span>Perfect Prompt</span>
+                                </button>
+
+                                <div class="dropdown-divider" role="separator"></div>
+
+                                <div class="dropdown-section-title" role="presentation">Transform & Edit</div>
+                                <button class="pane-dropdown-item" data-action="grammar" role="menuitem" tabindex="-1">
+                                    <i class="ti ti-checks" aria-hidden="true"></i> <span>Correct Grammar & Spelling</span>
+                                </button>
+                                <button class="pane-dropdown-item" data-action="rephrase" role="menuitem" tabindex="-1">
+                                    <i class="ti ti-refresh" aria-hidden="true"></i> <span>Polish & Rephrase</span>
+                                </button>
+                                <button class="pane-dropdown-item" data-action="concise" role="menuitem" tabindex="-1">
+                                    <i class="ti ti-arrows-minimize" aria-hidden="true"></i> <span>Make Concise</span>
+                                </button>
+                                <button class="pane-dropdown-item" data-action="shorter" role="menuitem" tabindex="-1">
+                                    <i class="ti ti-scissors" aria-hidden="true"></i> <span>Make Shorter</span>
+                                </button>
+                                <button class="pane-dropdown-item" data-action="expand" role="menuitem" tabindex="-1">
+                                    <i class="ti ti-arrows-maximize" aria-hidden="true"></i> <span>Elaborate / Expand</span>
+                                </button>
+
+                                <div class="dropdown-divider" role="separator"></div>
+
+                                <div class="dropdown-section-title" role="presentation">Tone & Language</div>
                                 <!-- Tone Accordion -->
-                                <button class="pane-dropdown-item accordion-trigger" id="anchoredToneTrigger" data-submenu="anchoredToneSubmenu">
-                                    <i class="ti ti-palette"></i> Change Tone <i class="ti ti-chevron-down" style="margin-left: auto; font-size: 0.75rem;"></i>
+                                <button class="pane-dropdown-item accordion-trigger" id="anchoredToneTrigger" data-submenu="anchoredToneSubmenu" role="menuitem" aria-haspopup="true" aria-expanded="false" tabindex="-1">
+                                    <i class="ti ti-palette" aria-hidden="true"></i> <span>Change Tone</span> <i class="ti ti-chevron-down" style="margin-left: auto; font-size: 0.75rem;"></i>
                                 </button>
-                                <div class="anchored-submenu" id="anchoredToneSubmenu" style="display: none;">
-                                    <button class="pane-dropdown-subitem" data-action="tone-professional">👔 Professional</button>
-                                    <button class="pane-dropdown-subitem" data-action="tone-casual">👕 Casual</button>
-                                    <button class="pane-dropdown-subitem" data-action="tone-persuasive">🎯 Persuasive</button>
-                                    <button class="pane-dropdown-subitem" data-action="tone-friendly">🤝 Friendly</button>
-                                    <button class="pane-dropdown-subitem" data-action="tone-urgent">⚡ Urgent</button>
-                                    <button class="pane-dropdown-subitem" data-action="tone-sarcastic">😏 Sarcastic</button>
+                                <div class="anchored-submenu" id="anchoredToneSubmenu" style="display: none;" role="menu">
+                                    <button class="pane-dropdown-subitem" data-action="tone-professional" role="menuitem" tabindex="-1">👔 Professional</button>
+                                    <button class="pane-dropdown-subitem" data-action="tone-casual" role="menuitem" tabindex="-1">👕 Casual</button>
+                                    <button class="pane-dropdown-subitem" data-action="tone-persuasive" role="menuitem" tabindex="-1">🎯 Persuasive</button>
+                                    <button class="pane-dropdown-subitem" data-action="tone-friendly" role="menuitem" tabindex="-1">🤝 Friendly</button>
+                                    <button class="pane-dropdown-subitem" data-action="tone-urgent" role="menuitem" tabindex="-1">⚡ Urgent</button>
+                                    <button class="pane-dropdown-subitem" data-action="tone-sarcastic" role="menuitem" tabindex="-1">😏 Sarcastic</button>
                                 </div>
 
                                 <!-- Translate Accordion -->
-                                <button class="pane-dropdown-item accordion-trigger" id="anchoredTranslateTrigger" data-submenu="anchoredTranslateSubmenu">
-                                    <i class="ti ti-language"></i> Translate To <i class="ti ti-chevron-down" style="margin-left: auto; font-size: 0.75rem;"></i>
+                                <button class="pane-dropdown-item accordion-trigger" id="anchoredTranslateTrigger" data-submenu="anchoredTranslateSubmenu" role="menuitem" aria-haspopup="true" aria-expanded="false" tabindex="-1">
+                                    <i class="ti ti-language" aria-hidden="true"></i> <span>Translate To</span> <i class="ti ti-chevron-down" style="margin-left: auto; font-size: 0.75rem;"></i>
                                 </button>
-                                <div class="anchored-submenu" id="anchoredTranslateSubmenu" style="display: none;">
-                                    <button class="pane-dropdown-subitem" data-action="translate-es">🇪🇸 Spanish</button>
-                                    <button class="pane-dropdown-subitem" data-action="translate-fr">🇫🇷 French</button>
-                                    <button class="pane-dropdown-subitem" data-action="translate-de">🇩🇪 German</button>
-                                    <button class="pane-dropdown-subitem" data-action="translate-ja">🇯🇵 Japanese</button>
-                                    <button class="pane-dropdown-subitem" data-action="translate-zh">🇨🇳 Chinese</button>
-                                    <button class="pane-dropdown-subitem" data-action="translate-ar">🇸🇦 Arabic</button>
+                                <div class="anchored-submenu" id="anchoredTranslateSubmenu" style="display: none;" role="menu">
+                                    <button class="pane-dropdown-subitem" data-action="translate-es" role="menuitem" tabindex="-1">🇪🇸 Spanish</button>
+                                    <button class="pane-dropdown-subitem" data-action="translate-fr" role="menuitem" tabindex="-1">🇫🇷 French</button>
+                                    <button class="pane-dropdown-subitem" data-action="translate-de" role="menuitem" tabindex="-1">🇩🇪 German</button>
+                                    <button class="pane-dropdown-subitem" data-action="translate-ja" role="menuitem" tabindex="-1">🇯🇵 Japanese</button>
+                                    <button class="pane-dropdown-subitem" data-action="translate-zh" role="menuitem" tabindex="-1">🇨🇳 Chinese</button>
+                                    <button class="pane-dropdown-subitem" data-action="translate-ar" role="menuitem" tabindex="-1">🇸🇦 Arabic</button>
                                 </div>
 
-                                <div class="dropdown-divider"></div>
+                                <div class="dropdown-divider" role="separator"></div>
 
-                                <div class="ai-custom-prompt-wrapper" style="padding: 6px;">
-                                    <input type="text" class="ai-custom-input" id="anchoredCustomInput" placeholder="Custom AI instruction..." style="font-size: 0.78rem; padding: 6px 8px; width: 100%; box-sizing: border-box;">
-                                    <button class="btn btn-primary" id="anchoredCustomSubmitBtn" style="font-size: 0.72rem; padding: 5px 8px; margin-top: 6px; width: 100%;">
-                                        <i class="ti ti-sparkles"></i> Run Instruction
+                                <div class="dropdown-section-title" role="presentation">Explain & Custom</div>
+                                <button class="pane-dropdown-item" data-action="explain" role="menuitem" tabindex="-1">
+                                    <i class="ti ti-info-circle" aria-hidden="true"></i> <span>Explain Concept</span>
+                                </button>
+
+                                <div class="ai-custom-prompt-wrapper" style="padding: 6px 2px 2px;">
+                                    <input type="text" class="ai-custom-input" id="anchoredCustomInput" placeholder="Custom AI instruction..." style="font-size: 0.78rem; padding: 6px 8px; width: 100%; box-sizing: border-box;" aria-label="Custom AI prompt input">
+                                    <button class="btn btn-primary" id="anchoredCustomSubmitBtn" style="font-size: 0.75rem; padding: 6px 10px; margin-top: 6px; width: 100%;" aria-label="Run custom instruction">
+                                        <i class="ti ti-sparkles" aria-hidden="true"></i> Run Instruction
                                     </button>
                                 </div>
                             </div>
@@ -2717,17 +2768,18 @@
     </div>
 
     <!-- Custom Context Menu -->
-    <div class="custom-context-menu" id="customContextMenu">
-        <div class="context-header" id="contextSelectionInfo">Target: None</div>
-        <button class="context-item" data-action="perfect-prompt" style="color: var(--accent-color); font-weight: 600;"><i class="ti ti-wand"></i> Perfect Prompt</button>
-        <button class="context-item" data-action="grammar"><i class="ti ti-checks"></i> Correct Grammar</button>
-        <button class="context-item" data-action="rephrase"><i class="ti ti-refresh"></i> Rephrase Text</button>
-        <button class="context-item" data-action="concise"><i class="ti ti-arrows-minimize"></i> Make Concise</button>
-        <button class="context-item" data-action="shorter"><i class="ti ti-scissors"></i> Make Shorter</button>
-        <button class="context-item" data-action="expand"><i class="ti ti-arrows-maximize"></i> Elaborate / Expand</button>
-        <button class="context-item" data-action="explain"><i class="ti ti-info-circle"></i> Explain This</button>
-        <div class="context-divider"></div>
-        <button class="context-item" id="contextCustomBtn"><i class="ti ti-prompt"></i> Run Custom Prompt...</button>
+    <div class="custom-context-menu" id="customContextMenu" role="menu" aria-label="Context AI Actions" tabindex="-1">
+        <div class="context-header" id="contextSelectionInfo" role="presentation">Target: None</div>
+        <div class="dropdown-section-title" role="presentation" style="padding: 4px 8px 2px;">Transform & Polish</div>
+        <button class="context-item" data-action="perfect-prompt" role="menuitem" tabindex="-1" style="color: var(--accent-color); font-weight: 600;"><i class="ti ti-wand" aria-hidden="true"></i> Perfect Prompt</button>
+        <button class="context-item" data-action="grammar" role="menuitem" tabindex="-1"><i class="ti ti-checks" aria-hidden="true"></i> Correct Grammar</button>
+        <button class="context-item" data-action="rephrase" role="menuitem" tabindex="-1"><i class="ti ti-refresh" aria-hidden="true"></i> Rephrase Text</button>
+        <button class="context-item" data-action="concise" role="menuitem" tabindex="-1"><i class="ti ti-arrows-minimize" aria-hidden="true"></i> Make Concise</button>
+        <button class="context-item" data-action="shorter" role="menuitem" tabindex="-1"><i class="ti ti-scissors" aria-hidden="true"></i> Make Shorter</button>
+        <button class="context-item" data-action="expand" role="menuitem" tabindex="-1"><i class="ti ti-arrows-maximize" aria-hidden="true"></i> Elaborate / Expand</button>
+        <button class="context-item" data-action="explain" role="menuitem" tabindex="-1"><i class="ti ti-info-circle" aria-hidden="true"></i> Explain This</button>
+        <div class="context-divider" role="separator"></div>
+        <button class="context-item" id="contextCustomBtn" role="menuitem" tabindex="-1"><i class="ti ti-prompt" aria-hidden="true"></i> Run Custom Prompt...</button>
     </div>
 
     <!-- Mobile "More Actions" Bottom Sheet -->
@@ -4233,6 +4285,10 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 customContextMenu.style.visibility = 'visible';
                 
                 hideSelectionUI(); // hide selection popover button
+                
+                // Focus first item for instant keyboard accessibility
+                const firstItem = customContextMenu.querySelector('.context-item');
+                if (firstItem) firstItem.focus();
             } else {
                 customContextMenu.style.display = 'none';
             }
@@ -4242,6 +4298,27 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         document.addEventListener('mousedown', (e) => {
             if (!customContextMenu.contains(e.target)) {
                 customContextMenu.style.display = 'none';
+            }
+        });
+
+        // Keyboard Navigation for Context Menu
+        customContextMenu.addEventListener('keydown', (e) => {
+            const items = Array.from(customContextMenu.querySelectorAll('.context-item:not([aria-disabled="true"])'));
+            if (!items.length) return;
+            const currentIndex = items.indexOf(document.activeElement);
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const nextIndex = (currentIndex + 1) % items.length;
+                items[nextIndex].focus();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const prevIndex = (currentIndex - 1 + items.length) % items.length;
+                items[prevIndex].focus();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                customContextMenu.style.display = 'none';
+                editorTextarea.focus();
             }
         });
 
@@ -4684,26 +4761,120 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         editorTextarea.onkeyup = checkSelection;
         editorTextarea.onselect = checkSelection;
 
-        // Toggle Anchored AI Actions dropdown in editor pane header
+        // --- Enterprise AI Action Dropdown Controller & Keyboard Navigation ---
+        function getFocusableMenuItems() {
+            if (!editorAiMenu) return [];
+            return Array.from(editorAiMenu.querySelectorAll('.pane-dropdown-item:not([aria-disabled="true"]):not([style*="display: none"]), .anchored-submenu[style*="display: flex"] .pane-dropdown-subitem'));
+        }
+
+        let aiMenuActiveIndex = -1;
+
+        function focusAiMenuItem(index) {
+            const items = getFocusableMenuItems();
+            if (!items.length) return;
+            if (index < 0) index = items.length - 1;
+            if (index >= items.length) index = 0;
+            aiMenuActiveIndex = index;
+            items.forEach((it, i) => {
+                if (i === index) {
+                    it.classList.add('focused');
+                    it.focus();
+                } else {
+                    it.classList.remove('focused');
+                }
+            });
+        }
+
+        function toggleEditorAiMenu(forceState) {
+            if (!editorAiDropdown || !editorAiMenu) return;
+            const currentState = editorAiDropdown.classList.contains('open');
+            const shouldOpen = forceState !== undefined ? forceState : !currentState;
+
+            if (previewCopyDropdown) {
+                previewCopyDropdown.classList.remove('open');
+                if (previewCopyMenu) previewCopyMenu.classList.remove('show');
+            }
+
+            if (shouldOpen) {
+                editorAiDropdown.classList.add('open');
+                editorAiMenu.classList.add('show');
+                editorAiBtn.setAttribute('aria-expanded', 'true');
+                
+                // Viewport Collision & Boundary Detection
+                const rect = editorAiMenu.getBoundingClientRect();
+                if (rect.bottom > window.innerHeight - 12) {
+                    editorAiMenu.style.bottom = 'calc(100% + 6px)';
+                    editorAiMenu.style.top = 'auto';
+                } else {
+                    editorAiMenu.style.top = 'calc(100% + 6px)';
+                    editorAiMenu.style.bottom = 'auto';
+                }
+
+                if (typeof renderAdaptiveActions === 'function') {
+                    renderAdaptiveActions();
+                }
+                focusAiMenuItem(0);
+            } else {
+                editorAiDropdown.classList.remove('open');
+                editorAiMenu.classList.remove('show');
+                editorAiBtn.setAttribute('aria-expanded', 'false');
+                aiMenuActiveIndex = -1;
+            }
+        }
+
         if (editorAiBtn) {
             editorAiBtn.onclick = (e) => {
                 e.stopPropagation();
-                // Close preview dropdown if open
-                if (previewCopyDropdown) {
-                    previewCopyDropdown.classList.remove('open');
-                    previewCopyMenu.classList.remove('show');
-                }
-                const isOpen = editorAiDropdown.classList.toggle('open');
-                editorAiMenu.classList.toggle('show', isOpen);
-                editorAiBtn.setAttribute('aria-expanded', isOpen);
-                if (isOpen && typeof renderAdaptiveActions === 'function') {
-                    renderAdaptiveActions();
-                }
+                toggleEditorAiMenu();
             };
+
+            editorAiBtn.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleEditorAiMenu(true);
+                    focusAiMenuItem(0);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    toggleEditorAiMenu(true);
+                    focusAiMenuItem(getFocusableMenuItems().length - 1);
+                }
+            });
         }
 
-        // Toggle submenus inside anchored AI menu
         if (editorAiMenu) {
+            editorAiMenu.addEventListener('keydown', (e) => {
+                const items = getFocusableMenuItems();
+                if (!items.length) return;
+
+                switch (e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        focusAiMenuItem(aiMenuActiveIndex + 1);
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        focusAiMenuItem(aiMenuActiveIndex - 1);
+                        break;
+                    case 'Home':
+                        e.preventDefault();
+                        focusAiMenuItem(0);
+                        break;
+                    case 'End':
+                        e.preventDefault();
+                        focusAiMenuItem(items.length - 1);
+                        break;
+                    case 'Escape':
+                        e.preventDefault();
+                        toggleEditorAiMenu(false);
+                        if (editorAiBtn) editorAiBtn.focus();
+                        break;
+                    case 'Tab':
+                        toggleEditorAiMenu(false);
+                        break;
+                }
+            });
+
+            // Toggle submenus inside anchored AI menu
             editorAiMenu.querySelectorAll('.accordion-trigger').forEach(trigger => {
                 trigger.onclick = (e) => {
                     e.stopPropagation();
@@ -4717,12 +4888,16 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                     editorAiMenu.querySelectorAll('.accordion-trigger i:last-child').forEach(icon => {
                         icon.className = 'ti ti-chevron-down';
                     });
+                    editorAiMenu.querySelectorAll('.accordion-trigger').forEach(t => t.setAttribute('aria-expanded', 'false'));
 
                     // Toggle this submenu
                     if (isHidden) {
                         submenu.style.display = 'flex';
+                        trigger.setAttribute('aria-expanded', 'true');
                         const icon = trigger.querySelector('i:last-child');
                         if (icon) icon.className = 'ti ti-chevron-up';
+                        const firstSubItem = submenu.querySelector('.pane-dropdown-subitem');
+                        if (firstSubItem) firstSubItem.focus();
                     }
                 };
             });
