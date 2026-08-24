@@ -3004,8 +3004,6 @@
                                 <i class="ti ti-sparkles" aria-hidden="true"></i> <span>AI Actions</span> <i class="ti ti-chevron-down" style="font-size: 0.7rem; margin-left: 2px;"></i>
                             </button>
                             <div class="pane-dropdown-menu editor-ai-menu" id="editorAiMenu" role="menu" aria-labelledby="editorAiBtn" aria-orientation="vertical" tabindex="-1">
-                                <div id="adaptiveActionsGroup" class="adaptive-actions-group" style="display: none; padding-bottom: 6px; border-bottom: 1px solid var(--border-color); margin-bottom: 6px;"></div>
-                                
                                 <div class="dropdown-section-title" role="presentation">Draft & Compose</div>
                                 <button class="pane-dropdown-item" data-action="continue" role="menuitem" tabindex="-1">
                                     <i class="ti ti-pencil" aria-hidden="true"></i> <span>Continue Writing</span>
@@ -4064,42 +4062,7 @@ Try editing this text, or create a new document!`);
             }
         }
 
-        function renderAdaptiveActions() {
-            const container = document.getElementById('adaptiveActionsGroup');
-            if (!container) return;
-            const textToAnalyze = selectedText || editorTextarea.value;
-            const sense = ContentSense.analyze(textToAnalyze);
-            
-            if (!sense.actions || sense.actions.length === 0) {
-                container.style.display = 'none';
-                return;
-            }
 
-            container.style.display = 'block';
-            let html = `
-            <div class="dropdown-section-title adaptive-header" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 8px 6px; margin-bottom: 3px;">
-                <span style="font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;">Suggested Actions</span>
-                <span class="adaptive-badge" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.65rem; font-weight: 600; text-transform: none; color: var(--accent-color); background: var(--accent-glow); padding: 2px 8px; border-radius: 12px; border: 1px solid rgba(226, 184, 116, 0.28); line-height: 1.2;">
-                    <i class="ti ${sense.icon}" style="font-size: 0.72rem;"></i> ${sense.label}
-                </span>
-            </div>`;
-
-            sense.actions.forEach(item => {
-                html += `<button type="button" class="pane-dropdown-item adaptive-item" data-action="${item.action}" role="menuitem" tabindex="-1" style="${item.primary ? 'color: var(--accent-color); font-weight: 600;' : ''}">
-                    <i class="ti ${item.icon}" aria-hidden="true"></i> <span>${item.label}</span>
-                </button>`;
-            });
-
-            container.innerHTML = html;
-
-            container.querySelectorAll('.adaptive-item').forEach(btn => {
-                btn.onclick = (e) => {
-                    e.stopPropagation();
-                    const action = btn.getAttribute('data-action');
-                    if (action) runUnifiedAIAction(action);
-                };
-            });
-        }
 
         // --- Static Contextually Anchored AI Selection Logic ---
         function checkSelection(e) {
@@ -5704,9 +5667,6 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                     editorAiMenu.style.bottom = 'auto';
                 }
 
-                if (typeof renderAdaptiveActions === 'function') {
-                    renderAdaptiveActions();
-                }
                 focusAiMenuItem(0);
             } else {
                 editorAiDropdown.classList.remove('open');
