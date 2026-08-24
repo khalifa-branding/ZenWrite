@@ -1,67 +1,84 @@
 # ZenWrite AI Editor & Browser Extension Bundle
 
-This bundle contains the complete source code for **ZenWrite AI**, including the web-based document editor and the Chrome/Edge extension.
+This repository contains the complete source code for **ZenWrite AI**, featuring a distraction-free web document editor, Progressive Web App (PWA), and a companion Chrome/Edge extension.
 
-## Directory Structure
+**Live Production URL:** [https://khalifa-branding.github.io/ZenWrite/](https://khalifa-branding.github.io/ZenWrite/)
 
+---
+
+## 📁 Directory Structure
+
+*   `index.html` — Production Web Application and PWA root.
+*   `sw.js` & `manifest.json` — PWA Service Worker (v2.3.0) and web manifest.
 *   `web-editor/`
-    *   `editor.html` — The main text editor interface.
-    *   `config.js` — Global configuration script file for permanent, universal settings.
-    *   `favicon.ico` — High-resolution desktop and shortcut icon.
-    *   `favicon.jpg` — Page header logo/favicon.
+    *   `editor.html` — Standalone portable text editor interface.
+    *   `config.js` — Global configuration script for pre-baked corporate keys.
+    *   `sw.js` & `manifest.json` — Standalone PWA assets.
+    *   `favicon.ico` & `favicon.jpg` — High-resolution icons.
 *   `chrome-extension/`
-    *   `manifest.json` — Extension configuration manifest.
-    *   `background.js` — Context menus builder and Gemini API router.
-    *   `content.js` & `content.css` — Page injection scripts.
-    *   `popup.html` & `popup.js` & `popup.css` — Extension settings widget.
-    *   `icon-16.png`, `icon-48.png`, `icon-128.png` — Scaled icon assets.
+    *   `manifest.json` — Manifest V3 extension configuration.
+    *   `background.js` — Context menus builder, Gemini API failover router, and counter-prompt engine.
+    *   `content.js` & `content.css` — Non-intrusive page injection scripts and diff viewer.
+    *   `popup.html`, `popup.js`, `popup.css` — Extension settings widget.
+*   `chrome-extension.zip` & `ZenWrite-Bundle.zip` — Pre-packaged 1-click distribution bundles.
 
 ---
 
-## 🚀 AI Writing Features Bundle
+## 🚀 Key Features & AI Suite
 
-ZenWrite comes pre-packaged with six enterprise-grade AI writing tools:
-1.  **🎭 Tone Changer**: Highlight text to rewrite it in Professional, Casual, Friendly, Urgent, Persuasive, or Sarcastic tones.
-2.  **🌐 Inline Translator**: Translate text directly into Spanish, French, German, Japanese, Chinese, or Arabic.
-3.  **🪄 Smart Autocomplete**: Press **`Alt + \`** while typing to fetch ghost text suggestions. Press **`Tab`** to accept or **`Esc`** to dismiss.
-4.  **📝 AI Proofreader Drawer**: Click **AI Proofreader** in the header to scan the document for spelling, grammar, and style suggestions with interactive accept/reject cards.
-5.  **💡 AI Explainer**: Highlight complex concepts and choose **Explain This** to see definitions in a clean card modal.
-6.  **📄 PDF & Word Exporters**: Export documents to clean Microsoft Word formats (`.doc`) or print/save as clean page layouts using PDF print media targets.
+### 1. 🤖 AI Agent Next-Turn Counter-Prompt Engine
+* **Automatic Smart Paste Detection**: Pasting terminal outputs, code walkthroughs, test runs, or diffs displays a non-intrusive banner (`🤖 AI Agent Response detected` $\rightarrow$ `[ ⚡ Counter-Prompt ]`).
+* **1-Tap Directive Scenario Chips**: Instantly orient coding agents (Antigravity, Cursor, Claude Code, Aider, Codex):
+  * 🟢 **Proceed & Implement**: Confirms approval and gives immediate imperative execution commands.
+  * 🧪 **Verify & Test**: Directs agent to run automated test suites and verify integrity.
+  * 🛠️ **Fix Bugs & Errors**: Commands systematic root-cause debugging and edge-case fixing.
+  * 🧹 **Clean & Refactor**: Directs code simplification while preserving backward compatibility.
+  * 🚀 **Commit & Sync**: Instructs syntax validation, git staging, descriptive commit messaging, and remote push.
+* **1-Click Copy for Terminal**: Formatted for direct `Ctrl+V` back into agent CLIs with universal clipboard fallbacks.
 
----
+### 2. ✨ 5-Part Master Prompt Studio
+* Transforms rough, vague task ideas into deterministic, production-ready prompts using the gold-standard 5-part architecture:
+  1. `# PERSONA & ROLE`
+  2. `# TASK OBJECTIVE`
+  3. `# CONTEXT & BACKGROUND`
+  4. `# SPECIFIC RULES & CONSTRAINTS`
+  5. `# EXPECTED OUTPUT FORMAT`
 
-## 👥 Internal Team Distribution & Pre-Configuration
+### 3. 🧩 Everywhere Extension (`chrome-extension/`)
+* Right-click selected text in any web application (GitHub PRs, Cursor Web, Claude, ChatGPT, Jira, Notion) to trigger:
+  * `🤖 Agent Counter-Prompt`
+  * `✨ 5-Part Master Prompt`
+  * `🎭 Change Tone` (Professional, Casual, Persuasive, Friendly, Urgent, Sarcastic)
+  * `🌐 Translate To` (Spanish, French, German, Japanese, Chinese, Arabic)
+  * `💡 Explain This`
 
-To distribute this bundle to internal teams with a pre-configured corporate API key:
+### 4. 📂 Native Drag-and-Drop File Import & Multi-Format Export
+* Drag any `.md`, `.txt`, `.json`, or code file over the editor to trigger a visual drop-zone overlay (`.drag-active`) and load the file into the active document.
+* Export cleanly to **Markdown (`.md`)**, **Plain Text (`.txt`)**, **HTML (`.html`)**, **Word (`.doc`)**, or **PDF Document (`.pdf`)**.
 
-### 1. Pre-bake a Shared API Key (Optional)
-To save your team members from registering their own individual keys, you can hardcode a shared corporate key:
-*   **For Web Editor**: Open `web-editor/config.js` and set the shared API key:
-    ```javascript
-    const ZENWRITE_CONFIG = {
-        apiKey: "YOUR_CORPORATE_GEMINI_KEY",
-        aiModel: "gemini-3.6-flash"
-    };
-    ```
-*   **For Browser Extension**: Open `chrome-extension/background.js`, locate line 224, and replace the default fallback key with your corporate key:
-    ```javascript
-    apiKey = "YOUR_CORPORATE_GEMINI_KEY";
-    ```
-
-### 2. Loading the Web Editor
-1.  Distribute the folder bundle to team members.
-2.  Members can double-click `web-editor/editor.html` to open and run the editor in any browser instantly.
-
-### 3. Loading the Chrome / Edge Extension
-1.  Open the browser and navigate to **`chrome://extensions`**.
-2.  Enable **Developer mode** (top right toggle).
-3.  Click **Load unpacked** (top left).
-4.  Select the `chrome-extension` folder (or distribute the `chrome-extension.zip` file, which members can extract and load).
-5.  All context menus and right-click shortcuts will activate instantly!
+### 5. ⚡ PWA v2.3.0 Offline Shell & Auto-Collapsed Zen Canvas
+* **Service Worker v2.3.0**: Fully functional offline editor with stale-while-revalidate caching.
+* **Auto-Collapsed Left Panel**: The document sidebar starts collapsed on launch for a distraction-free writing canvas, auto-collapsing smoothly on document switch.
+* **Mobile Floating Selection Pill**: 1-tap thumb-zone actions (AI, Counter-Prompt, Copy, Cut, Delete, Select All) with WCAG 44×44px touch compliance.
 
 ---
 
-## 🛡️ Outage Resiliency & Smart Key Ring Failover
-ZenWrite is engineered with enterprise-grade API resiliency:
-- **Smart Multi-Key Auto-Rotation ("Key Ring")**: Paste one or multiple free Gemini keys in Settings. ZenWrite automatically load-balances and routes requests across the pool. If any key experiences a temporary 429 rate limit, ZenWrite instantly fails over to the next ready key with zero user interruption.
-- **Cross-Model Independent Quota Ladder**: Automatically routes requests across **`gemini-2.0-flash`**, **`gemini-1.5-flash`**, and **`gemini-1.5-flash-8b`**, leveraging independent 1,500 Requests/Day free quota buckets on Google AI Studio.
+## 👥 Installation & Distribution
+
+### Web Editor & PWA
+1. Open [https://khalifa-branding.github.io/ZenWrite/](https://khalifa-branding.github.io/ZenWrite/) in any modern browser.
+2. Click **Install App** in the sidebar footer or browser address bar to install as a standalone desktop/mobile app.
+
+### Chrome / Edge Extension
+1. Download or extract `chrome-extension.zip`.
+2. Open Chrome/Edge and navigate to **`chrome://extensions`**.
+3. Enable **Developer mode** (top-right toggle).
+4. Click **Load unpacked** (top-left) and select the `chrome-extension` folder.
+5. All right-click AI actions and shortcuts will activate immediately!
+
+---
+
+## 🛡️ API Resiliency & Smart Key Ring Failover
+
+* **Multi-Key Load Balancing**: Store multiple free Gemini API keys in Settings. ZenWrite automatically balances requests across keys and fails over instantly if any key hits a 429 quota rate limit.
+* **Cross-Model Independent Quota Ladder**: Automatically routes requests across **`gemini-2.5-flash-lite`**, **`gemini-2.5-flash`**, **`gemini-3.7-flash`**, and **`gemini-3.6-flash`**, leveraging independent quota buckets on Google AI Studio.
