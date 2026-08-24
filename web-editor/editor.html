@@ -2063,6 +2063,128 @@
             border-color: var(--accent-color);
         }
 
+        /* Floating Mobile Selection Action Pill */
+        .mobile-selection-pill {
+            display: none;
+            position: fixed;
+            bottom: calc(64px + env(safe-area-inset-bottom, 12px));
+            left: 50%;
+            transform: translateX(-50%) translateY(24px) scale(0.96);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 30px;
+            padding: 4px 6px;
+            align-items: center;
+            gap: 4px;
+            z-index: 220;
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease;
+            max-width: calc(100vw - 24px);
+            white-space: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .mobile-selection-pill::-webkit-scrollbar {
+            display: none;
+        }
+
+        .mobile-selection-pill.active {
+            display: flex;
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0) scale(1);
+        }
+
+        .pill-action-btn {
+            min-height: 40px;
+            min-width: 40px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .pill-action-btn:active {
+            transform: scale(0.92);
+            background: var(--bg-tertiary);
+        }
+
+        .pill-action-btn.primary {
+            background: var(--accent-color);
+            color: var(--accent-text);
+        }
+
+        .pill-action-btn.danger {
+            color: #EF4444;
+        }
+
+        .pill-action-btn.danger:active {
+            background: rgba(239, 68, 68, 0.15);
+        }
+
+        /* Non-Destructive Undo Toast */
+        .undo-toast {
+            position: fixed;
+            bottom: calc(72px + env(safe-area-inset-bottom, 16px));
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 350;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .undo-toast.show {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .undo-toast-btn {
+            background: var(--accent-color);
+            color: var(--accent-text);
+            border: none;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            touch-action: manipulation;
+        }
+
         /* ==========================================================================
            RESPONSIVE DESIGN BREAKPOINTS & TOUCH-FIRST MOBILE ARCHITECTURE
            ========================================================================== */
@@ -2757,6 +2879,7 @@
 
         <!-- Mobile Quick-Format Markdown Toolbar -->
         <div class="mobile-format-toolbar" id="mobileFormatToolbar" role="toolbar" aria-label="Quick Markdown Formatting">
+            <button type="button" class="format-btn" id="mobileSelectAllBtn" aria-label="Select All Text" style="color: var(--accent-color); font-weight: 600;"><i class="ti ti-select" aria-hidden="true"></i> Select All</button>
             <button type="button" class="format-btn" data-format="h1" aria-label="Heading 1">H1</button>
             <button type="button" class="format-btn" data-format="h2" aria-label="Heading 2">H2</button>
             <button type="button" class="format-btn" data-format="bold" aria-label="Bold"><i class="ti ti-bold" aria-hidden="true"></i></button>
@@ -2786,6 +2909,31 @@
         <button class="exit-zen-btn" id="exitZenBtn" data-tooltip="Exit Zen Mode">
             <i class="ti ti-minimize"></i>
         </button>
+
+        <!-- Floating Mobile Selection Action Pill -->
+        <div class="mobile-selection-pill" id="mobileSelectionPill" role="toolbar" aria-label="Selection Actions">
+            <button type="button" class="pill-action-btn primary" id="pillAiBtn" aria-label="AI Writing Actions on Selection">
+                <i class="ti ti-sparkles" aria-hidden="true"></i> <span>AI Actions</span>
+            </button>
+            <button type="button" class="pill-action-btn" id="pillCopyBtn" aria-label="Copy Selected Text">
+                <i class="ti ti-copy" aria-hidden="true"></i> <span>Copy</span>
+            </button>
+            <button type="button" class="pill-action-btn" id="pillCutBtn" aria-label="Cut Selected Text">
+                <i class="ti ti-cut" aria-hidden="true"></i> <span>Cut</span>
+            </button>
+            <button type="button" class="pill-action-btn danger" id="pillDeleteBtn" aria-label="Delete Selected Text">
+                <i class="ti ti-trash" aria-hidden="true"></i> <span>Delete</span>
+            </button>
+            <button type="button" class="pill-action-btn" id="pillDeselectBtn" aria-label="Deselect Text" title="Deselect">
+                <i class="ti ti-x" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <!-- Non-Destructive Undo Toast -->
+        <div class="undo-toast" id="undoToast" role="alert" aria-live="assertive">
+            <span id="undoToastText">Text deleted</span>
+            <button type="button" class="undo-toast-btn" id="undoToastBtn"><i class="ti ti-arrow-back-up" aria-hidden="true"></i> Undo</button>
+        </div>
 
         <!-- Autocomplete Tooltip -->
         <div class="autocomplete-tooltip" id="autocompleteTooltip">
@@ -2953,6 +3101,8 @@
             <button class="sheet-close-btn" id="closeActionsSheet" aria-label="Close Actions"><i class="ti ti-x" aria-hidden="true"></i></button>
         </div>
         <div class="sheet-grid">
+            <button class="sheet-item-btn" id="sheetSelectAllBtn"><i class="ti ti-select" aria-hidden="true"></i> <span>Select All</span></button>
+            <button class="sheet-item-btn" id="sheetClearDocBtn" style="color: #EF4444;"><i class="ti ti-trash" aria-hidden="true" style="color: #EF4444;"></i> <span>Clear Text</span></button>
             <button class="sheet-item-btn" id="sheetThemeToggle"><i class="ti ti-sun" id="sheetThemeIcon" aria-hidden="true"></i> <span>Theme</span></button>
             <button class="sheet-item-btn" id="sheetSoundToggle"><i class="ti ti-volume" id="sheetSoundIcon" aria-hidden="true"></i> <span>Sounds</span></button>
             <button class="sheet-item-btn" id="sheetZenToggle"><i class="ti ti-maximize" aria-hidden="true"></i> <span>Zen Mode</span></button>
@@ -3648,7 +3798,7 @@ Try editing this text, or create a new document!`);
             const end = editorTextarea.selectionEnd;
             const text = editorTextarea.value.substring(start, end).trim();
 
-            if (text.length > 1) {
+            if (text.length > 0 && start !== end) {
                 selectedText = text;
                 selectionStart = start;
                 selectionEnd = end;
@@ -3662,6 +3812,12 @@ Try editing this text, or create a new document!`);
                 if (editorAiBtn) {
                     editorAiBtn.classList.add('has-selection');
                     editorAiBtn.setAttribute('title', `AI Actions on selected ${words} words`);
+                }
+
+                // Activate Floating Mobile Selection Pill
+                if (window.innerWidth <= 768) {
+                    const pill = document.getElementById('mobileSelectionPill');
+                    if (pill) pill.classList.add('active');
                 }
             } else {
                 hideSelectionUI();
@@ -3679,6 +3835,8 @@ Try editing this text, or create a new document!`);
                 editorAiBtn.classList.remove('has-selection');
                 editorAiBtn.setAttribute('title', 'AI Writing Actions (Selection or Full Document)');
             }
+            const pill = document.getElementById('mobileSelectionPill');
+            if (pill) pill.classList.remove('active');
             updateContentSenseUI();
         }
 
@@ -4723,6 +4881,174 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                     mobileActionsSheet.classList.remove('active');
                     updateBackdropState();
                 }
+            };
+        }
+
+        // --- Mobile 1-Tap Select All & Safe Delete / Undo Engine ---
+        let undoDeleteBuffer = null;
+        let undoToastTimer = null;
+
+        function showUndoToast(message, restoreData) {
+            const toast = document.getElementById('undoToast');
+            const toastText = document.getElementById('undoToastText');
+            if (!toast) return;
+            undoDeleteBuffer = restoreData;
+            if (toastText) toastText.textContent = message;
+            toast.classList.add('show');
+            if (navigator.vibrate) navigator.vibrate([15, 30, 15]);
+            clearTimeout(undoToastTimer);
+            undoToastTimer = setTimeout(() => {
+                toast.classList.remove('show');
+                undoDeleteBuffer = null;
+            }, 5000);
+        }
+
+        const undoToastBtn = document.getElementById('undoToastBtn');
+        if (undoToastBtn) {
+            undoToastBtn.onclick = () => {
+                if (undoDeleteBuffer) {
+                    editorTextarea.value = undoDeleteBuffer.content;
+                    editorTextarea.focus();
+                    if (undoDeleteBuffer.start !== undefined && undoDeleteBuffer.end !== undefined) {
+                        editorTextarea.setSelectionRange(undoDeleteBuffer.start, undoDeleteBuffer.end);
+                    }
+                    renderEditor();
+                    triggerAutosave();
+                    checkSelection();
+                    const toast = document.getElementById('undoToast');
+                    if (toast) toast.classList.remove('show');
+                    undoDeleteBuffer = null;
+                    if (navigator.vibrate) navigator.vibrate(20);
+                    if (typeof announceA11y === 'function') announceA11y("Action undone. Text restored.");
+                }
+            };
+        }
+
+        function selectAllEditorText() {
+            if (!editorTextarea) return;
+            editorTextarea.focus();
+            editorTextarea.setSelectionRange(0, editorTextarea.value.length);
+            checkSelection();
+            if (navigator.vibrate) navigator.vibrate(15);
+            if (typeof announceA11y === 'function') announceA11y(`All text selected (${editorTextarea.value.length} characters)`);
+            if (mobileActionsSheet) mobileActionsSheet.classList.remove('active');
+            if (typeof updateBackdropState === 'function') updateBackdropState();
+        }
+
+        const mobileSelectAllBtn = document.getElementById('mobileSelectAllBtn');
+        if (mobileSelectAllBtn) {
+            mobileSelectAllBtn.onclick = selectAllEditorText;
+        }
+
+        const sheetSelectAllBtn = document.getElementById('sheetSelectAllBtn');
+        if (sheetSelectAllBtn) {
+            sheetSelectAllBtn.onclick = selectAllEditorText;
+        }
+
+        const sheetClearDocBtn = document.getElementById('sheetClearDocBtn');
+        if (sheetClearDocBtn) {
+            sheetClearDocBtn.onclick = () => {
+                if (mobileActionsSheet) mobileActionsSheet.classList.remove('active');
+                updateBackdropState();
+                const val = editorTextarea.value;
+                if (!val) return;
+                const prev = { content: val, start: 0, end: val.length };
+                editorTextarea.value = '';
+                renderEditor();
+                triggerAutosave();
+                hideSelectionUI();
+                showUndoToast("Document cleared", prev);
+            };
+        }
+
+        // Floating Mobile Selection Pill Buttons
+        const pillAiBtn = document.getElementById('pillAiBtn');
+        const pillCopyBtn = document.getElementById('pillCopyBtn');
+        const pillCutBtn = document.getElementById('pillCutBtn');
+        const pillDeleteBtn = document.getElementById('pillDeleteBtn');
+        const pillDeselectBtn = document.getElementById('pillDeselectBtn');
+
+        if (pillAiBtn) {
+            pillAiBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (aiDrawer) {
+                    aiDrawer.classList.remove('hidden');
+                    if (typeof setAiDrawerTab === 'function') setAiDrawerTab('assist');
+                    if (typeof updateBackdropState === 'function') updateBackdropState();
+                } else if (editorAiBtn) {
+                    editorAiBtn.click();
+                }
+            };
+        }
+
+        if (pillCopyBtn) {
+            pillCopyBtn.onclick = async (e) => {
+                e.stopPropagation();
+                const text = selectedText || editorTextarea.value;
+                if (!text) return;
+                try {
+                    await navigator.clipboard.writeText(text);
+                    const orig = pillCopyBtn.innerHTML;
+                    pillCopyBtn.innerHTML = '<i class="ti ti-check"></i> <span>Copied!</span>';
+                    if (navigator.vibrate) navigator.vibrate(15);
+                    setTimeout(() => { pillCopyBtn.innerHTML = orig; }, 1500);
+                } catch (err) {
+                    console.error("Copy failed:", err);
+                }
+            };
+        }
+
+        if (pillCutBtn) {
+            pillCutBtn.onclick = async (e) => {
+                e.stopPropagation();
+                const start = editorTextarea.selectionStart;
+                const end = editorTextarea.selectionEnd;
+                const text = editorTextarea.value.substring(start, end);
+                if (!text) return;
+                try {
+                    await navigator.clipboard.writeText(text);
+                } catch (err) {}
+                const val = editorTextarea.value;
+                const prev = { content: val, start, end };
+                editorTextarea.value = val.substring(0, start) + val.substring(end);
+                editorTextarea.setSelectionRange(start, start);
+                renderEditor();
+                triggerAutosave();
+                hideSelectionUI();
+                showUndoToast("Cut to clipboard", prev);
+            };
+        }
+
+        if (pillDeleteBtn) {
+            pillDeleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                const start = editorTextarea.selectionStart;
+                const end = editorTextarea.selectionEnd;
+                const val = editorTextarea.value;
+                if (start === end && val.length === 0) return;
+                const prev = { content: val, start, end };
+                if (start !== end) {
+                    editorTextarea.value = val.substring(0, start) + val.substring(end);
+                    editorTextarea.setSelectionRange(start, start);
+                    renderEditor();
+                    triggerAutosave();
+                    hideSelectionUI();
+                    showUndoToast("Selection deleted", prev);
+                } else {
+                    editorTextarea.value = "";
+                    renderEditor();
+                    triggerAutosave();
+                    hideSelectionUI();
+                    showUndoToast("Document cleared", prev);
+                }
+            };
+        }
+
+        if (pillDeselectBtn) {
+            pillDeselectBtn.onclick = (e) => {
+                e.stopPropagation();
+                editorTextarea.setSelectionRange(editorTextarea.selectionEnd, editorTextarea.selectionEnd);
+                hideSelectionUI();
             };
         }
 
