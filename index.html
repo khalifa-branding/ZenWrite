@@ -3444,13 +3444,17 @@ Try editing this text, or create a new document!`);
             }
 
             container.style.display = 'block';
-            let html = `<div style="font-size: 0.68rem; text-transform: uppercase; color: var(--accent-color); font-weight: 700; padding: 4px 8px 2px 8px; display: flex; align-items: center; gap: 4px;">
-                <i class="ti ${sense.icon}"></i> Recommended for ${sense.label}:
+            let html = `
+            <div class="dropdown-section-title" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 8px 4px;">
+                <span>Suggested Actions</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.64rem; font-weight: 500; text-transform: none; color: var(--accent-color); background: rgba(226, 184, 116, 0.12); padding: 1px 7px; border-radius: 10px; border: 1px solid rgba(226, 184, 116, 0.25);">
+                    <i class="ti ${sense.icon}" style="font-size: 0.72rem;"></i> ${sense.label}
+                </span>
             </div>`;
 
             sense.actions.forEach(item => {
-                html += `<button class="pane-dropdown-item adaptive-item" data-action="${item.action}" role="menuitem" style="color: ${item.primary ? 'var(--accent-color)' : 'var(--text-primary)'}; font-weight: ${item.primary ? '600' : 'normal'};">
-                    <i class="ti ${item.icon}"></i> ${item.label}
+                html += `<button type="button" class="pane-dropdown-item adaptive-item" data-action="${item.action}" role="menuitem" tabindex="-1" style="${item.primary ? 'color: var(--accent-color); font-weight: 600;' : ''}">
+                    <i class="ti ${item.icon}" aria-hidden="true"></i> <span>${item.label}</span>
                 </button>`;
             });
 
