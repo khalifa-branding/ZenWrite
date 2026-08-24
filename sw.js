@@ -1,5 +1,5 @@
 // ZenWrite Progressive Web App (PWA) Service Worker
-const CACHE_NAME = "zenwrite-cache-v1.3.0";
+const CACHE_NAME = "zenwrite-cache-v2.0.0";
 const STATIC_ASSETS = [
     "./",
     "./index.html",
@@ -15,7 +15,7 @@ const STATIC_ASSETS = [
 self.addEventListener("install", (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log("[ZenWrite SW] Pre-caching offline app shell");
+            console.log("[ZenWrite SW] Pre-caching offline app shell v2.0.0");
             return cache.addAll(STATIC_ASSETS).catch((err) => {
                 console.warn("[ZenWrite SW] Pre-cache warning:", err);
             });
@@ -24,24 +24,23 @@ self.addEventListener("install", (event) => {
     self.skipWaiting();
 });
 
-// Activate Event: Cleanup Old Caches
+// Activate Event: Instant Cleanup of All Stale Caches
 self.addEventListener("activate", (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((name) => {
                     if (name !== CACHE_NAME) {
-                        console.log("[ZenWrite SW] Removing stale cache:", name);
+                        console.log("[ZenWrite SW] Purging old cache:", name);
                         return caches.delete(name);
                     }
                 })
             );
-        })
+        }).then(() => self.clients.claim())
     );
-    self.clients.claim();
 });
 
-// Fetch Event: Stale-While-Revalidate Strategy for App Assets & Network-Only for Gemini API
+// Fetch Event: Network-First for Document/HTML Navigation & Stale-While-Revalidate for Static Assets
 self.addEventListener("fetch", (event) => {
     const url = new URL(event.request.url);
 
@@ -50,38 +49,48 @@ self.addEventListener("fetch", (event) => {
         return;
     }
 
-    // Only cache GET requests
+    // Only handle GET requests
     if (event.request.method !== "GET") {
         return;
     }
 
-    event.respondWith(
-        caches.match(event.request).then((cachedResponse) => {
-            if (cachedResponse) {
-                fetch(event.request).then((networkResponse) => {
+    const isHtmlNavigation = event.request.mode === "navigate" || event.request.destination === "document" || url.pathname.endsWith(".html") || url.pathname.endsWith("/");
+
+    if (isHtmlNavigation) {
+        // Network-First: Always deliver freshest content when online, fallback to cache when offline
+        event.respondWith(
+            fetch(event.request)
+                .then((networkResponse) => {
                     if (networkResponse && networkResponse.status === 200) {
+                        const responseClone = networkResponse.clone();
                         caches.open(CACHE_NAME).then((cache) => {
-                            cache.put(event.request, networkResponse.clone());
+                            cache.put(event.request, responseClone);
                         });
                     }
-                }).catch(() => {});
-                return cachedResponse;
-            }
-
-            return fetch(event.request).then((networkResponse) => {
-                if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== "basic") {
                     return networkResponse;
+                })
+                .catch(() => {
+                    return caches.match(event.request).then((cached) => {
+                        return cached || caches.match("./index.html");
+                    });
+                })
+        );
+        return;
+    }
+
+    // Static Assets: Stale-While-Revalidate
+    event.respondWith(
+        caches.match(event.request).then((cachedResponse) => {
+            const fetchPromise = fetch(event.request).then((networkResponse) => {
+                if (networkResponse && networkResponse.status === 200) {
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, networkResponse.clone());
+                    });
                 }
-                const responseToCache = networkResponse.clone();
-                caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(event.request, responseToCache);
-                });
                 return networkResponse;
-            }).catch(() => {
-                if (event.request.mode === "navigate") {
-                    return caches.match("./index.html");
-                }
-            });
+            }).catch(() => {});
+
+            return cachedResponse || fetchPromise;
         })
     );
 });

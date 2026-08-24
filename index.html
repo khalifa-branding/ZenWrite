@@ -5161,12 +5161,13 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         let deferredInstallPrompt = null;
         const installAppBtn = document.getElementById('installAppBtn');
 
-        // Register Service Worker
+        // Register Service Worker with instant update check
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
+                navigator.serviceWorker.register('./sw.js?v=20260824b', { updateViaCache: 'none' })
                     .then((reg) => {
                         console.log('[ZenWrite PWA] Service Worker registered with scope:', reg.scope);
+                        reg.update(); // Check for fresh worker immediately
                     })
                     .catch((err) => {
                         console.warn('[ZenWrite PWA] Service Worker registration failed:', err);
