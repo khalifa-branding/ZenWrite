@@ -2063,6 +2063,104 @@
             border-color: var(--accent-color);
         }
 
+        /* AI Agent Paste Detection Banner */
+        .agent-prompt-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, rgba(212, 160, 23, 0.12), rgba(212, 160, 23, 0.04));
+            border-bottom: 1px solid var(--accent-glow);
+            padding: 8px 16px;
+            gap: 12px;
+            animation: slideDownFade 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 20;
+        }
+
+        .agent-banner-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .agent-banner-info i {
+            color: var(--accent-color);
+            font-size: 1.15rem;
+        }
+
+        .agent-banner-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Directive Scenario Chips */
+        .directive-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 8px 0;
+        }
+
+        .directive-chip {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 4px 10px;
+            font-size: 0.76rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .directive-chip:hover, .directive-chip.active {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            background: var(--accent-glow);
+        }
+
+        /* Submode switcher for Prompt Studio */
+        .prompt-submode-switcher {
+            display: flex;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 3px;
+            margin-bottom: 10px;
+            gap: 4px;
+        }
+
+        .submode-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.76rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: all 0.15s ease;
+        }
+
+        .submode-btn.active {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
         /* Floating Mobile Selection Action Pill */
         .mobile-selection-pill {
             display: none;
@@ -2823,7 +2921,10 @@
                                     <kbd class="dropdown-kbd">Alt+\</kbd>
                                 </button>
                                 <button class="pane-dropdown-item" data-action="perfect-prompt" role="menuitem" tabindex="-1" style="color: var(--accent-color); font-weight: 600;">
-                                    <i class="ti ti-wand" aria-hidden="true"></i> <span>Perfect Prompt</span>
+                                    <i class="ti ti-wand" aria-hidden="true"></i> <span>5-Part Master Prompt</span>
+                                </button>
+                                <button class="pane-dropdown-item" data-action="counter-prompt" role="menuitem" tabindex="-1" style="color: var(--accent-color); font-weight: 600;">
+                                    <i class="ti ti-robot" aria-hidden="true"></i> <span>Agent Counter-Prompt</span>
                                 </button>
 
                                 <div class="dropdown-divider" role="separator"></div>
@@ -2857,6 +2958,21 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+                <!-- AI Agent Paste Detection Banner -->
+                <div class="agent-prompt-banner" id="agentPromptBanner" style="display: none;">
+                    <div class="agent-banner-info">
+                        <i class="ti ti-robot"></i>
+                        <span id="agentBannerText">AI Agent Response detected</span>
+                    </div>
+                    <div class="agent-banner-actions">
+                        <button type="button" class="btn btn-primary" id="agentBannerGenBtn" style="padding: 4px 10px; font-size: 0.76rem; display: flex; align-items: center; gap: 4px;">
+                            <i class="ti ti-bolt"></i> Counter-Prompt
+                        </button>
+                        <button type="button" class="icon-btn" id="agentBannerCloseBtn" aria-label="Dismiss banner" style="border: none; padding: 4px; font-size: 0.85rem;">
+                            <i class="ti ti-x"></i>
+                        </button>
                     </div>
                 </div>
                 <div class="editor-textarea-wrapper">
@@ -2914,6 +3030,9 @@
         <div class="mobile-selection-pill" id="mobileSelectionPill" role="toolbar" aria-label="Selection Actions">
             <button type="button" class="pill-action-btn primary" id="pillAiBtn" aria-label="AI Writing Actions on Selection">
                 <i class="ti ti-sparkles" aria-hidden="true"></i> <span>AI Actions</span>
+            </button>
+            <button type="button" class="pill-action-btn" id="pillCounterPromptBtn" aria-label="Agent Counter-Prompt" title="Generate Counter-Prompt for AI Agent">
+                <i class="ti ti-robot" aria-hidden="true"></i> <span>Counter-Prompt</span>
             </button>
             <button type="button" class="pill-action-btn" id="pillCopyBtn" aria-label="Copy Selected Text">
                 <i class="ti ti-copy" aria-hidden="true"></i> <span>Copy</span>
@@ -2984,11 +3103,33 @@
             </button>
         </div>
 
-        <!-- Tab 2: Prompt Studio (Master Prompt Engineer) View -->
+        <!-- Tab 2: Prompt Studio (Master Prompt & Agent Counter-Prompt) View -->
         <div class="ai-drawer-body" id="aiPromptStudioView" style="display: none; flex-direction: column;">
+            <!-- Prompt Studio Submode Switcher -->
+            <div class="prompt-submode-switcher" role="tablist">
+                <button type="button" class="submode-btn active" id="submodeMasterPrompt" role="tab" aria-selected="true">
+                    <i class="ti ti-wand"></i> <span>5-Part Prompt</span>
+                </button>
+                <button type="button" class="submode-btn" id="submodeCounterPrompt" role="tab" aria-selected="false">
+                    <i class="ti ti-robot"></i> <span>Agent Counter-Prompt</span>
+                </button>
+            </div>
+
+            <!-- Directive Scenario Chips (Counter-Prompt Mode) -->
+            <div id="counterPromptChips" style="display: none; flex-direction: column; margin-bottom: 8px;">
+                <label class="form-label" style="margin-bottom: 4px; font-size: 0.74rem;">Next-Turn Goal / Directive</label>
+                <div class="directive-chips">
+                    <button type="button" class="directive-chip active" data-goal="proceed"><i class="ti ti-check"></i> Proceed & Implement</button>
+                    <button type="button" class="directive-chip" data-goal="test"><i class="ti ti-flask"></i> Verify & Test</button>
+                    <button type="button" class="directive-chip" data-goal="fix"><i class="ti ti-bug"></i> Fix Bugs & Errors</button>
+                    <button type="button" class="directive-chip" data-goal="refactor"><i class="ti ti-code"></i> Clean & Refactor</button>
+                    <button type="button" class="directive-chip" data-goal="deploy"><i class="ti ti-git-commit"></i> Commit & Sync</button>
+                </div>
+            </div>
+
             <div class="form-group">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <label class="form-label" for="promptStudioInput" style="margin-bottom: 0;">Rough Task / Draft Idea</label>
+                    <label class="form-label" id="promptStudioInputLabel" for="promptStudioInput" style="margin-bottom: 0;">Rough Task / Draft Idea</label>
                     <button type="button" id="promptStudioGrabBtn" style="background: none; border: none; color: var(--accent-color); font-size: 0.75rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">
                         <i class="ti ti-arrow-down-left"></i> Grab Editor Text
                     </button>
@@ -2997,30 +3138,30 @@
             </div>
             
             <button class="btn btn-primary" id="promptStudioGenBtn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600;">
-                <i class="ti ti-wand"></i> Engineer Master Prompt (5-Part)
+                <i class="ti ti-wand" id="promptStudioGenBtnIcon"></i> <span id="promptStudioGenBtnText">Engineer Master Prompt (5-Part)</span>
             </button>
             
             <div class="form-group" style="flex: 1; display: flex; flex-direction: column; margin-top: 10px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <label class="form-label" style="margin-bottom: 0;">Engineered Master Prompt</label>
+                    <label class="form-label" id="promptStudioOutputLabel" style="margin-bottom: 0;">Engineered Output</label>
                     <span id="promptStudioStatusBadge" style="font-size: 0.7rem; color: var(--accent-color); font-weight: 600; display: none;">✨ Ready</span>
                 </div>
                 <div class="ai-output-box" id="promptStudioOutputBox" style="font-family: 'Fira Code', monospace; font-size: 0.82rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word;">
-                    <div class="ai-output-placeholder">Engineered 5-part Master Prompt will appear here (Persona, Objective, Context, Constraints, Output Schema).</div>
+                    <div class="ai-output-placeholder" id="promptStudioPlaceholder">Engineered 5-part Master Prompt will appear here (Persona, Objective, Context, Constraints, Output Schema).</div>
                 </div>
             </div>
 
             <div id="promptStudioActions" style="display: none; gap: 8px; flex-direction: column; margin-top: 6px;">
                 <div style="display: flex; gap: 8px;">
                     <button class="btn btn-secondary" id="promptStudioCopyBtn" style="flex: 1;">
-                        <i class="ti ti-copy"></i> Copy Prompt
+                        <i class="ti ti-copy"></i> <span id="promptStudioCopyBtnText">Copy Prompt</span>
                     </button>
                     <button class="btn btn-secondary" id="promptStudioInsertBtn" style="flex: 1;">
                         <i class="ti ti-arrow-left"></i> Insert in Editor
                     </button>
                 </div>
                 <button class="btn btn-primary" id="promptStudioRunBtn" style="width: 100%; background: linear-gradient(135deg, var(--accent-color), #B8860B); color: #FFF;">
-                    <i class="ti ti-player-play"></i> Run Master Prompt with AI
+                    <i class="ti ti-player-play"></i> Run with Gemini AI
                 </button>
             </div>
         </div>
@@ -3125,8 +3266,9 @@
     <!-- Custom Context Menu -->
     <div class="custom-context-menu" id="customContextMenu" role="menu" aria-label="Context AI Actions" tabindex="-1">
         <div class="context-header" id="contextSelectionInfo" role="presentation">Target: None</div>
-        <div class="dropdown-section-title" role="presentation" style="padding: 4px 8px 2px;">Transform & Polish</div>
-        <button class="context-item" data-action="perfect-prompt" role="menuitem" tabindex="-1" style="color: var(--accent-color); font-weight: 600;"><i class="ti ti-wand" aria-hidden="true"></i> Perfect Prompt</button>
+        <div class="dropdown-section-title" role="presentation" style="padding: 4px 8px 2px;">Prompt Studio & Transform</div>
+        <button class="context-item" data-action="perfect-prompt" role="menuitem" tabindex="-1" style="color: var(--accent-color); font-weight: 600;"><i class="ti ti-wand" aria-hidden="true"></i> 5-Part Master Prompt</button>
+        <button class="context-item" data-action="counter-prompt" role="menuitem" tabindex="-1" style="color: var(--accent-color); font-weight: 600;"><i class="ti ti-robot" aria-hidden="true"></i> Agent Counter-Prompt</button>
         <button class="context-item" data-action="grammar" role="menuitem" tabindex="-1"><i class="ti ti-checks" aria-hidden="true"></i> Correct Grammar</button>
         <button class="context-item" data-action="rephrase" role="menuitem" tabindex="-1"><i class="ti ti-refresh" aria-hidden="true"></i> Rephrase Text</button>
         <button class="context-item" data-action="concise" role="menuitem" tabindex="-1"><i class="ti ti-arrows-minimize" aria-hidden="true"></i> Make Concise</button>
@@ -4706,6 +4848,14 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
 
                 if (action === 'perfect-prompt') {
                     promptInstruction = 'You are a world-class Prompt Engineer and AI Alignment Specialist. Analyze and transform the following rough idea, draft task, or user prompt into an exquisitely engineered, production-ready master prompt structured with: 1) # PERSONA & ROLE, 2) # TASK OBJECTIVE, 3) # CONTEXT & BACKGROUND, 4) # SPECIFIC RULES & CONSTRAINTS, and 5) # EXPECTED OUTPUT FORMAT. Use bracket placeholders like [Insert Text Here] for dynamic parameters. Return ONLY the perfected master prompt ready to use without conversational filler or triple backtick wraps.';
+                } else if (action === 'counter-prompt') {
+                    aiDrawer.classList.remove('hidden');
+                    setAiDrawerTab('prompt-studio');
+                    updatePromptStudioSubmode('counter');
+                    if (promptStudioInput) promptStudioInput.value = selectedText || editorTextarea.value.trim();
+                    updateBackdropState();
+                    if (promptStudioGenBtn) promptStudioGenBtn.click();
+                    return;
                 } else if (action === 'grammar') {
                     promptInstruction = 'Proofread and correct the spelling, grammar, and sentence structure of the text. Keep all styling intact. Return ONLY the updated corrected text without any extra text or quotes.';
                 } else if (action === 'rephrase') {
@@ -5480,6 +5630,14 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 promptInstruction = 'Continue writing seamlessly from the end of the target text. Maintain the exact same style, voice, formatting, and language. Write the next 1-3 paragraphs naturally. Return ONLY the continuation text to be appended. Do not repeat the existing text and do not include conversational introductions or quotes.';
             } else if (action === 'perfect-prompt') {
                 promptInstruction = 'You are a world-class Prompt Engineer and AI Alignment Specialist. Analyze and transform the following rough idea, draft task, or user prompt into an exquisitely engineered, production-ready master prompt structured with: 1) # PERSONA & ROLE, 2) # TASK OBJECTIVE, 3) # CONTEXT & BACKGROUND, 4) # SPECIFIC RULES & CONSTRAINTS, and 5) # EXPECTED OUTPUT FORMAT. Use bracket placeholders like [Insert Text Here] for dynamic parameters. Return ONLY the perfected master prompt ready to use without conversational filler or triple backtick wraps.';
+            } else if (action === 'counter-prompt') {
+                aiDrawer.classList.remove('hidden');
+                setAiDrawerTab('prompt-studio');
+                updatePromptStudioSubmode('counter');
+                if (promptStudioInput) promptStudioInput.value = targetText;
+                updateBackdropState();
+                if (promptStudioGenBtn) promptStudioGenBtn.click();
+                return;
             } else if (action === 'format-json') {
                 promptInstruction = 'Format, clean, indent, and validate the following JSON data. Ensure strict valid JSON output with standard 2-space indentation. Return ONLY the formatted JSON without conversational text or backtick wraps.';
             } else if (action === 'format-sql') {
@@ -5981,7 +6139,167 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         if (aiPromptStudioTab) aiPromptStudioTab.onclick = () => setAiDrawerTab('prompt-studio');
         if (aiProofreadTab) aiProofreadTab.onclick = () => setAiDrawerTab('proofread');
 
-        // --- Prompt Studio Logic ---
+        // --- Prompt Studio & AI Agent Counter-Prompt Engine ---
+        let promptStudioSubmode = 'master'; // 'master' or 'counter'
+        let activeDirectiveGoal = 'proceed'; // 'proceed', 'test', 'fix', 'refactor', 'deploy'
+
+        const submodeMasterPrompt = document.getElementById('submodeMasterPrompt');
+        const submodeCounterPrompt = document.getElementById('submodeCounterPrompt');
+        const counterPromptChips = document.getElementById('counterPromptChips');
+        const promptStudioInputLabel = document.getElementById('promptStudioInputLabel');
+        const promptStudioGenBtnIcon = document.getElementById('promptStudioGenBtnIcon');
+        const promptStudioGenBtnText = document.getElementById('promptStudioGenBtnText');
+        const promptStudioOutputLabel = document.getElementById('promptStudioOutputLabel');
+        const promptStudioPlaceholder = document.getElementById('promptStudioPlaceholder');
+        const promptStudioCopyBtnText = document.getElementById('promptStudioCopyBtnText');
+
+        function updatePromptStudioSubmode(mode) {
+            promptStudioSubmode = mode;
+            if (mode === 'counter') {
+                if (submodeCounterPrompt) {
+                    submodeCounterPrompt.classList.add('active');
+                    submodeCounterPrompt.setAttribute('aria-selected', 'true');
+                }
+                if (submodeMasterPrompt) {
+                    submodeMasterPrompt.classList.remove('active');
+                    submodeMasterPrompt.setAttribute('aria-selected', 'false');
+                }
+                if (counterPromptChips) counterPromptChips.style.display = 'flex';
+                if (promptStudioInputLabel) promptStudioInputLabel.textContent = 'Pasted AI Agent Output / Response';
+                if (promptStudioInput) promptStudioInput.placeholder = 'Paste the AI agent response, proposed changes, or terminal output here...';
+                if (promptStudioGenBtnIcon) promptStudioGenBtnIcon.className = 'ti ti-robot';
+                if (promptStudioGenBtnText) promptStudioGenBtnText.textContent = 'Generate Agent Counter-Prompt';
+                if (promptStudioOutputLabel) promptStudioOutputLabel.textContent = 'Next-Turn Counter-Prompt';
+                if (promptStudioPlaceholder) promptStudioPlaceholder.textContent = 'Actionable Next-Turn Counter-Prompt for AI Agent will appear here.';
+                if (promptStudioCopyBtnText) promptStudioCopyBtnText.textContent = 'Copy for Terminal';
+            } else {
+                if (submodeMasterPrompt) {
+                    submodeMasterPrompt.classList.add('active');
+                    submodeMasterPrompt.setAttribute('aria-selected', 'true');
+                }
+                if (submodeCounterPrompt) {
+                    submodeCounterPrompt.classList.remove('active');
+                    submodeCounterPrompt.setAttribute('aria-selected', 'false');
+                }
+                if (counterPromptChips) counterPromptChips.style.display = 'none';
+                if (promptStudioInputLabel) promptStudioInputLabel.textContent = 'Rough Task / Draft Idea';
+                if (promptStudioInput) promptStudioInput.placeholder = 'e.g. Create a customer support reply for delayed shipment with 10% refund voucher...';
+                if (promptStudioGenBtnIcon) promptStudioGenBtnIcon.className = 'ti ti-wand';
+                if (promptStudioGenBtnText) promptStudioGenBtnText.textContent = 'Engineer Master Prompt (5-Part)';
+                if (promptStudioOutputLabel) promptStudioOutputLabel.textContent = 'Engineered Master Prompt';
+                if (promptStudioPlaceholder) promptStudioPlaceholder.textContent = 'Engineered 5-part Master Prompt will appear here (Persona, Objective, Context, Constraints, Output Schema).';
+                if (promptStudioCopyBtnText) promptStudioCopyBtnText.textContent = 'Copy Prompt';
+            }
+        }
+
+        if (submodeMasterPrompt) submodeMasterPrompt.onclick = () => updatePromptStudioSubmode('master');
+        if (submodeCounterPrompt) submodeCounterPrompt.onclick = () => updatePromptStudioSubmode('counter');
+
+        // Directive Scenario Chips handler
+        document.querySelectorAll('.directive-chips .directive-chip').forEach(chip => {
+            chip.onclick = () => {
+                document.querySelectorAll('.directive-chips .directive-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                activeDirectiveGoal = chip.getAttribute('data-goal') || 'proceed';
+                if (navigator.vibrate) navigator.vibrate(10);
+            };
+        });
+
+        function getAgentCounterPromptInstruction(directiveGoal = 'proceed') {
+            let goalGuidance = '';
+            if (directiveGoal === 'proceed') {
+                goalGuidance = 'Goal: Acknowledge the plan/step proposed by the agent, confirm approval with no unnecessary delay, and give direct, imperative instructions to execute and implement the changes immediately.';
+            } else if (directiveGoal === 'test') {
+                goalGuidance = 'Goal: Instruct the agent to run unit tests, integrity checks, and validation commands to verify zero breakages and complete test coverage.';
+            } else if (directiveGoal === 'fix') {
+                goalGuidance = 'Goal: Point out any errors, failed tests, edge cases, or bugs in the output and instruct the agent to systematically diagnose, fix the root cause, and re-verify.';
+            } else if (directiveGoal === 'refactor') {
+                goalGuidance = 'Goal: Instruct the agent to refactor, simplify, and polish the code structure, removing redundancy while preserving all functionality and backward compatibility.';
+            } else if (directiveGoal === 'deploy') {
+                goalGuidance = 'Goal: Instruct the agent to run syntax validation, stage modified files, craft a descriptive git commit, and push/sync cleanly to the remote branch.';
+            }
+
+            return `You are an expert AI Agent Director and Prompt Engineer. The user is collaborating with an autonomous AI coding agent in a CLI/IDE terminal (such as Antigravity, Cursor, Claude Code, Aider, or Codex).\\n\\nThe user has pasted the AI agent's latest response/output. Your task is to generate a context-aware, highly actionable NEXT-TURN COUNTER-PROMPT that the user can copy and paste directly back into the agent's terminal without reading, analyzing, or manually drafting a reply.\\n\\n${goalGuidance}\\n\\nStructure the generated counter-prompt cleanly as:\\n1. Short direct confirmation/evaluation of the current step.\\n2. Numbered list of concrete next actions/commands the agent must execute.\\n3. Explicit constraints (e.g. preserve working code, run integrity checks, keep comments).\\n\\nFormatting rules:\\n- Return ONLY the exact counter-prompt text ready to paste into the terminal.\\n- Do not wrap the entire response in triple backticks.\\n- Do not include conversational introductory remarks like "Here is your counter prompt:".\\n- Make it authoritative, concise, and unambiguous.`;
+        }
+
+        function isAIAgentResponse(text) {
+            if (!text || text.length < 35) return false;
+            const patterns = [
+                /\[diff_block_start\]/i,
+                /### Proposed Changes/i,
+                /## User Review Required/i,
+                /## Open Questions/i,
+                /## Verification Plan/i,
+                /The command exited with code/i,
+                /files changed, \d+ insertions/i,
+                /To https:\/\/github\.com/i,
+                /Would you like me to (proceed|execute|implement|continue)/i,
+                /Do you want me to/i,
+                /I have (completed|implemented|created|updated|fixed)/i,
+                /Here is the (plan|implementation|walkthrough|summary)/i,
+                /Traceback \(most recent call last\)/i,
+                /SyntaxError:|TypeError:|ReferenceError:|Error:/i,
+                /PASS |FAIL |npm test|pytest|vitest/i,
+                /PERSONA & ROLE/i,
+                /# TASK OBJECTIVE/i,
+                /Let me know if you would like/i,
+                /Shall I proceed with/i
+            ];
+            return patterns.some(pattern => pattern.test(text));
+        }
+
+        // Smart Paste Listener for AI Agent Output Detection
+        editorTextarea.addEventListener('paste', () => {
+            setTimeout(() => {
+                const val = editorTextarea.value;
+                if (isAIAgentResponse(val)) {
+                    const banner = document.getElementById('agentPromptBanner');
+                    if (banner) {
+                        banner.style.display = 'flex';
+                        if (navigator.vibrate) navigator.vibrate(15);
+                    }
+                }
+            }, 120);
+        });
+
+        // Banner Button Handlers
+        const agentBannerGenBtn = document.getElementById('agentBannerGenBtn');
+        const agentBannerCloseBtn = document.getElementById('agentBannerCloseBtn');
+
+        if (agentBannerGenBtn) {
+            agentBannerGenBtn.onclick = () => {
+                const text = selectedText || editorTextarea.value.trim();
+                aiDrawer.classList.remove('hidden');
+                setAiDrawerTab('prompt-studio');
+                updatePromptStudioSubmode('counter');
+                if (promptStudioInput) promptStudioInput.value = text;
+                updateBackdropState();
+                if (promptStudioGenBtn) promptStudioGenBtn.click();
+            };
+        }
+
+        if (agentBannerCloseBtn) {
+            agentBannerCloseBtn.onclick = () => {
+                const banner = document.getElementById('agentPromptBanner');
+                if (banner) banner.style.display = 'none';
+            };
+        }
+
+        // Selection Pill Counter-Prompt Button
+        const pillCounterPromptBtn = document.getElementById('pillCounterPromptBtn');
+        if (pillCounterPromptBtn) {
+            pillCounterPromptBtn.onclick = (e) => {
+                e.stopPropagation();
+                const text = selectedText || editorTextarea.value.trim();
+                aiDrawer.classList.remove('hidden');
+                setAiDrawerTab('prompt-studio');
+                updatePromptStudioSubmode('counter');
+                if (promptStudioInput) promptStudioInput.value = text;
+                updateBackdropState();
+                if (promptStudioGenBtn) promptStudioGenBtn.click();
+            };
+        }
+
         const promptStudioGrabBtn = document.getElementById('promptStudioGrabBtn');
         const promptStudioInput = document.getElementById('promptStudioInput');
         const promptStudioGenBtn = document.getElementById('promptStudioGenBtn');
@@ -6009,14 +6327,23 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             promptStudioGenBtn.onclick = async () => {
                 const rawTask = promptStudioInput ? promptStudioInput.value.trim() : '';
                 if (!rawTask) {
-                    alert("Please enter a rough task, draft idea, or prompt to engineer.");
+                    alert("Please enter or paste text to engineer.");
                     if (promptStudioInput) promptStudioInput.focus();
                     return;
                 }
 
-                const systemInstruction = 'You are a world-class Prompt Engineer and AI Alignment Specialist. Your expertise lies in dissecting vague, rough, or unstructured user requests and transforming them into highly optimized, reliable, and context-aware master prompts.\\n\\nYour objective is to take the rough draft or task description provided by the user and engineer it into a high-performing, production-ready master prompt following this exact 5-part structural blueprint:\\n\\n# PERSONA & ROLE\\n[Define a highly specific, expert persona for the AI with deep domain authority]\\n\\n# TASK OBJECTIVE\\n[State clearly and concisely what the AI must accomplish using active, imperative verbs]\\n\\n# CONTEXT & BACKGROUND\\n[Provide the necessary situational awareness, problem space, and operational context]\\n\\n# SPECIFIC RULES & CONSTRAINTS\\n- [Constraint 1: Required Methodology & Inclusion Criteria]\\n- [Constraint 2: Negative Constraints - What to Avoid]\\n- [Constraint 3: Edge Case & Quality Guidelines]\\n- [Constraint 4: Tone, Depth, and Technical Rigor]\\n\\n# EXPECTED OUTPUT FORMAT\\n[Define the exact structure, layout, or markdown/JSON schema of the final response]\\n\\nMeta-Engineering Rules:\\n- Use clear bracket placeholders like [Insert Text Here] or [Variable] for dynamic inputs.\\n- No Conversational Filler: Output ONLY the engineered master prompt. Do not wrap the whole response in triple backticks or include conversational introductory/concluding remarks.';
+                let systemInstruction = '';
+                if (promptStudioSubmode === 'counter') {
+                    systemInstruction = getAgentCounterPromptInstruction(activeDirectiveGoal);
+                } else {
+                    systemInstruction = 'You are a world-class Prompt Engineer and AI Alignment Specialist. Your expertise lies in dissecting vague, rough, or unstructured user requests and transforming them into highly optimized, reliable, and context-aware master prompts.\\n\\nYour objective is to take the rough draft or task description provided by the user and engineer it into a high-performing, production-ready master prompt following this exact 5-part structural blueprint:\\n\\n# PERSONA & ROLE\\n[Define a highly specific, expert persona for the AI with deep domain authority]\\n\\n# TASK OBJECTIVE\\n[State clearly and concisely what the AI must accomplish using active, imperative verbs]\\n\\n# CONTEXT & BACKGROUND\\n[Provide the necessary situational awareness, problem space, and operational context]\\n\\n# SPECIFIC RULES & CONSTRAINTS\\n- [Constraint 1: Required Methodology & Inclusion Criteria]\\n- [Constraint 2: Negative Constraints - What to Avoid]\\n- [Constraint 3: Edge Case & Quality Guidelines]\\n- [Constraint 4: Tone, Depth, and Technical Rigor]\\n\\n# EXPECTED OUTPUT FORMAT\\n[Define the exact structure, layout, or markdown/JSON schema of the final response]\\n\\nMeta-Engineering Rules:\\n- Use clear bracket placeholders like [Insert Text Here] or [Variable] for dynamic inputs.\\n- No Conversational Filler: Output ONLY the engineered master prompt. Do not wrap the whole response in triple backticks or include conversational introductory/concluding remarks.';
+                }
 
-                promptStudioOutputBox.innerHTML = '<div class="loading-pulse"><div class="pulse-dot"></div><div class="pulse-dot"></div><div class="pulse-dot"></div></div><p style="text-align: center; color: var(--text-secondary); margin-top: 8px;">Engineering 5-part Master Prompt with Gemini...</p>';
+                const loadingMsg = promptStudioSubmode === 'counter'
+                    ? 'Generating actionable Agent Counter-Prompt...'
+                    : 'Engineering 5-part Master Prompt with Gemini...';
+
+                promptStudioOutputBox.innerHTML = `<div class="loading-pulse"><div class="pulse-dot"></div><div class="pulse-dot"></div><div class="pulse-dot"></div></div><p style="text-align: center; color: var(--text-secondary); margin-top: 8px;">${loadingMsg}</p>`;
                 if (promptStudioActions) promptStudioActions.style.display = 'none';
                 if (promptStudioStatusBadge) promptStudioStatusBadge.style.display = 'none';
 
@@ -6027,7 +6354,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                     if (promptStudioStatusBadge) promptStudioStatusBadge.style.display = 'inline';
                     if (navigator.vibrate) navigator.vibrate(20);
                 } catch (err) {
-                    promptStudioOutputBox.innerHTML = `<span style="color: #EF4444;">Error engineering prompt: ${escapeHtml(err.message || 'Generation failed')}</span>`;
+                    promptStudioOutputBox.innerHTML = `<span style="color: #EF4444;">Error generating prompt: ${escapeHtml(err.message || 'Generation failed')}</span>`;
                 }
             };
         }
@@ -6062,7 +6389,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 editorTextarea.focus();
                 renderEditor();
                 triggerAutosave();
-                showUndoToast("Master prompt inserted", prev);
+                showUndoToast("Prompt inserted", prev);
                 if (window.innerWidth <= 768 && aiDrawer) {
                     aiDrawer.classList.add('hidden');
                     updateBackdropState();
