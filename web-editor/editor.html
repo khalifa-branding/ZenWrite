@@ -3004,7 +3004,7 @@
                                 <i class="ti ti-sparkles" aria-hidden="true"></i> <span>AI Actions</span> <i class="ti ti-chevron-down" style="font-size: 0.7rem; margin-left: 2px;"></i>
                             </button>
                             <div class="pane-dropdown-menu editor-ai-menu" id="editorAiMenu" role="menu" aria-labelledby="editorAiBtn" aria-orientation="vertical" tabindex="-1">
-                                <div id="adaptiveActionsGroup" class="adaptive-actions-group" style="display: none; padding-bottom: 4px; border-bottom: 1px solid var(--border-color); margin-bottom: 4px;"></div>
+                                <div id="adaptiveActionsGroup" class="adaptive-actions-group" style="display: none; padding-bottom: 6px; border-bottom: 1px solid var(--border-color); margin-bottom: 6px;"></div>
                                 
                                 <div class="dropdown-section-title" role="presentation">Draft & Compose</div>
                                 <button class="pane-dropdown-item" data-action="continue" role="menuitem" tabindex="-1">
@@ -4077,9 +4077,9 @@ Try editing this text, or create a new document!`);
 
             container.style.display = 'block';
             let html = `
-            <div class="dropdown-section-title" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 8px 4px;">
-                <span>Suggested Actions</span>
-                <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.64rem; font-weight: 500; text-transform: none; color: var(--accent-color); background: rgba(226, 184, 116, 0.12); padding: 1px 7px; border-radius: 10px; border: 1px solid rgba(226, 184, 116, 0.25);">
+            <div class="dropdown-section-title adaptive-header" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 8px 6px; margin-bottom: 3px;">
+                <span style="font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;">Suggested Actions</span>
+                <span class="adaptive-badge" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.65rem; font-weight: 600; text-transform: none; color: var(--accent-color); background: var(--accent-glow); padding: 2px 8px; border-radius: 12px; border: 1px solid rgba(226, 184, 116, 0.28); line-height: 1.2;">
                     <i class="ti ${sense.icon}" style="font-size: 0.72rem;"></i> ${sense.label}
                 </span>
             </div>`;
