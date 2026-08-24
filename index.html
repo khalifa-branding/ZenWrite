@@ -2951,11 +2951,14 @@
             </div>
             <!-- Mode Switcher Tabs -->
             <div class="mobile-view-switcher" style="display: flex; width: 100%; border-radius: 8px;" role="tablist">
-                <button class="view-switch-btn active" id="aiAssistantTab" role="tab" aria-selected="true" style="flex: 1; justify-content: center;">
-                    <i class="ti ti-sparkles"></i> Assist & Draft
+                <button class="view-switch-btn active" id="aiAssistantTab" role="tab" aria-selected="true" style="flex: 1; justify-content: center; font-size: 0.76rem; padding: 6px 4px;">
+                    <i class="ti ti-sparkles"></i> Draft
                 </button>
-                <button class="view-switch-btn" id="aiProofreadTab" role="tab" aria-selected="false" style="flex: 1; justify-content: center;">
-                    <i class="ti ti-checklist"></i> Audit & Proofread
+                <button class="view-switch-btn" id="aiPromptStudioTab" role="tab" aria-selected="false" style="flex: 1; justify-content: center; font-size: 0.76rem; padding: 6px 4px; color: var(--accent-color); font-weight: 600;">
+                    <i class="ti ti-wand"></i> Prompt Studio
+                </button>
+                <button class="view-switch-btn" id="aiProofreadTab" role="tab" aria-selected="false" style="flex: 1; justify-content: center; font-size: 0.76rem; padding: 6px 4px;">
+                    <i class="ti ti-checklist"></i> Audit
                 </button>
             </div>
         </div>
@@ -2981,7 +2984,48 @@
             </button>
         </div>
 
-        <!-- Tab 2: Proofreader & Audit View -->
+        <!-- Tab 2: Prompt Studio (Master Prompt Engineer) View -->
+        <div class="ai-drawer-body" id="aiPromptStudioView" style="display: none; flex-direction: column;">
+            <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label class="form-label" for="promptStudioInput" style="margin-bottom: 0;">Rough Task / Draft Idea</label>
+                    <button type="button" id="promptStudioGrabBtn" style="background: none; border: none; color: var(--accent-color); font-size: 0.75rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                        <i class="ti ti-arrow-down-left"></i> Grab Editor Text
+                    </button>
+                </div>
+                <textarea class="ai-prompt-area" id="promptStudioInput" placeholder="e.g. Create a customer support reply for delayed shipment with 10% refund voucher..." style="min-height: 85px;"></textarea>
+            </div>
+            
+            <button class="btn btn-primary" id="promptStudioGenBtn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600;">
+                <i class="ti ti-wand"></i> Engineer Master Prompt (5-Part)
+            </button>
+            
+            <div class="form-group" style="flex: 1; display: flex; flex-direction: column; margin-top: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label class="form-label" style="margin-bottom: 0;">Engineered Master Prompt</label>
+                    <span id="promptStudioStatusBadge" style="font-size: 0.7rem; color: var(--accent-color); font-weight: 600; display: none;">✨ Ready</span>
+                </div>
+                <div class="ai-output-box" id="promptStudioOutputBox" style="font-family: 'Fira Code', monospace; font-size: 0.82rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word;">
+                    <div class="ai-output-placeholder">Engineered 5-part Master Prompt will appear here (Persona, Objective, Context, Constraints, Output Schema).</div>
+                </div>
+            </div>
+
+            <div id="promptStudioActions" style="display: none; gap: 8px; flex-direction: column; margin-top: 6px;">
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-secondary" id="promptStudioCopyBtn" style="flex: 1;">
+                        <i class="ti ti-copy"></i> Copy Prompt
+                    </button>
+                    <button class="btn btn-secondary" id="promptStudioInsertBtn" style="flex: 1;">
+                        <i class="ti ti-arrow-left"></i> Insert in Editor
+                    </button>
+                </div>
+                <button class="btn btn-primary" id="promptStudioRunBtn" style="width: 100%; background: linear-gradient(135deg, var(--accent-color), #B8860B); color: #FFF;">
+                    <i class="ti ti-player-play"></i> Run Master Prompt with AI
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab 3: Proofreader & Audit View -->
         <div class="ai-drawer-body" id="aiProofreadView" style="display: none;">
             <button class="btn btn-primary" id="proofreaderScanBtn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <i class="ti ti-scan"></i> Scan Document
@@ -4661,7 +4705,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 let promptInstruction = '';
 
                 if (action === 'perfect-prompt') {
-                    promptInstruction = 'You are a world-class Prompt Engineer. Analyze and transform the following rough idea, draft task, or user prompt into an exquisitely engineered, high-performing master prompt. Structure it clearly with: 1) Persona & Role, 2) Task Objective, 3) Context & Background, 4) Specific Rules & Constraints, and 5) Expected Output Format. Return ONLY the perfected, engineered prompt ready to use. Do not wrap the whole response in triple backticks or include conversational introductory notes.';
+                    promptInstruction = 'You are a world-class Prompt Engineer and AI Alignment Specialist. Analyze and transform the following rough idea, draft task, or user prompt into an exquisitely engineered, production-ready master prompt structured with: 1) # PERSONA & ROLE, 2) # TASK OBJECTIVE, 3) # CONTEXT & BACKGROUND, 4) # SPECIFIC RULES & CONSTRAINTS, and 5) # EXPECTED OUTPUT FORMAT. Use bracket placeholders like [Insert Text Here] for dynamic parameters. Return ONLY the perfected master prompt ready to use without conversational filler or triple backtick wraps.';
                 } else if (action === 'grammar') {
                     promptInstruction = 'Proofread and correct the spelling, grammar, and sentence structure of the text. Keep all styling intact. Return ONLY the updated corrected text without any extra text or quotes.';
                 } else if (action === 'rephrase') {
@@ -5435,7 +5479,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             if (action === 'continue') {
                 promptInstruction = 'Continue writing seamlessly from the end of the target text. Maintain the exact same style, voice, formatting, and language. Write the next 1-3 paragraphs naturally. Return ONLY the continuation text to be appended. Do not repeat the existing text and do not include conversational introductions or quotes.';
             } else if (action === 'perfect-prompt') {
-                promptInstruction = 'You are a world-class Prompt Engineer. Analyze and transform the following rough idea, draft task, or user prompt into an exquisitely engineered, high-performing master prompt. Structure it clearly with: 1) Persona & Role, 2) Task Objective, 3) Context & Background, 4) Specific Rules & Constraints, and 5) Expected Output Format. Return ONLY the perfected, engineered prompt ready to use. Do not wrap the whole response in triple backticks or include conversational introductory notes.';
+                promptInstruction = 'You are a world-class Prompt Engineer and AI Alignment Specialist. Analyze and transform the following rough idea, draft task, or user prompt into an exquisitely engineered, production-ready master prompt structured with: 1) # PERSONA & ROLE, 2) # TASK OBJECTIVE, 3) # CONTEXT & BACKGROUND, 4) # SPECIFIC RULES & CONSTRAINTS, and 5) # EXPECTED OUTPUT FORMAT. Use bracket placeholders like [Insert Text Here] for dynamic parameters. Return ONLY the perfected master prompt ready to use without conversational filler or triple backtick wraps.';
             } else if (action === 'format-json') {
                 promptInstruction = 'Format, clean, indent, and validate the following JSON data. Ensure strict valid JSON output with standard 2-space indentation. Return ONLY the formatted JSON without conversational text or backtick wraps.';
             } else if (action === 'format-sql') {
@@ -5880,43 +5924,161 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             };
         }
 
-        // --- Unified AI Assistant Drawer Tabs ---
+        // --- Unified AI Assistant Drawer Tabs (Draft, Prompt Studio, Proofreader) ---
         const aiAssistantTab = document.getElementById('aiAssistantTab');
+        const aiPromptStudioTab = document.getElementById('aiPromptStudioTab');
         const aiProofreadTab = document.getElementById('aiProofreadTab');
         const aiDraftingView = document.getElementById('aiDraftingView');
+        const aiPromptStudioView = document.getElementById('aiPromptStudioView');
         const aiProofreadView = document.getElementById('aiProofreadView');
         const aiDrawerTitle = document.getElementById('aiDrawerTitle');
 
         function setAiDrawerTab(tabName) {
-            if (tabName === 'proofread') {
+            // Deactivate all tabs & views
+            [aiAssistantTab, aiPromptStudioTab, aiProofreadTab].forEach(t => {
+                if (t) {
+                    t.classList.remove('active');
+                    t.setAttribute('aria-selected', 'false');
+                }
+            });
+            if (aiDraftingView) aiDraftingView.style.display = 'none';
+            if (aiPromptStudioView) aiPromptStudioView.style.display = 'none';
+            if (aiProofreadView) aiProofreadView.style.display = 'none';
+
+            if (tabName === 'prompt-studio') {
+                if (aiPromptStudioTab) {
+                    aiPromptStudioTab.classList.add('active');
+                    aiPromptStudioTab.setAttribute('aria-selected', 'true');
+                }
+                if (aiPromptStudioView) aiPromptStudioView.style.display = 'flex';
+                if (aiDrawerTitle) aiDrawerTitle.innerHTML = '<i class="ti ti-wand"></i> Master Prompt Studio';
+                
+                // Auto-fill from editor selection if input is empty
+                const promptInput = document.getElementById('promptStudioInput');
+                if (promptInput && !promptInput.value.trim()) {
+                    const text = selectedText || editorTextarea.value.trim();
+                    if (text) promptInput.value = text;
+                }
+                if (promptInput) promptInput.focus();
+            } else if (tabName === 'proofread') {
                 if (aiProofreadTab) {
                     aiProofreadTab.classList.add('active');
                     aiProofreadTab.setAttribute('aria-selected', 'true');
                 }
-                if (aiAssistantTab) {
-                    aiAssistantTab.classList.remove('active');
-                    aiAssistantTab.setAttribute('aria-selected', 'false');
-                }
                 if (aiProofreadView) aiProofreadView.style.display = 'flex';
-                if (aiDraftingView) aiDraftingView.style.display = 'none';
                 if (aiDrawerTitle) aiDrawerTitle.innerHTML = '<i class="ti ti-checklist"></i> AI Proofreader';
             } else {
                 if (aiAssistantTab) {
                     aiAssistantTab.classList.add('active');
                     aiAssistantTab.setAttribute('aria-selected', 'true');
                 }
-                if (aiProofreadTab) {
-                    aiProofreadTab.classList.remove('active');
-                    aiProofreadTab.setAttribute('aria-selected', 'false');
-                }
                 if (aiDraftingView) aiDraftingView.style.display = 'flex';
-                if (aiProofreadView) aiProofreadView.style.display = 'none';
                 if (aiDrawerTitle) aiDrawerTitle.innerHTML = '<i class="ti ti-sparkles"></i> AI Assistant';
             }
         }
 
         if (aiAssistantTab) aiAssistantTab.onclick = () => setAiDrawerTab('assist');
+        if (aiPromptStudioTab) aiPromptStudioTab.onclick = () => setAiDrawerTab('prompt-studio');
         if (aiProofreadTab) aiProofreadTab.onclick = () => setAiDrawerTab('proofread');
+
+        // --- Prompt Studio Logic ---
+        const promptStudioGrabBtn = document.getElementById('promptStudioGrabBtn');
+        const promptStudioInput = document.getElementById('promptStudioInput');
+        const promptStudioGenBtn = document.getElementById('promptStudioGenBtn');
+        const promptStudioOutputBox = document.getElementById('promptStudioOutputBox');
+        const promptStudioActions = document.getElementById('promptStudioActions');
+        const promptStudioCopyBtn = document.getElementById('promptStudioCopyBtn');
+        const promptStudioInsertBtn = document.getElementById('promptStudioInsertBtn');
+        const promptStudioRunBtn = document.getElementById('promptStudioRunBtn');
+        const promptStudioStatusBadge = document.getElementById('promptStudioStatusBadge');
+
+        if (promptStudioGrabBtn) {
+            promptStudioGrabBtn.onclick = () => {
+                const text = selectedText || editorTextarea.value.trim();
+                if (text && promptStudioInput) {
+                    promptStudioInput.value = text;
+                    promptStudioInput.focus();
+                    if (navigator.vibrate) navigator.vibrate(15);
+                } else {
+                    alert("Editor has no text to grab. Type or select some text first.");
+                }
+            };
+        }
+
+        if (promptStudioGenBtn) {
+            promptStudioGenBtn.onclick = async () => {
+                const rawTask = promptStudioInput ? promptStudioInput.value.trim() : '';
+                if (!rawTask) {
+                    alert("Please enter a rough task, draft idea, or prompt to engineer.");
+                    if (promptStudioInput) promptStudioInput.focus();
+                    return;
+                }
+
+                const systemInstruction = 'You are a world-class Prompt Engineer and AI Alignment Specialist. Your expertise lies in dissecting vague, rough, or unstructured user requests and transforming them into highly optimized, reliable, and context-aware master prompts.\\n\\nYour objective is to take the rough draft or task description provided by the user and engineer it into a high-performing, production-ready master prompt following this exact 5-part structural blueprint:\\n\\n# PERSONA & ROLE\\n[Define a highly specific, expert persona for the AI with deep domain authority]\\n\\n# TASK OBJECTIVE\\n[State clearly and concisely what the AI must accomplish using active, imperative verbs]\\n\\n# CONTEXT & BACKGROUND\\n[Provide the necessary situational awareness, problem space, and operational context]\\n\\n# SPECIFIC RULES & CONSTRAINTS\\n- [Constraint 1: Required Methodology & Inclusion Criteria]\\n- [Constraint 2: Negative Constraints - What to Avoid]\\n- [Constraint 3: Edge Case & Quality Guidelines]\\n- [Constraint 4: Tone, Depth, and Technical Rigor]\\n\\n# EXPECTED OUTPUT FORMAT\\n[Define the exact structure, layout, or markdown/JSON schema of the final response]\\n\\nMeta-Engineering Rules:\\n- Use clear bracket placeholders like [Insert Text Here] or [Variable] for dynamic inputs.\\n- No Conversational Filler: Output ONLY the engineered master prompt. Do not wrap the whole response in triple backticks or include conversational introductory/concluding remarks.';
+
+                promptStudioOutputBox.innerHTML = '<div class="loading-pulse"><div class="pulse-dot"></div><div class="pulse-dot"></div><div class="pulse-dot"></div></div><p style="text-align: center; color: var(--text-secondary); margin-top: 8px;">Engineering 5-part Master Prompt with Gemini...</p>';
+                if (promptStudioActions) promptStudioActions.style.display = 'none';
+                if (promptStudioStatusBadge) promptStudioStatusBadge.style.display = 'none';
+
+                try {
+                    const generated = await runGeminiAPI(systemInstruction, rawTask);
+                    promptStudioOutputBox.textContent = generated;
+                    if (promptStudioActions) promptStudioActions.style.display = 'flex';
+                    if (promptStudioStatusBadge) promptStudioStatusBadge.style.display = 'inline';
+                    if (navigator.vibrate) navigator.vibrate(20);
+                } catch (err) {
+                    promptStudioOutputBox.innerHTML = `<span style="color: #EF4444;">Error engineering prompt: ${escapeHtml(err.message || 'Generation failed')}</span>`;
+                }
+            };
+        }
+
+        if (promptStudioCopyBtn) {
+            promptStudioCopyBtn.onclick = async () => {
+                const text = promptStudioOutputBox.textContent;
+                if (!text) return;
+                try {
+                    await navigator.clipboard.writeText(text);
+                    const orig = promptStudioCopyBtn.innerHTML;
+                    promptStudioCopyBtn.innerHTML = '<i class="ti ti-check"></i> Copied!';
+                    if (navigator.vibrate) navigator.vibrate(15);
+                    setTimeout(() => { promptStudioCopyBtn.innerHTML = orig; }, 1500);
+                } catch (err) {
+                    console.error("Failed to copy:", err);
+                }
+            };
+        }
+
+        if (promptStudioInsertBtn) {
+            promptStudioInsertBtn.onclick = () => {
+                const text = promptStudioOutputBox.textContent;
+                if (!text) return;
+                const start = editorTextarea.selectionStart;
+                const end = editorTextarea.selectionEnd;
+                const val = editorTextarea.value;
+                const prev = { content: val, start, end };
+                editorTextarea.value = val.substring(0, start) + text + val.substring(end);
+                const newPos = start + text.length;
+                editorTextarea.setSelectionRange(newPos, newPos);
+                editorTextarea.focus();
+                renderEditor();
+                triggerAutosave();
+                showUndoToast("Master prompt inserted", prev);
+                if (window.innerWidth <= 768 && aiDrawer) {
+                    aiDrawer.classList.add('hidden');
+                    updateBackdropState();
+                }
+            };
+        }
+
+        if (promptStudioRunBtn) {
+            promptStudioRunBtn.onclick = async () => {
+                const engineeredPrompt = promptStudioOutputBox.textContent;
+                if (!engineeredPrompt) return;
+                setAiDrawerTab('assist');
+                if (aiPrompt) aiPrompt.value = engineeredPrompt;
+                if (aiDraftBtn) aiDraftBtn.click();
+            };
+        }
 
         // --- Line Numbers Setting Controller ---
         const showLineNumbersToggle = document.getElementById('showLineNumbersToggle');
