@@ -3106,19 +3106,38 @@
             </section>
         </div>
 
-        <!-- Mobile Quick-Format Markdown Toolbar -->
-        <div class="mobile-format-toolbar" id="mobileFormatToolbar" role="toolbar" aria-label="Quick Markdown Formatting">
-            <button type="button" class="format-btn" id="mobileSelectAllBtn" aria-label="Select All Text" style="color: var(--accent-color); font-weight: 600;"><i class="ti ti-select" aria-hidden="true"></i> Select All</button>
-            <button type="button" class="format-btn" data-format="h1" aria-label="Heading 1">H1</button>
-            <button type="button" class="format-btn" data-format="h2" aria-label="Heading 2">H2</button>
+        <!-- Mobile AI Writing & Quick Action Toolbar -->
+        <div class="mobile-format-toolbar" id="mobileFormatToolbar" role="toolbar" aria-label="Mobile AI Writing & Quick Action Bar">
+            <button type="button" class="format-btn format-ai-primary-btn" data-ai-action="perfect-prompt" aria-label="5-Part Master Prompt" style="color: var(--accent-color); font-weight: 700; background: var(--accent-glow); border-color: rgba(226, 184, 116, 0.45);">
+                <i class="ti ti-wand" aria-hidden="true"></i> <span>Master Prompt</span>
+            </button>
+            <button type="button" class="format-btn format-ai-primary-btn" data-ai-action="counter-prompt" aria-label="Agent Counter-Prompt" style="color: var(--accent-color); font-weight: 700; background: var(--accent-glow); border-color: rgba(226, 184, 116, 0.45);">
+                <i class="ti ti-robot" aria-hidden="true"></i> <span>Counter-Prompt</span>
+            </button>
+            <button type="button" class="format-btn" data-ai-action="rephrase" aria-label="Polish & Rephrase">
+                <i class="ti ti-refresh" aria-hidden="true"></i> <span>Polish</span>
+            </button>
+            <button type="button" class="format-btn" data-ai-action="continue" aria-label="Continue Writing with AI">
+                <i class="ti ti-pencil" aria-hidden="true"></i> <span>Continue</span>
+            </button>
+            <button type="button" class="format-btn" data-ai-action="grammar" aria-label="Proofread & Fix Grammar">
+                <i class="ti ti-checks" aria-hidden="true"></i> <span>Proofread</span>
+            </button>
+            <button type="button" class="format-btn" data-ai-action="tone-professional" aria-label="Professional Tone">
+                <i class="ti ti-briefcase" aria-hidden="true"></i> <span>Pro Tone</span>
+            </button>
+            <button type="button" class="format-btn" data-ai-action="tone-casual" aria-label="Casual Tone">
+                <i class="ti ti-coffee" aria-hidden="true"></i> <span>Casual Tone</span>
+            </button>
+            <button type="button" class="format-btn" data-ai-action="explain" aria-label="Explain Concept">
+                <i class="ti ti-info-circle" aria-hidden="true"></i> <span>Explain</span>
+            </button>
+            <button type="button" class="format-btn" id="mobileSelectAllBtn" aria-label="Select All Text" style="color: var(--text-secondary); font-weight: 600;">
+                <i class="ti ti-select" aria-hidden="true"></i> <span>Select All</span>
+            </button>
             <button type="button" class="format-btn" data-format="bold" aria-label="Bold"><i class="ti ti-bold" aria-hidden="true"></i></button>
-            <button type="button" class="format-btn" data-format="italic" aria-label="Italic"><i class="ti ti-italic" aria-hidden="true"></i></button>
-            <button type="button" class="format-btn" data-format="quote" aria-label="Blockquote"><i class="ti ti-quote" aria-hidden="true"></i></button>
-            <button type="button" class="format-btn" data-format="code" aria-label="Code Block"><i class="ti ti-code" aria-hidden="true"></i></button>
+            <button type="button" class="format-btn" data-format="h1" aria-label="Heading 1">H1</button>
             <button type="button" class="format-btn" data-format="list" aria-label="Bullet List"><i class="ti ti-list" aria-hidden="true"></i></button>
-            <button type="button" class="format-btn" data-format="task" aria-label="Task Checkbox"><i class="ti ti-checkbox" aria-hidden="true"></i></button>
-            <button type="button" class="format-btn" data-format="link" aria-label="Insert Link"><i class="ti ti-link" aria-hidden="true"></i></button>
-            <button type="button" class="format-btn format-ai-btn" id="mobileAiFormatBtn" aria-label="AI Writing Prompt"><i class="ti ti-sparkles" aria-hidden="true"></i> AI</button>
             <span class="mobile-word-badge" id="mobileWordBadge">0 words</span>
         </div>
 
@@ -5217,10 +5236,16 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             playClickSound();
         }
 
-        // Bind Mobile Format Bar Buttons
+        // Bind Mobile Format & AI Toolbar Buttons
         document.querySelectorAll('.mobile-format-toolbar .format-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
+                const aiAction = btn.getAttribute('data-ai-action');
+                if (aiAction) {
+                    if (navigator.vibrate) navigator.vibrate(10);
+                    runUnifiedAIAction(aiAction);
+                    return;
+                }
                 const format = btn.getAttribute('data-format');
                 if (format) {
                     applyMarkdownFormat(format);
