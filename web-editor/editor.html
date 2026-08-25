@@ -2263,9 +2263,11 @@
             opacity: 0;
             pointer-events: none;
             transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease;
-            max-width: calc(100vw - 24px);
+            max-width: calc(100vw - 20px);
             white-space: nowrap;
             overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
             -webkit-overflow-scrolling: touch;
         }
 
@@ -2281,8 +2283,11 @@
         }
 
         .pill-action-btn {
-            min-height: 44px;
-            min-width: 44px;
+            flex: 0 0 auto;
+            flex-shrink: 0;
+            white-space: nowrap;
+            min-height: 40px;
+            min-width: 40px;
             padding: 6px 12px;
             border-radius: 22px;
             border: none;
@@ -3108,20 +3113,11 @@
 
         <!-- Mobile AI Writing & Quick Action Toolbar -->
         <div class="mobile-format-toolbar" id="mobileFormatToolbar" role="toolbar" aria-label="Mobile AI Writing & Quick Action Bar">
-            <button type="button" class="format-btn format-ai-primary-btn" data-ai-action="perfect-prompt" aria-label="5-Part Master Prompt" style="color: var(--accent-color); font-weight: 700; background: var(--accent-glow); border-color: rgba(226, 184, 116, 0.45);">
-                <i class="ti ti-wand" aria-hidden="true"></i> <span>Master Prompt</span>
+            <button type="button" class="format-btn format-ai-primary-btn" id="mobileSelectAllBtn" aria-label="Select All Text" style="color: var(--accent-color); font-weight: 700; background: var(--accent-glow); border-color: rgba(226, 184, 116, 0.45);">
+                <i class="ti ti-select" aria-hidden="true"></i> <span>Select All</span>
             </button>
-            <button type="button" class="format-btn format-ai-primary-btn" data-ai-action="counter-prompt" aria-label="Agent Counter-Prompt" style="color: var(--accent-color); font-weight: 700; background: var(--accent-glow); border-color: rgba(226, 184, 116, 0.45);">
-                <i class="ti ti-robot" aria-hidden="true"></i> <span>Counter-Prompt</span>
-            </button>
-            <button type="button" class="format-btn" data-ai-action="rephrase" aria-label="Polish & Rephrase">
-                <i class="ti ti-refresh" aria-hidden="true"></i> <span>Polish</span>
-            </button>
-            <button type="button" class="format-btn" data-ai-action="continue" aria-label="Continue Writing with AI">
-                <i class="ti ti-pencil" aria-hidden="true"></i> <span>Continue</span>
-            </button>
-            <button type="button" class="format-btn" data-ai-action="grammar" aria-label="Proofread & Fix Grammar">
-                <i class="ti ti-checks" aria-hidden="true"></i> <span>Proofread</span>
+            <button type="button" class="format-btn format-ai-primary-btn" data-ai-action="rephrase" aria-label="Polish & Rephrase" style="color: var(--accent-color); font-weight: 700; background: var(--accent-glow); border-color: rgba(226, 184, 116, 0.45);">
+                <i class="ti ti-refresh" aria-hidden="true"></i> <span>Polish & Rewrite</span>
             </button>
             <button type="button" class="format-btn" data-ai-action="tone-professional" aria-label="Professional Tone">
                 <i class="ti ti-briefcase" aria-hidden="true"></i> <span>Pro Tone</span>
@@ -3129,11 +3125,23 @@
             <button type="button" class="format-btn" data-ai-action="tone-casual" aria-label="Casual Tone">
                 <i class="ti ti-coffee" aria-hidden="true"></i> <span>Casual Tone</span>
             </button>
+            <button type="button" class="format-btn" data-ai-action="grammar" aria-label="Proofread & Fix Grammar">
+                <i class="ti ti-checks" aria-hidden="true"></i> <span>Proofread</span>
+            </button>
+            <button type="button" class="format-btn" data-ai-action="continue" aria-label="Continue Writing with AI">
+                <i class="ti ti-pencil" aria-hidden="true"></i> <span>Continue</span>
+            </button>
+            <button type="button" class="format-btn" data-ai-action="perfect-prompt" aria-label="5-Part Master Prompt">
+                <i class="ti ti-wand" aria-hidden="true"></i> <span>Master Prompt</span>
+            </button>
+            <button type="button" class="format-btn" data-ai-action="counter-prompt" aria-label="Agent Counter-Prompt">
+                <i class="ti ti-robot" aria-hidden="true"></i> <span>Counter-Prompt</span>
+            </button>
             <button type="button" class="format-btn" data-ai-action="explain" aria-label="Explain Concept">
                 <i class="ti ti-info-circle" aria-hidden="true"></i> <span>Explain</span>
             </button>
-            <button type="button" class="format-btn" id="mobileSelectAllBtn" aria-label="Select All Text" style="color: var(--text-secondary); font-weight: 600;">
-                <i class="ti ti-select" aria-hidden="true"></i> <span>Select All</span>
+            <button type="button" class="format-btn" id="mobileClearCanvasBtn" aria-label="Clear Canvas" style="color: var(--text-secondary);">
+                <i class="ti ti-eraser" aria-hidden="true"></i> <span>Clear</span>
             </button>
             <button type="button" class="format-btn" data-format="bold" aria-label="Bold"><i class="ti ti-bold" aria-hidden="true"></i></button>
             <button type="button" class="format-btn" data-format="h1" aria-label="Heading 1">H1</button>
@@ -3160,14 +3168,17 @@
 
         <!-- Floating Mobile Selection Action Pill -->
         <div class="mobile-selection-pill" id="mobileSelectionPill" role="toolbar" aria-label="Selection Actions">
-            <button type="button" class="pill-action-btn primary" id="pillAiBtn" aria-label="AI Writing Actions on Selection">
-                <i class="ti ti-sparkles" aria-hidden="true"></i> <span>AI Actions</span>
-            </button>
-            <button type="button" class="pill-action-btn" id="pillCounterPromptBtn" aria-label="Agent Counter-Prompt" title="Generate Counter-Prompt for AI Agent">
-                <i class="ti ti-robot" aria-hidden="true"></i> <span>Counter-Prompt</span>
+            <button type="button" class="pill-action-btn primary" id="pillPolishBtn" aria-label="Polish Selected Text" style="background: var(--accent-color); color: var(--accent-text); font-weight: 700;">
+                <i class="ti ti-refresh" aria-hidden="true"></i> <span>Polish</span>
             </button>
             <button type="button" class="pill-action-btn" id="pillCopyBtn" aria-label="Copy Selected Text">
                 <i class="ti ti-copy" aria-hidden="true"></i> <span>Copy</span>
+            </button>
+            <button type="button" class="pill-action-btn" id="pillAiBtn" aria-label="AI Writing Actions on Selection">
+                <i class="ti ti-sparkles" aria-hidden="true"></i> <span>AI Menu</span>
+            </button>
+            <button type="button" class="pill-action-btn" id="pillCounterPromptBtn" aria-label="Agent Counter-Prompt" title="Generate Counter-Prompt for AI Agent">
+                <i class="ti ti-robot" aria-hidden="true"></i> <span>Counter-Prompt</span>
             </button>
             <button type="button" class="pill-action-btn" id="pillCutBtn" aria-label="Cut Selected Text">
                 <i class="ti ti-cut" aria-hidden="true"></i> <span>Cut</span>
@@ -5339,6 +5350,20 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             mobileSelectAllBtn.onclick = selectAllEditorText;
         }
 
+        const mobileClearCanvasBtn = document.getElementById('mobileClearCanvasBtn');
+        if (mobileClearCanvasBtn) {
+            mobileClearCanvasBtn.onclick = () => {
+                const val = editorTextarea.value;
+                if (!val) return;
+                const prev = { content: val, start: 0, end: val.length };
+                editorTextarea.value = '';
+                renderEditor();
+                triggerAutosave();
+                hideSelectionUI();
+                showUndoToast("Canvas cleared", prev);
+            };
+        }
+
         const sheetSelectAllBtn = document.getElementById('sheetSelectAllBtn');
         if (sheetSelectAllBtn) {
             sheetSelectAllBtn.onclick = selectAllEditorText;
@@ -5361,11 +5386,20 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         }
 
         // Floating Mobile Selection Pill Buttons
+        const pillPolishBtn = document.getElementById('pillPolishBtn');
         const pillAiBtn = document.getElementById('pillAiBtn');
         const pillCopyBtn = document.getElementById('pillCopyBtn');
         const pillCutBtn = document.getElementById('pillCutBtn');
         const pillDeleteBtn = document.getElementById('pillDeleteBtn');
         const pillDeselectBtn = document.getElementById('pillDeselectBtn');
+
+        if (pillPolishBtn) {
+            pillPolishBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (navigator.vibrate) navigator.vibrate(12);
+                runUnifiedAIAction('rephrase');
+            };
+        }
 
         if (pillAiBtn) {
             pillAiBtn.onclick = (e) => {
