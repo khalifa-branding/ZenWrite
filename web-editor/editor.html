@@ -3090,7 +3090,7 @@
                 </div>
                 <div class="editor-textarea-wrapper">
                     <div class="line-numbers" id="lineNumbers">1</div>
-                    <textarea class="editor-textarea" id="editorTextarea" placeholder="Start typing your draft here... Use markdown headings (#), lists (-), bold (**), or italic (*) to format. Highlight text to trigger the AI writing helper."></textarea>
+                    <textarea class="editor-textarea" id="editorTextarea" placeholder="Paste or write any text, draft, notes, email, or prompt idea here... then tap any AI Action to transform it into your desired output!"></textarea>
                 </div>
             </section>
 
@@ -3766,35 +3766,33 @@
 
             if (documents.length === 0) {
                 // Initialize default documents
-                createDocument("Welcome to ZenWrite", `# Welcome to ZenWrite ✍️
+                createDocument("Welcome to ZenWrite", `# ⚡ Welcome to ZenWrite AI
 
-ZenWrite is a premium, distraction-free markdown text editor integrated with a Gemini AI Writing Assistant.
+Your 1-Click AI Transformation Canvas for everyday writing, drafts, and prompt engineering.
 
-## Key Features
+---
 
-1. **Live Markdown Rendering**: Type in the editor and watch it build beautifully on the right.
-2. **Interactive AI Writing Helper**: Highlight any sentence or paragraph, and click the **AI Actions** popover button to correct grammar, rephrase, expand or prompt directly.
-3. **Zen Focus Mode**: Hide headers, footers, sidebars, and panels by pressing the maximize button or double-clicking the title.
-4. **Offline Keyboard Sounds**: Toggle mechanical keyboard typing feedback using the volume icon.
-5. **Autosave**: Everything you write is saved in your browser local storage instantly.
+### 🚀 How to use ZenWrite in 3 simple steps:
 
-### Quick Markdown Cheatsheet
+1. **📋 Paste or Type Anything**:
+   Paste any rough note, messy email, unstructured thought, agent output, or draft into this editor.
 
-- Add headings using \`#\` (H1) or \`##\` (H2) tags.
-- Apply formats: **Bold** using \`**bold**\` or *Italic* using \`*italic*\`.
-- List items with \`-\` or numerical list \`1.\`
-- Inline code uses backticks: \`const writing = true;\`
-- Make code blocks:
-\`\`\`
-function hello() {
-    console.log("Welcome home!");
-}
-\`\`\`
-- Checkbox tasks:
-- [ ] Task incomplete
-- [x] Task complete
+2. **🪄 Choose Your Desired AI Action**:
+   Tap or click any AI tool from the toolbar above your keyboard or the **✨ AI Actions** menu:
+   - **✨ 5-Part Master Prompt**: Turns rough ideas into high-performing prompts for ChatGPT/Claude.
+   - **🤖 Agent Counter-Prompt**: Generates context-aware next-turn instructions for coding agents.
+   - **✍️ Polish & Rephrase**: Elevates vocabulary, clarity, and stylistic flow instantly.
+   - **📝 AI Proofreader**: Corrects spelling, grammar, and sentence structure.
+   - **🎭 Change Tone**: Shifts text to Professional 👔, Casual ☕, Persuasive 🎯, or Urgent ⚡.
+   - **💡 Explain Concept**: Explains complex topics in simple, easy-to-understand words.
+   - **🌐 Instant Translation**: Translates into Spanish, French, German, Japanese, Chinese, or Arabic.
 
-Try editing this text, or create a new document!`);
+3. **📤 1-Click Copy & Export**:
+   Copy your polished output with 1 tap and paste it directly into **WhatsApp, Gmail, ChatGPT, Slack, LinkedIn, Word, or Terminal**!
+
+---
+
+*Tip: Highlight any sentence to transform just that part, or leave everything unselected to transform your entire text!*`);
             } else {
                 renderDocList();
                 setActiveDocument(documents[0].id);
