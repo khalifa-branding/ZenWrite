@@ -3352,11 +3352,12 @@
                     <label class="form-label" for="modelSelect">AI Model</label>
                     <select class="form-select" id="modelSelect" aria-label="Select AI Model">
                         <option value="auto" selected>⚡ Smart Auto-Failover (Cycles all models to maximize free quota)</option>
-                        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite (High Speed)</option>
-                        <option value="gemini-2.5-flash">Gemini 2.5 Flash (Balanced Quality)</option>
-                        <option value="gemini-2.0-flash">Gemini 2.0 Flash (Fast & Reliable)</option>
+                        <option value="gemini-2.0-flash">Gemini 2.0 Flash (Recommended / 15 RPM / 1,500 RPD)</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (High Stability / 15 RPM / 1,500 RPD)</option>
                         <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite (Ultra Fast)</option>
-                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (High Stability)</option>
+                        <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash 8B (High Free Quota)</option>
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash (Balanced)</option>
+                        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option>
                         <option value="gemini-1.5-pro">Gemini 1.5 Pro (Deep Reasoning)</option>
                         <option value="custom">Custom Model ID...</option>
                     </select>
@@ -4286,15 +4287,15 @@ Requirements:
                 prompt = `You are a writing assistant. ${promptInstruction}\n\nTarget Text:\n"""\n${textContent}\n"""`;
             }
 
-            // Real Google Gemini models in priority order
+            // High-quota, production Google Gemini models in priority order
             const defaultModelPriority = [
-                'gemini-2.5-flash-lite',
-                'gemini-2.5-flash',
                 'gemini-2.0-flash',
-                'gemini-2.0-flash-lite',
                 'gemini-1.5-flash',
-                'gemini-1.5-pro',
-                'gemini-1.5-flash-8b'
+                'gemini-2.0-flash-lite',
+                'gemini-1.5-flash-8b',
+                'gemini-2.5-flash',
+                'gemini-2.5-flash-lite',
+                'gemini-1.5-pro'
             ];
 
             let modelsToTry = [];
@@ -4309,7 +4310,7 @@ Requirements:
 
             let lastError = null;
 
-            // Iterate through keys with fast failover
+            // Iterate through keys and models with fast failover
             for (let kIdx = 0; kIdx < keys.length; kIdx++) {
                 const currentKey = keys[kIdx];
                 for (const model of modelsToTry) {
@@ -4342,9 +4343,9 @@ Requirements:
                             }
 
                             if (response.status === 429 || errMsg.toLowerCase().includes('quota') || errMsg.toLowerCase().includes('rate')) {
-                                console.warn(`[ZenWrite AI] Key #${kIdx + 1} (${model}) quota reached. Switching key...`);
-                                lastError = new Error(`Key #${kIdx + 1} quota limit reached`);
-                                break; // Key quota exhausted, try next key immediately
+                                console.warn(`[ZenWrite AI] Key #${kIdx + 1} (${model}) quota limit reached. Trying next model/key...`);
+                                lastError = new Error(`Key #${kIdx + 1} quota limit reached (${errMsg})`);
+                                continue; // Try other model families on this key, then proceed to next key
                             }
 
                             lastError = new Error(`[${model}] ${errMsg}`);
@@ -4790,7 +4791,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 2500);
                 try {
-                    const testModel = aiModel === 'custom' ? (customModelInput.value.trim() || 'gemini-2.5-flash-lite') : 'gemini-2.5-flash-lite';
+                    const testModel = aiModel === 'custom' ? (customModelInput.value.trim() || 'gemini-2.0-flash') : 'gemini-2.0-flash';
                     const testResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${testModel}:generateContent?key=${k}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
