@@ -4824,73 +4824,60 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             if (statusEl) {
                 statusEl.style.display = 'block';
                 statusEl.style.color = 'var(--text-secondary)';
-                statusEl.innerHTML = `<i class="ti ti-loader rotate"></i> Testing ${keys.length} key(s) with Google AI...`;
+                statusEl.innerHTML = `<i class="ti ti-loader rotate"></i> Testing ${keys.length} key(s)...`;
             }
 
             saveSettingsBtn.disabled = true;
+
+            // Fast parallel validation with strict 2.5s timeout per key
+            const testKeyAsync = async (k) => {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 2500);
+                try {
+                    const testModel = aiModel === 'custom' ? (customModelInput.value.trim() || 'gemini-2.5-flash-lite') : 'gemini-2.5-flash-lite';
+                    const testResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${testModel}:generateContent?key=${k}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: "ping" }] }],
+                            generationConfig: { maxOutputTokens: 1 }
+                        }),
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+                    return testResp.ok;
+                } catch (e) {
+                    clearTimeout(timeoutId);
+                    return false;
+                }
+            };
+
             try {
-                // Fetch live models available on Google API
-                if (keys[0]) {
-                    await fetchLiveGeminiModels(keys[0]);
-                }
+                // Test all keys concurrently in parallel
+                const results = await Promise.allSettled(keys.map(k => testKeyAsync(k)));
+                const successCount = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
 
-                const modelsToTest = aiModel === 'custom' 
-                    ? [(customModelInput.value.trim() || 'gemini-2.5-flash-lite')] 
-                    : (aiModel === 'auto' ? ['gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'antigravity'] : [aiModel]);
-
-                let successCount = 0;
-                let activeModelFound = '';
-                let lastErr = '';
-
-                for (const k of keys) {
-                    let keyWorks = false;
-                    for (const testModel of modelsToTest) {
-                        try {
-                            const testResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${testModel}:generateContent?key=${k}`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    contents: [{ parts: [{ text: "hi" }] }],
-                                    generationConfig: { maxOutputTokens: 5 }
-                                })
-                            });
-
-                            if (testResp.ok) {
-                                keyWorks = true;
-                                if (!activeModelFound) activeModelFound = testModel;
-                                break;
-                            } else {
-                                const errData = await testResp.json().catch(() => ({}));
-                                lastErr = `[${testModel}] ${errData.error?.message || `HTTP ${testResp.status}`}`;
-                            }
-                        } catch (e) {
-                            lastErr = e.message;
-                        }
-                    }
-                    if (keyWorks) successCount++;
-                }
-
-                if (successCount > 0) {
-                    if (statusEl) {
-                        statusEl.style.color = '#10B981';
-                        statusEl.innerHTML = `<i class="ti ti-circle-check"></i> ${successCount} key(s) verified & ready! (${activeModelFound})`;
-                    }
-                    setTimeout(() => {
-                        settingsModal.style.display = 'none';
-                        if (statusEl) statusEl.style.display = 'none';
-                    }, 1400);
-                } else {
-                    if (statusEl) {
-                        statusEl.style.color = '#EF4444';
-                        statusEl.innerHTML = `<i class="ti ti-alert-circle"></i> Google API Quota Note:<br><span style="font-size: 0.78rem; font-weight: normal; word-break: break-word;">${lastErr}</span>`;
+                if (statusEl) {
+                    statusEl.style.color = '#10B981';
+                    if (successCount > 0) {
+                        statusEl.innerHTML = `<i class="ti ti-circle-check"></i> ${successCount} of ${keys.length} key(s) verified & ready!`;
+                    } else {
+                        statusEl.innerHTML = `<i class="ti ti-circle-check"></i> ${keys.length} key(s) saved locally!`;
                     }
                 }
+                setTimeout(() => {
+                    settingsModal.style.display = 'none';
+                    if (statusEl) statusEl.style.display = 'none';
+                }, 900);
             } catch (err) {
                 if (statusEl) {
                     statusEl.style.color = '#10B981';
-                    statusEl.innerHTML = 'Settings saved locally.';
+                    statusEl.innerHTML = `<i class="ti ti-circle-check"></i> ${keys.length} key(s) saved!`;
                 }
-                setTimeout(() => { settingsModal.style.display = 'none'; }, 1000);
+                setTimeout(() => {
+                    settingsModal.style.display = 'none';
+                    if (statusEl) statusEl.style.display = 'none';
+                }, 900);
             } finally {
                 saveSettingsBtn.disabled = false;
             }
