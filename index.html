@@ -4208,12 +4208,13 @@ Your 1-Click AI Transformation Canvas for everyday writing, drafts, and prompt e
         // Global Smart Key Ring, Cooldown Tracker & Dynamic Live Model Discovery
         const keyCooldowns = new Map(); // key -> timestamp (ms) when cooldown expires
         let discoveredActiveModels = [
-            'gemini-2.5-flash-lite',
+            'gemini-2.0-flash',
+            'gemini-1.5-flash',
+            'gemini-2.0-flash-lite',
+            'gemini-1.5-flash-8b',
             'gemini-2.5-flash',
-            'gemini-3.7-flash',
-            'gemini-3.6-flash',
-            'gemini-3.5-flash',
-            'antigravity'
+            'gemini-2.5-flash-lite',
+            'gemini-1.5-pro'
         ];
 
         function getAvailableApiKeys() {
