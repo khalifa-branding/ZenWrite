@@ -3352,12 +3352,12 @@
                     <label class="form-label" for="modelSelect">AI Model</label>
                     <select class="form-select" id="modelSelect" aria-label="Select AI Model">
                         <option value="auto" selected>⚡ Smart Auto-Failover (Cycles all models to maximize free quota)</option>
-                        <option value="gemini-2.0-flash">Gemini 2.0 Flash (Recommended / 15 RPM / 1,500 RPD)</option>
-                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (High Stability / 15 RPM / 1,500 RPD)</option>
-                        <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite (Ultra Fast)</option>
-                        <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash 8B (High Free Quota)</option>
-                        <option value="gemini-2.5-flash">Gemini 2.5 Flash (Balanced)</option>
-                        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option>
+                        <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash Lite (Latest Fast Model / High Quota)</option>
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash (Balanced / 15 RPM)</option>
+                        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite (High Speed)</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (High Stability / 15 RPM)</option>
+                        <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                        <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash 8B</option>
                         <option value="gemini-1.5-pro">Gemini 1.5 Pro (Deep Reasoning)</option>
                         <option value="custom">Custom Model ID...</option>
                     </select>
@@ -4288,26 +4288,26 @@ Requirements:
                 prompt = `You are a writing assistant. ${promptInstruction}\n\nTarget Text:\n"""\n${textContent}\n"""`;
             }
 
-            // High-quota, production Google Gemini models in priority order
+            // Production Google Gemini models in priority order
             const defaultModelPriority = [
-                'gemini-2.0-flash',
-                'gemini-1.5-flash',
-                'gemini-2.0-flash-lite',
-                'gemini-1.5-flash-8b',
+                'gemini-3.5-flash-lite',
                 'gemini-2.5-flash',
                 'gemini-2.5-flash-lite',
+                'gemini-1.5-flash',
+                'gemini-2.0-flash',
+                'gemini-1.5-flash-8b',
                 'gemini-1.5-pro'
             ];
 
             let modelsToTry = [];
             if (aiModel === 'custom' && customModelInput.value.trim()) {
-                modelsToTry = [customModelInput.value.trim(), ...defaultModelPriority];
+                modelsToTry = [customModelInput.value.trim(), ...discoveredActiveModels, ...defaultModelPriority];
             } else if (aiModel && aiModel !== 'auto') {
-                modelsToTry = [aiModel, ...defaultModelPriority];
+                modelsToTry = [aiModel, ...discoveredActiveModels, ...defaultModelPriority];
             } else {
-                modelsToTry = [...defaultModelPriority];
+                modelsToTry = [...discoveredActiveModels, ...defaultModelPriority];
             }
-            modelsToTry = [...new Set([...modelsToTry, ...discoveredActiveModels])];
+            modelsToTry = [...new Set(modelsToTry)];
 
             let lastError = null;
 
@@ -4790,13 +4790,42 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
 
             saveSettingsBtn.disabled = true;
 
-            // Parallel validation across active models with 3.5s timeout per key
+            // Validation using live Google models endpoint and active model ping
             const testKeyAsync = async (k) => {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3500);
-                const testModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite'];
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
                 let lastErr = '';
 
+                try {
+                    // 1. Query Google's live models catalog for this key
+                    const modelsResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${k}`, {
+                        signal: controller.signal
+                    });
+
+                    if (modelsResp.ok) {
+                        const mData = await modelsResp.json();
+                        if (mData.models && Array.isArray(mData.models)) {
+                            const valid = mData.models
+                                .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
+                                .map(m => m.name.replace(/^models\//, ''))
+                                .filter(name => !name.includes('embedding') && !name.includes('aqa') && !name.includes('imagen') && !name.includes('tts'));
+
+                            if (valid.length > 0) {
+                                discoveredActiveModels = [...new Set([...valid, ...discoveredActiveModels])];
+                                clearTimeout(timeoutId);
+                                return { ok: true, model: valid[0] };
+                            }
+                        }
+                    } else {
+                        const errData = await modelsResp.json().catch(() => ({}));
+                        lastErr = errData.error?.message || `HTTP ${modelsResp.status}: ${modelsResp.statusText}`;
+                    }
+                } catch (e) {
+                    lastErr = e.name === 'AbortError' ? 'Network timeout' : e.message;
+                }
+
+                // 2. Fallback ping across priority models
+                const testModels = ['gemini-3.5-flash-lite', 'gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
                 for (const testModel of testModels) {
                     for (const apiVer of ['v1beta', 'v1']) {
                         try {
@@ -4820,6 +4849,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                         }
                     }
                 }
+
                 clearTimeout(timeoutId);
                 return { ok: false, error: lastErr };
             };
