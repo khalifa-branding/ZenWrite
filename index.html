@@ -536,6 +536,86 @@
             flex-direction: column;
         }
 
+        .editor-container.has-split-preview #editorPane {
+            flex: 0 0 var(--editor-pane-width, 50%);
+            min-width: 240px;
+            max-width: calc(100% - 240px);
+        }
+
+        .editor-container.has-split-preview #previewPane {
+            flex: 1 1 0;
+            min-width: 240px;
+            border-left: none;
+        }
+
+        /* Pane Resizer / Central Curtain Splitter */
+        .pane-resizer {
+            width: 10px;
+            margin: 0 -5px;
+            height: 100%;
+            cursor: col-resize;
+            position: relative;
+            z-index: 6;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .pane-resizer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            background-color: var(--border-color);
+            transition: background-color 0.2s ease, width 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .pane-resizer-handle {
+            width: 4px;
+            height: 32px;
+            border-radius: 2px;
+            background-color: var(--text-secondary);
+            opacity: 0;
+            transition: opacity 0.2s ease, background-color 0.2s ease, height 0.2s ease;
+            position: relative;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .pane-resizer:hover::before,
+        .pane-resizer.is-dragging::before {
+            width: 2px;
+            background-color: var(--accent-color);
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+
+        .pane-resizer:hover .pane-resizer-handle,
+        .pane-resizer.is-dragging .pane-resizer-handle {
+            opacity: 0.85;
+            background-color: var(--accent-color);
+            height: 48px;
+        }
+
+        .pane-resizer:focus-visible {
+            outline: 2px solid var(--accent-color);
+            outline-offset: -2px;
+        }
+
+        body.is-resizing-panes {
+            cursor: col-resize !important;
+            user-select: none !important;
+        }
+
+        body.is-resizing-panes * {
+            user-select: none !important;
+        }
+
         .pane-header {
             flex-shrink: 0;
             height: 38px;
@@ -3038,6 +3118,16 @@
             .diff-container {
                 max-height: calc(50dvh - 40px);
             }
+
+            .pane-resizer {
+                display: none !important;
+            }
+
+            .editor-container.has-split-preview #editorPane {
+                flex: 1 1 0 !important;
+                max-width: none !important;
+                min-width: 0 !important;
+            }
         }
 
         /* 5. Compact Mobile Smartphones (<= 480px) */
@@ -3373,6 +3463,11 @@
                     <textarea class="editor-textarea" id="editorTextarea" placeholder="Paste or write any text, draft, notes, email, or prompt idea here... then tap any AI Action to transform it into your desired output!"></textarea>
                 </div>
             </section>
+
+            <!-- Central Draggable Splitter (Curtain Slider) -->
+            <div class="pane-resizer" id="paneResizer" role="separator" aria-orientation="vertical" aria-label="Resize Editor and Preview Panes" tabindex="0" aria-valuenow="50" aria-valuemin="20" aria-valuemax="80">
+                <div class="pane-resizer-handle"></div>
+            </div>
 
             <!-- Live Preview Pane -->
             <section class="pane preview-pane" id="previewPane">
@@ -3755,6 +3850,9 @@
         const themeToggle = document.getElementById('themeToggle');
         const soundToggle = document.getElementById('soundToggle');
         const splitToggle = document.getElementById('splitToggle');
+        const paneResizer = document.getElementById('paneResizer');
+        const editorContainer = document.querySelector('.editor-container');
+        let editorSplitRatio = 0.5;
         const zenToggle = document.getElementById('zenToggle');
         const aiDrawerToggle = document.getElementById('aiDrawerToggle');
         const settingsToggle = document.getElementById('settingsToggle');
@@ -4158,6 +4256,14 @@
                 applyLineNumbersSetting(savedLineNumbers === 'true');
             }
 
+            const savedSplitRatio = localStorage.getItem('zenwrite_editor_split_ratio');
+            if (savedSplitRatio) {
+                const parsed = parseFloat(savedSplitRatio);
+                if (!isNaN(parsed) && parsed >= 0.20 && parsed <= 0.80) {
+                    editorSplitRatio = parsed;
+                }
+            }
+
             if (savedDocs) {
                 documents = JSON.parse(savedDocs);
             }
@@ -4271,10 +4377,22 @@ Your 1-Click AI Transformation Canvas for everyday writing, drafts, and prompt e
             }
 
             // Split View State
-            if (window.innerWidth > 768) {
-                previewPane.style.display = previewEnabled ? 'flex' : 'none';
+            const isDesktop = window.innerWidth > 768;
+            if (isDesktop && previewEnabled) {
+                previewPane.style.display = 'flex';
+                if (editorContainer) editorContainer.classList.add('has-split-preview');
+                if (paneResizer) paneResizer.style.display = 'flex';
+                if (typeof applyEditorSplitRatio === 'function') {
+                    applyEditorSplitRatio(editorSplitRatio, false);
+                }
             } else {
-                previewPane.style.display = '';
+                if (editorContainer) editorContainer.classList.remove('has-split-preview');
+                if (paneResizer) paneResizer.style.display = 'none';
+                if (isDesktop) {
+                    previewPane.style.display = 'none';
+                } else {
+                    previewPane.style.display = '';
+                }
             }
             if (splitToggle) {
                 splitToggle.className = previewEnabled ? 'icon-btn active' : 'icon-btn';
@@ -5154,6 +5272,87 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             updateUIState();
         };
 
+        // --- Central Draggable Splitter (Option A: Curtain Slider) ---
+        function applyEditorSplitRatio(ratio, saveToStorage = false) {
+            const clamped = Math.max(0.20, Math.min(0.80, ratio));
+            editorSplitRatio = clamped;
+            if (editorContainer) {
+                editorContainer.style.setProperty('--editor-pane-width', `${(clamped * 100).toFixed(2)}%`);
+            }
+            if (paneResizer) {
+                paneResizer.setAttribute('aria-valuenow', Math.round(clamped * 100).toString());
+            }
+            if (saveToStorage) {
+                localStorage.setItem('zenwrite_editor_split_ratio', clamped.toFixed(4));
+            }
+        }
+
+        let isResizingPanes = false;
+        let resizeAnimFrame = null;
+
+        if (paneResizer) {
+            paneResizer.onpointerdown = (e) => {
+                if (e.button !== 0) return; // Only primary mouse button or touch
+                if (!previewEnabled || window.innerWidth <= 768) return;
+
+                isResizingPanes = true;
+                paneResizer.setPointerCapture(e.pointerId);
+                paneResizer.classList.add('is-dragging');
+                document.body.classList.add('is-resizing-panes');
+                e.preventDefault();
+            };
+
+            paneResizer.onpointermove = (e) => {
+                if (!isResizingPanes) return;
+                if (resizeAnimFrame) cancelAnimationFrame(resizeAnimFrame);
+
+                resizeAnimFrame = requestAnimationFrame(() => {
+                    if (!editorContainer) return;
+                    const rect = editorContainer.getBoundingClientRect();
+                    if (rect.width <= 0) return;
+                    const ratio = (e.clientX - rect.left) / rect.width;
+                    applyEditorSplitRatio(ratio, false);
+                });
+            };
+
+            const endPaneResize = (e) => {
+                if (!isResizingPanes) return;
+                isResizingPanes = false;
+                try {
+                    paneResizer.releasePointerCapture(e.pointerId);
+                } catch (err) {}
+                paneResizer.classList.remove('is-dragging');
+                document.body.classList.remove('is-resizing-panes');
+                if (resizeAnimFrame) cancelAnimationFrame(resizeAnimFrame);
+                applyEditorSplitRatio(editorSplitRatio, true);
+            };
+
+            paneResizer.onpointerup = endPaneResize;
+            paneResizer.onpointercancel = endPaneResize;
+
+            // Double-click to reset back to balanced 50/50 split
+            paneResizer.ondblclick = () => {
+                if (!previewEnabled || window.innerWidth <= 768) return;
+                applyEditorSplitRatio(0.5, true);
+                if (navigator.vibrate) navigator.vibrate(15);
+            };
+
+            // Keyboard navigation for accessibility
+            paneResizer.onkeydown = (e) => {
+                if (!previewEnabled || window.innerWidth <= 768) return;
+                if (e.key === 'ArrowLeft') {
+                    applyEditorSplitRatio(editorSplitRatio - 0.02, true);
+                    e.preventDefault();
+                } else if (e.key === 'ArrowRight') {
+                    applyEditorSplitRatio(editorSplitRatio + 0.02, true);
+                    e.preventDefault();
+                } else if (e.key === 'Home' || e.key === 'Enter') {
+                    applyEditorSplitRatio(0.5, true);
+                    e.preventDefault();
+                }
+            };
+        }
+
         // Zen Mode Toggle
         function toggleZen() {
             isZenMode = !isZenMode;
@@ -5546,7 +5745,6 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         const mobileBackdrop = document.getElementById('mobileBackdrop');
         const mobileEditTab = document.getElementById('mobileEditTab');
         const mobilePreviewTab = document.getElementById('mobilePreviewTab');
-        const editorContainer = document.querySelector('.editor-container');
         const mobileActionsSheet = document.getElementById('mobileActionsSheet');
         const closeActionsSheet = document.getElementById('closeActionsSheet');
         const mobileMoreBtn = document.getElementById('mobileMoreBtn');
