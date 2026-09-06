@@ -556,6 +556,10 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            flex-shrink: 0;
+            padding-left: 10px;
+            margin-left: 8px;
+            border-left: 1px solid var(--border-color);
         }
 
         .pane-action-btn {
@@ -636,13 +640,15 @@
 
         .pane-ai-action-btn.has-selection {
             background: linear-gradient(135deg, var(--accent-color), #B8860B);
-            color: #FFFFFF !important;
+            color: var(--accent-text) !important;
+            font-weight: 700;
             box-shadow: 0 2px 10px var(--accent-glow);
             border-color: transparent;
         }
 
-        .pane-ai-action-btn.has-selection i {
-            color: #FFFFFF !important;
+        .pane-ai-action-btn.has-selection i,
+        .pane-ai-action-btn.has-selection span {
+            color: var(--accent-text) !important;
         }
 
         /* Desktop Formatting Toolbar */
@@ -657,6 +663,7 @@
             flex: 1;
             justify-content: center;
             max-width: 480px;
+            min-width: 0;
         }
 
         .desktop-format-toolbar::-webkit-scrollbar {
@@ -3247,7 +3254,6 @@
                 <div class="pane-header">
                     <div class="pane-header-left">
                         <span>Editor</span>
-                        <span class="selection-badge" id="editorSelectionBadge"><i class="ti ti-check"></i> <span id="editorSelectionCount">0 words</span></span>
                     </div>
                     <!-- Desktop Formatting Action Toolbar -->
                     <div class="desktop-format-toolbar" id="desktopFormatToolbar" role="toolbar" aria-label="Desktop Text Formatting">
@@ -3270,7 +3276,7 @@
                         <div class="format-tool-separator" role="separator"></div>
                         <button type="button" class="format-tool-btn" data-format="codeblock" title="Code Block (```)" aria-label="Code Block"><i class="ti ti-braces"></i></button>
                         <button type="button" class="format-tool-btn" data-format="link" title="Insert Link (Ctrl+K)" aria-label="Insert Link"><i class="ti ti-link"></i></button>
-                        <button type="button" class="format-tool-btn" data-format="hr" title="Horizontal Divider (---)" aria-label="Horizontal Divider"><i class="ti ti-separator"></i></button>
+                        <button type="button" class="format-tool-btn" data-format="hr" title="Horizontal Divider (---)" aria-label="Horizontal Divider"><i class="ti ti-separator-horizontal"></i></button>
                     </div>
                     <div class="pane-header-actions">
                         <div class="pane-dropdown" id="editorAiDropdown">
@@ -4298,7 +4304,12 @@ Your 1-Click AI Transformation Canvas for everyday writing, drafts, and prompt e
             const paragraphs = content.trim() === '' ? 0 : content.split(/\n{2,}/).length;
             const readingTime = Math.ceil(words / 200);
 
-            wordCount.textContent = `Words: ${words}`;
+            if (selectedText && selectedText.trim()) {
+                const selWords = selectedText.trim().split(/\s+/).filter(Boolean).length;
+                wordCount.textContent = `Words: ${words} (${selWords} selected)`;
+            } else {
+                wordCount.textContent = `Words: ${words}`;
+            }
             charCount.textContent = `Characters: ${chars}`;
             readTime.textContent = `Read Time: ${readingTime} min`;
 
@@ -4535,15 +4546,16 @@ Your 1-Click AI Transformation Canvas for everyday writing, drafts, and prompt e
                 selectionStart = start;
                 selectionEnd = end;
 
-                // Update anchored AI button & badge state in editor header
-                const words = text.split(/\s+/).filter(Boolean).length;
-                if (editorSelectionBadge) {
-                    editorSelectionBadge.style.display = 'inline-flex';
-                    if (editorSelectionCount) editorSelectionCount.textContent = `${words} ${words === 1 ? 'word' : 'words'}`;
+                // Update anchored AI button & footer selection stats
+                const selWords = text.split(/\s+/).filter(Boolean).length;
+                const totalContent = editorTextarea.value;
+                const totalWords = totalContent.trim() === '' ? 0 : totalContent.trim().split(/\s+/).length;
+                if (wordCount) {
+                    wordCount.textContent = `Words: ${totalWords} (${selWords} selected)`;
                 }
                 if (editorAiBtn) {
                     editorAiBtn.classList.add('has-selection');
-                    editorAiBtn.setAttribute('title', `AI Actions on selected ${words} words`);
+                    editorAiBtn.setAttribute('title', `AI Actions on selected ${selWords} words`);
                 }
 
                 // Activate Floating Mobile Selection Pill
@@ -4562,7 +4574,11 @@ Your 1-Click AI Transformation Canvas for everyday writing, drafts, and prompt e
             selectedText = '';
             selectionStart = 0;
             selectionEnd = 0;
-            if (editorSelectionBadge) editorSelectionBadge.style.display = 'none';
+            const totalContent = editorTextarea ? editorTextarea.value : '';
+            const totalWords = totalContent.trim() === '' ? 0 : totalContent.trim().split(/\s+/).length;
+            if (wordCount) {
+                wordCount.textContent = `Words: ${totalWords}`;
+            }
             if (editorAiBtn) {
                 editorAiBtn.classList.remove('has-selection');
                 editorAiBtn.setAttribute('title', 'AI Writing Actions (Selection or Full Document)');
