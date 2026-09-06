@@ -1888,7 +1888,9 @@
         }
 
         .ai-output-box {
-            flex: 1;
+            flex: 1 1 0;
+            min-height: 120px;
+            height: 100%;
             background-color: var(--bg-primary);
             border: 1px solid var(--border-color);
             border-radius: 8px;
@@ -1899,8 +1901,14 @@
             color: var(--text-primary);
             overflow-y: auto;
             position: relative;
-            min-height: 200px;
-            max-height: 400px;
+            box-sizing: border-box;
+        }
+
+        #promptStudioActions {
+            flex-shrink: 0;
+            margin-top: auto;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-color);
         }
 
         .ai-output-placeholder {
@@ -3488,29 +3496,29 @@
 
         <!-- Tab 1: AI Drafting View -->
         <div class="ai-drawer-body" id="aiDraftingView">
-            <div class="form-group">
+            <div class="form-group" style="flex-shrink: 0;">
                 <label class="form-label" for="aiPrompt">What would you like the AI to draft?</label>
                 <textarea class="ai-prompt-area" id="aiPrompt" placeholder="e.g. Write a professional introduction explaining the benefits of local data privacy in AI editors..."></textarea>
             </div>
-            <button class="btn btn-primary" id="aiDraftBtn" style="width: 100%;">
+            <button class="btn btn-primary" id="aiDraftBtn" style="width: 100%; flex-shrink: 0;">
                 <i class="ti ti-rocket"></i> Generate Draft
             </button>
             
-            <div class="form-group" style="flex: 1; display: flex; flex-direction: column;">
-                <label class="form-label">Generated Response</label>
-                <div class="ai-output-box" id="aiOutputBox">
+            <div class="form-group" style="flex: 1 1 0; min-height: 120px; display: flex; flex-direction: column; overflow: hidden;">
+                <label class="form-label" style="flex-shrink: 0;">Generated Response</label>
+                <div class="ai-output-box" id="aiOutputBox" style="flex: 1 1 0; min-height: 0; overflow-y: auto;">
                     <div class="ai-output-placeholder">Generated text will appear here. You can insert it directly into your editor.</div>
                 </div>
             </div>
-            <button class="btn btn-secondary" id="aiInsertBtn" style="width: 100%; display: none;">
+            <button class="btn btn-secondary" id="aiInsertBtn" style="width: 100%; display: none; flex-shrink: 0; margin-top: auto;">
                 <i class="ti ti-arrow-left"></i> Insert at Cursor
             </button>
         </div>
 
         <!-- Tab 2: Prompt Studio (Master Prompt & Agent Counter-Prompt) View -->
-        <div class="ai-drawer-body" id="aiPromptStudioView" style="display: none; flex-direction: column;">
+        <div class="ai-drawer-body" id="aiPromptStudioView" style="display: none; flex-direction: column; overflow: hidden; gap: 10px;">
             <!-- Prompt Studio Submode Switcher -->
-            <div class="prompt-submode-switcher" role="tablist">
+            <div class="prompt-submode-switcher" role="tablist" style="flex-shrink: 0;">
                 <button type="button" class="submode-btn active" id="submodeMasterPrompt" role="tab" aria-selected="true">
                     <i class="ti ti-wand"></i> <span>5-Part Prompt</span>
                 </button>
@@ -3520,7 +3528,7 @@
             </div>
 
             <!-- Directive Scenario Chips (Counter-Prompt Mode) -->
-            <div id="counterPromptChips" style="display: none; flex-direction: column; margin-bottom: 8px;">
+            <div id="counterPromptChips" style="display: none; flex-direction: column; flex-shrink: 0; margin-bottom: 2px;">
                 <label class="form-label" style="margin-bottom: 4px; font-size: 0.74rem;">Next-Turn Goal / Directive</label>
                 <div class="directive-chips">
                     <button type="button" class="directive-chip active" data-goal="proceed"><i class="ti ti-check"></i> Proceed & Implement</button>
@@ -3531,31 +3539,31 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div class="form-group" style="flex-shrink: 0; margin-bottom: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                     <label class="form-label" id="promptStudioInputLabel" for="promptStudioInput" style="margin-bottom: 0;">Rough Task / Draft Idea</label>
                     <button type="button" id="promptStudioGrabBtn" style="background: none; border: none; color: var(--accent-color); font-size: 0.75rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">
                         <i class="ti ti-arrow-down-left"></i> Grab Editor Text
                     </button>
                 </div>
-                <textarea class="ai-prompt-area" id="promptStudioInput" placeholder="e.g. Create a customer support reply for delayed shipment with 10% refund voucher..." style="min-height: 85px;"></textarea>
+                <textarea class="ai-prompt-area" id="promptStudioInput" placeholder="e.g. Create a customer support reply for delayed shipment with 10% refund voucher..." style="height: 80px; min-height: 60px; max-height: 100px; resize: none;"></textarea>
             </div>
             
-            <button class="btn btn-primary" id="promptStudioGenBtn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600;">
+            <button class="btn btn-primary" id="promptStudioGenBtn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; flex-shrink: 0;">
                 <i class="ti ti-wand" id="promptStudioGenBtnIcon"></i> <span id="promptStudioGenBtnText">Engineer Master Prompt (5-Part)</span>
             </button>
             
-            <div class="form-group" style="flex: 1; display: flex; flex-direction: column; margin-top: 10px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div class="form-group" style="flex: 1 1 0; min-height: 120px; display: flex; flex-direction: column; overflow: hidden; margin-top: 2px; margin-bottom: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; flex-shrink: 0;">
                     <label class="form-label" id="promptStudioOutputLabel" style="margin-bottom: 0;">Engineered Output</label>
                     <span id="promptStudioStatusBadge" style="font-size: 0.7rem; color: var(--accent-color); font-weight: 600; display: none;">✨ Ready</span>
                 </div>
-                <div class="ai-output-box" id="promptStudioOutputBox" style="font-family: 'Fira Code', monospace; font-size: 0.82rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word;">
+                <div class="ai-output-box" id="promptStudioOutputBox" style="font-family: 'Fira Code', monospace; font-size: 0.82rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word; flex: 1 1 0; min-height: 0; overflow-y: auto;">
                     <div class="ai-output-placeholder" id="promptStudioPlaceholder">Engineered 5-part Master Prompt will appear here (Persona, Objective, Context, Constraints, Output Schema).</div>
                 </div>
             </div>
 
-            <div id="promptStudioActions" style="display: none; gap: 8px; flex-direction: column; margin-top: 6px;">
+            <div id="promptStudioActions" style="display: none; gap: 8px; flex-direction: column; flex-shrink: 0; margin-top: auto; padding-top: 8px; border-top: 1px solid var(--border-color);">
                 <div style="display: flex; gap: 8px;">
                     <button class="btn btn-secondary" id="promptStudioCopyBtn" style="flex: 1;">
                         <i class="ti ti-copy"></i> <span id="promptStudioCopyBtnText">Copy Prompt</span>
