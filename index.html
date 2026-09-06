@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content">
     <title>ZenWrite - AI Creative Text Editor</title>
     <meta name="description" content="ZenWrite is a modern, responsive, distraction-free markdown text editor powered by Google Gemini AI.">
-    <meta name="theme-color" content="#8E6C40">
+    <meta name="theme-color" content="#131314">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="ZenWrite">
@@ -45,27 +45,29 @@
             --glass-bg: rgba(244, 241, 240, 0.7);
             --sidebar-width: 280px;
             --ai-drawer-width: 320px;
+            --preview-zoom: 1;
         }
 
         [data-theme="dark"] {
-            /* Deep Obsidian Theme (Dark Mode - Warm Gold Accent) */
-            --bg-primary: #0A0A0B;
-            --bg-secondary: #121214;
-            --bg-tertiary: #1A1A1E;
-            --text-primary: #F0EDE6;
-            --text-secondary: #A09E99;
-            --accent-glow: rgba(226, 184, 116, 0.15);
-            --accent-color: #E2B874; /* Warm Gold avoids purple-on-dark cliché */
-            --accent-text: #121214;
-            --border-color: rgba(226, 184, 116, 0.2);
-            --shadow-color: rgba(0, 0, 0, 0.6);
-            --editor-bg: #0A0A0B;
-            --preview-bg: #0A0A0B;
-            --diff-del-bg: rgba(239, 68, 68, 0.2);
-            --diff-del-text: #F87171;
-            --diff-ins-bg: rgba(16, 185, 129, 0.2);
-            --diff-ins-text: #34D399;
-            --glass-bg: rgba(18, 18, 20, 0.75);
+            /* Google Gemini / NotebookLM Studio Theme (Dark Mode) */
+            --bg-primary: #131314;
+            --bg-secondary: #1E1F20;
+            --bg-tertiary: #282A2C;
+            --text-primary: #E3E3E3;
+            --text-secondary: #8E918F;
+            --accent-glow: rgba(168, 199, 250, 0.15);
+            --accent-color: #A8C7FA; /* Google Gemini Soft Blue */
+            --accent-text: #041E49;
+            --border-color: #37393B;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --editor-bg: #131314;
+            --preview-bg: #1E1F20;
+            --diff-del-bg: rgba(242, 184, 181, 0.2);
+            --diff-del-text: #F2B8B5;
+            --diff-ins-bg: rgba(196, 238, 206, 0.2);
+            --diff-ins-text: #C4EECE;
+            --glass-bg: rgba(30, 31, 32, 0.85);
+            --preview-zoom: 1;
         }
 
         * {
@@ -515,6 +517,86 @@
             bottom: -36px;
         }
 
+        /* Google Material Design 3 Pill Actions */
+        .m3-pill-btn {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 20px;
+            padding: 0 14px;
+            height: 38px;
+            min-height: 38px;
+            width: auto !important;
+            min-width: unset !important;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+            white-space: nowrap;
+            position: relative;
+            text-decoration: none;
+            box-sizing: border-box;
+        }
+
+        .m3-pill-btn:hover {
+            background-color: var(--bg-tertiary);
+            border-color: var(--text-secondary);
+            color: var(--text-primary);
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+
+        .m3-pill-btn.active {
+            background-color: var(--accent-glow);
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .m3-pill-btn.primary {
+            background-color: var(--text-primary);
+            color: var(--bg-primary);
+            border-color: transparent;
+            font-weight: 600;
+        }
+
+        .m3-pill-btn.primary:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .m3-pill-btn.accent {
+            background-color: var(--accent-glow);
+            border-color: rgba(168, 199, 250, 0.4);
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .m3-pill-btn.accent:hover {
+            background-color: var(--accent-color);
+            color: var(--accent-text);
+            border-color: var(--accent-color);
+        }
+
+        .m3-btn-label {
+            display: inline-block;
+        }
+
+        @media (max-width: 820px) {
+            .m3-btn-label {
+                display: none;
+            }
+            .m3-pill-btn {
+                padding: 0 10px;
+                min-width: 38px;
+            }
+        }
+
         /* Editor Layout */
         /* Editor Layout */
         .editor-container {
@@ -640,6 +722,153 @@
             padding-left: 10px;
             margin-left: 8px;
             border-left: 1px solid var(--border-color);
+        }
+
+        /* Google NotebookLM Studio Breadcrumb Header */
+        .studio-breadcrumb {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            text-transform: none;
+            letter-spacing: 0.2px;
+            color: var(--text-secondary);
+        }
+
+        .studio-breadcrumb .breadcrumb-parent {
+            color: var(--text-secondary);
+        }
+
+        .studio-breadcrumb .breadcrumb-sep {
+            font-size: 0.68rem;
+            opacity: 0.6;
+        }
+
+        .studio-breadcrumb .breadcrumb-active {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .studio-breadcrumb .breadcrumb-badge {
+            font-size: 0.68rem;
+            padding: 2px 7px;
+            border-radius: 12px;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--accent-color);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 4px;
+        }
+
+        .studio-header-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .studio-header-btn:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        /* Floating Studio Canvas Control Dock (NotebookLM Mindmap / Canvas Style) */
+        .studio-canvas-controls {
+            position: absolute;
+            top: 52px;
+            left: 18px;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 4px;
+            box-shadow: 0 4px 16px var(--shadow-color);
+            backdrop-filter: blur(8px);
+            opacity: 0.85;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .studio-canvas-controls:hover {
+            opacity: 1;
+            transform: scale(1.02);
+        }
+
+        .studio-canvas-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-size: 0.95rem;
+        }
+
+        .studio-canvas-btn:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .studio-canvas-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* Bottom Studio Feedback Bar (NotebookLM Style) */
+        .studio-feedback-bar {
+            flex-shrink: 0;
+            padding: 8px 18px;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .studio-feedback-btn {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 500;
+            border-radius: 16px;
+            padding: 5px 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .studio-feedback-btn:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--text-secondary);
+        }
+
+        .studio-feedback-btn.active {
+            background-color: var(--accent-glow);
+            border-color: var(--accent-color);
+            color: var(--accent-color);
         }
 
         .pane-action-btn {
@@ -1051,10 +1280,11 @@
             overflow-y: auto;
             line-height: 1.7;
             font-family: 'Inter', sans-serif;
-            font-size: 1rem;
+            font-size: calc(1rem * var(--preview-zoom, 1));
             color: var(--text-primary);
             box-sizing: border-box;
             width: 100%;
+            transition: font-size 0.15s ease;
         }
 
         /* Markdown Styling inside preview */
@@ -1174,6 +1404,29 @@
             display: flex;
             align-items: center;
             gap: 16px;
+        }
+
+        .footer-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            text-align: center;
+            padding: 0 10px;
+        }
+
+        .footer-disclaimer {
+            font-size: 0.73rem;
+            color: var(--text-secondary);
+            opacity: 0.8;
+            letter-spacing: 0.2px;
+            font-weight: 400;
+        }
+
+        @media (max-width: 900px) {
+            .footer-center {
+                display: none;
+            }
         }
 
         .footer-right {
@@ -2003,6 +2256,121 @@
             font-style: italic;
             text-align: center;
             margin-top: 60px;
+        }
+
+        /* Floating Capsule Prompt Container (NotebookLM Style) */
+        .gemini-capsule-box {
+            position: relative;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .gemini-capsule-box:focus-within {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .gemini-capsule-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 4px;
+        }
+
+        .capsule-source-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-weight: 500;
+        }
+
+        .capsule-source-chip i {
+            color: var(--accent-color);
+            font-size: 0.75rem;
+        }
+
+        .gemini-capsule-send-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: none;
+            background-color: var(--accent-color);
+            color: var(--accent-text);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.15s ease, opacity 0.15s ease;
+        }
+
+        .gemini-capsule-send-btn:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+
+        /* Collapsible Gemini Thoughts Accordion */
+        .gemini-thoughts-card {
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background-color: var(--bg-secondary);
+            margin-bottom: 8px;
+            overflow: hidden;
+            transition: border-color 0.2s ease;
+        }
+
+        .gemini-thoughts-header {
+            width: 100%;
+            background: none;
+            border: none;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+
+        .gemini-thoughts-header:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .gemini-thoughts-header .thoughts-chevron {
+            margin-left: auto;
+            font-size: 0.75rem;
+            transition: transform 0.2s ease;
+        }
+
+        .gemini-thoughts-header[aria-expanded="true"] .thoughts-chevron {
+            transform: rotate(180deg);
+        }
+
+        .gemini-thoughts-body {
+            padding: 8px 12px;
+            font-size: 0.78rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+            background-color: var(--bg-primary);
+            border-top: 1px solid var(--border-color);
+            max-height: 140px;
+            overflow-y: auto;
         }
 
         /* Diff Preview Overlay / Modal */
@@ -3309,14 +3677,16 @@
                 </div>
             </div>
             <div class="header-actions" role="toolbar" aria-label="Editor Controls">
-                <button class="icon-btn" id="themeToggle" data-tooltip="Toggle Theme" aria-label="Toggle Light and Dark Theme"><i class="ti ti-sun" aria-hidden="true"></i></button>
-                <button class="icon-btn" id="soundToggle" data-tooltip="Typewriter Sounds" aria-label="Toggle Typewriter Sound Effects"><i class="ti ti-volume" aria-hidden="true"></i></button>
-                <button class="icon-btn" id="splitToggle" data-tooltip="Toggle Preview" aria-label="Toggle Markdown Preview Pane"><i class="ti ti-layout-columns" aria-hidden="true"></i></button>
-                <button class="icon-btn" id="zenToggle" data-tooltip="Zen Focus Mode" aria-label="Toggle Fullscreen Zen Focus Mode"><i class="ti ti-maximize" aria-hidden="true"></i></button>
-                
+                <!-- Google M3 + New Document Pill Action -->
+                <button type="button" class="m3-pill-btn primary" id="headerNewDocBtn" aria-label="Create New Document">
+                    <i class="ti ti-plus" aria-hidden="true"></i> <span class="m3-btn-label">New</span>
+                </button>
+
                 <!-- Unified Header Clipboard Copy Dropdown -->
                 <div class="pane-dropdown" id="headerCopyDropdown">
-                    <button class="icon-btn" id="headerCopyBtn" data-tooltip="Copy Content" aria-label="Copy document or selection" aria-haspopup="true" aria-expanded="false"><i class="ti ti-copy" aria-hidden="true"></i></button>
+                    <button class="m3-pill-btn icon-btn" id="headerCopyBtn" data-tooltip="Copy Content" aria-label="Copy document or selection" aria-haspopup="true" aria-expanded="false">
+                        <i class="ti ti-copy" aria-hidden="true"></i> <span class="m3-btn-label">Copy</span> <i class="ti ti-chevron-down" style="font-size: 0.7rem; opacity: 0.7; margin-left: 2px;"></i>
+                    </button>
                     <div class="pane-dropdown-menu" id="headerCopyMenu" role="menu" style="width: 210px; right: 0;">
                         <div class="dropdown-section-title" role="presentation">Clipboard Export</div>
                         <button class="pane-dropdown-item" id="copyMarkdownOption" role="menuitem" tabindex="-1">
@@ -3331,7 +3701,17 @@
                     </div>
                 </div>
 
-                <button class="icon-btn" id="aiDrawerToggle" data-tooltip="AI Assistant & Audit" aria-label="Open AI Assistant Drawer"><i class="ti ti-sparkles" aria-hidden="true"></i></button>
+                <button class="m3-pill-btn icon-btn" id="splitToggle" data-tooltip="Toggle Studio Preview" aria-label="Toggle Markdown Preview Pane">
+                    <i class="ti ti-layout-columns" aria-hidden="true"></i> <span class="m3-btn-label">Studio</span>
+                </button>
+
+                <button class="m3-pill-btn icon-btn accent" id="aiDrawerToggle" data-tooltip="AI Assistant & Audit" aria-label="Open AI Assistant Drawer">
+                    <i class="ti ti-sparkles" aria-hidden="true"></i> <span class="m3-btn-label">AI Studio</span>
+                </button>
+
+                <button class="icon-btn" id="themeToggle" data-tooltip="Toggle Theme" aria-label="Toggle Light and Dark Theme"><i class="ti ti-sun" aria-hidden="true"></i></button>
+                <button class="icon-btn" id="soundToggle" data-tooltip="Typewriter Sounds" aria-label="Toggle Typewriter Sound Effects"><i class="ti ti-volume" aria-hidden="true"></i></button>
+                <button class="icon-btn" id="zenToggle" data-tooltip="Zen Focus Mode" aria-label="Toggle Fullscreen Zen Focus Mode"><i class="ti ti-maximize" aria-hidden="true"></i></button>
                 <button class="icon-btn" id="settingsToggle" data-tooltip="Settings" aria-label="Open Application Settings"><i class="ti ti-settings" aria-hidden="true"></i></button>
                 <button class="icon-btn mobile-more-btn" id="mobileMoreBtn" data-tooltip="More Actions" aria-label="Open Quick Actions Menu"><i class="ti ti-dots" aria-hidden="true"></i></button>
             </div>
@@ -3472,11 +3852,34 @@
             <!-- Live Preview Pane -->
             <section class="pane preview-pane" id="previewPane">
                 <div class="pane-header">
-                    <span>Live Preview</span>
+                    <div class="studio-breadcrumb">
+                        <span class="breadcrumb-parent">Studio</span>
+                        <i class="ti ti-chevron-right breadcrumb-sep" aria-hidden="true"></i>
+                        <span class="breadcrumb-active">Preview</span>
+                        <span class="breadcrumb-badge">Live</span>
+                    </div>
+                    <div class="pane-header-actions" style="margin-left: auto; border-left: none;">
+                        <button type="button" class="studio-header-btn" id="previewCopyHtmlBtn" title="Copy Rendered HTML" aria-label="Copy Rendered HTML"><i class="ti ti-code"></i></button>
+                        <button type="button" class="studio-header-btn" id="previewExpandBtn" title="Toggle Preview Pane Width" aria-label="Toggle Preview Pane Width"><i class="ti ti-arrows-maximize"></i></button>
+                    </div>
                 </div>
+
+                <!-- Floating Canvas Control Dock (NotebookLM Mindmap / Canvas Style) -->
+                <div class="studio-canvas-controls" id="studioCanvasControls" role="toolbar" aria-label="Preview Canvas Controls">
+                    <button type="button" class="studio-canvas-btn" id="previewResetZoomBtn" title="Reset Zoom (100%)" aria-label="Reset Zoom"><i class="ti ti-arrows-maximize"></i></button>
+                    <button type="button" class="studio-canvas-btn" id="previewZoomInBtn" title="Zoom In (+)" aria-label="Zoom In"><i class="ti ti-plus"></i></button>
+                    <button type="button" class="studio-canvas-btn" id="previewZoomOutBtn" title="Zoom Out (-)" aria-label="Zoom Out"><i class="ti ti-minus"></i></button>
+                    <button type="button" class="studio-canvas-btn" id="previewDownloadBtn" title="Export / Download Document" aria-label="Download Document"><i class="ti ti-download"></i></button>
+                </div>
+
                 <div class="preview-content" id="previewContent">
                     <!-- Rendered HTML -->
-                    <!-- Rendered HTML -->
+                </div>
+
+                <!-- Bottom Studio Feedback Bar (NotebookLM Style) -->
+                <div class="studio-feedback-bar" id="studioFeedbackBar">
+                    <button type="button" class="studio-feedback-btn" id="feedbackGoodBtn" aria-label="Good content"><i class="ti ti-thumb-up"></i> <span>Good content</span></button>
+                    <button type="button" class="studio-feedback-btn" id="feedbackBadBtn" aria-label="Bad content"><i class="ti ti-thumb-down"></i> <span>Bad content</span></button>
                 </div>
             </section>
         </div>
@@ -3525,6 +3928,9 @@
                 <span id="wordCount">Words: 0</span>
                 <span id="charCount">Characters: 0</span>
                 <span id="readTime">Read Time: 0 min</span>
+            </div>
+            <div class="footer-center">
+                <span class="footer-disclaimer">ZenWrite AI can be inaccurate; please double-check critical outputs.</span>
             </div>
             <div class="footer-right">
                 <span id="saveStatus"><i class="ti ti-cloud-check"></i> Saved locally</span>
@@ -3597,17 +4003,27 @@
 
         <!-- Tab 1: AI Drafting View -->
         <div class="ai-drawer-body" id="aiDraftingView">
-            <div class="form-group" style="flex-shrink: 0;">
-                <label class="form-label" for="aiPrompt">What would you like the AI to draft?</label>
-                <textarea class="ai-prompt-area" id="aiPrompt" placeholder="e.g. Write a professional introduction explaining the benefits of local data privacy in AI editors..."></textarea>
+            <div class="gemini-capsule-box" style="flex-shrink: 0;">
+                <label class="form-label" for="aiPrompt" style="margin-bottom: 2px;">Ask a question or create something...</label>
+                <textarea class="ai-prompt-area" id="aiPrompt" placeholder="Ask a question or draft something with Gemini..." style="height: 70px; border: none; padding: 0; background: transparent;"></textarea>
+                <div class="gemini-capsule-footer">
+                    <span class="capsule-source-chip"><i class="ti ti-file-text"></i> 1 source</span>
+                    <button type="button" class="gemini-capsule-send-btn" id="aiDraftBtn" title="Generate Draft" aria-label="Generate Draft">
+                        <i class="ti ti-arrow-right"></i>
+                    </button>
+                </div>
             </div>
-            <button class="btn btn-primary" id="aiDraftBtn" style="width: 100%; flex-shrink: 0;">
-                <i class="ti ti-rocket"></i> Generate Draft
-            </button>
             
             <div class="form-group" style="flex: 1 1 0; min-height: 120px; display: flex; flex-direction: column; overflow: hidden;">
                 <label class="form-label" style="flex-shrink: 0;">Generated Response</label>
                 <div class="ai-output-box" id="aiOutputBox" style="flex: 1 1 0; min-height: 0; overflow-y: auto;">
+                    <!-- Collapsible Gemini Thoughts Accordion -->
+                    <div class="gemini-thoughts-card" id="aiThoughtsCard" style="display: none;">
+                        <button type="button" class="gemini-thoughts-header" id="aiThoughtsToggle" aria-expanded="false">
+                            <i class="ti ti-sparkles"></i> <span>Thoughts</span> <i class="ti ti-chevron-down thoughts-chevron"></i>
+                        </button>
+                        <div class="gemini-thoughts-body" id="aiThoughtsBody" style="display: none;"></div>
+                    </div>
                     <div class="ai-output-placeholder">Generated text will appear here. You can insert it directly into your editor.</div>
                 </div>
             </div>
@@ -3660,6 +4076,13 @@
                     <span id="promptStudioStatusBadge" style="font-size: 0.7rem; color: var(--accent-color); font-weight: 600; display: none;">✨ Ready</span>
                 </div>
                 <div class="ai-output-box" id="promptStudioOutputBox" style="font-family: 'Fira Code', monospace; font-size: 0.82rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word; flex: 1 1 0; min-height: 0; overflow-y: auto;">
+                    <!-- Collapsible Gemini Thoughts Accordion -->
+                    <div class="gemini-thoughts-card" id="promptThoughtsCard" style="display: none;">
+                        <button type="button" class="gemini-thoughts-header" id="promptThoughtsToggle" aria-expanded="false">
+                            <i class="ti ti-sparkles"></i> <span>Thoughts</span> <i class="ti ti-chevron-down thoughts-chevron"></i>
+                        </button>
+                        <div class="gemini-thoughts-body" id="promptThoughtsBody" style="display: none;"></div>
+                    </div>
                     <div class="ai-output-placeholder" id="promptStudioPlaceholder">Engineered 5-part Master Prompt will appear here (Persona, Objective, Context, Constraints, Output Schema).</div>
                 </div>
             </div>
@@ -3820,7 +4243,7 @@
         // --- State Management ---
         let documents = [];
         let activeDocId = null;
-        let theme = 'light';
+        let theme = 'dark';
         let soundEnabled = true;
         let previewEnabled = true;
         let isZenMode = false;
@@ -4233,7 +4656,7 @@
 
             if (savedSettings) {
                 const settings = JSON.parse(savedSettings);
-                theme = settings.theme || 'light';
+                theme = settings.theme || 'dark';
                 soundEnabled = settings.soundEnabled !== false;
                 previewEnabled = settings.previewEnabled !== false;
                 apiKey = settings.apiKey || '';
@@ -4245,11 +4668,11 @@
                 if (aiModel.includes('2.0') || aiModel.includes('1.5') || aiModel === 'gemini-pro') {
                     aiModel = 'auto';
                 }
-                
-                // Set HTML attributes
-                document.documentElement.setAttribute('data-theme', theme);
-                updateUIState();
             }
+            
+            // Set HTML attributes
+            document.documentElement.setAttribute('data-theme', theme);
+            updateUIState();
 
             const savedLineNumbers = localStorage.getItem('zenwrite_show_line_numbers');
             if (typeof applyLineNumbersSetting === 'function') {
@@ -4360,20 +4783,20 @@ Your 1-Click AI Transformation Canvas for everyday writing, drafts, and prompt e
             const themeIcon = themeToggle.querySelector('i');
             if (theme === 'dark') {
                 themeIcon.className = 'ti ti-moon';
-                themeToggle.className = 'icon-btn active';
+                themeToggle.classList.add('active');
             } else {
                 themeIcon.className = 'ti ti-sun';
-                themeToggle.className = 'icon-btn';
+                themeToggle.classList.remove('active');
             }
 
             // Sound Icon
             const soundIcon = soundToggle.querySelector('i');
             if (soundEnabled) {
                 soundIcon.className = 'ti ti-volume';
-                soundToggle.className = 'icon-btn active';
+                soundToggle.classList.add('active');
             } else {
                 soundIcon.className = 'ti ti-volume-3';
-                soundToggle.className = 'icon-btn';
+                soundToggle.classList.remove('active');
             }
 
             // Split View State
@@ -4395,7 +4818,7 @@ Your 1-Click AI Transformation Canvas for everyday writing, drafts, and prompt e
                 }
             }
             if (splitToggle) {
-                splitToggle.className = previewEnabled ? 'icon-btn active' : 'icon-btn';
+                splitToggle.classList.toggle('active', previewEnabled);
             }
 
             apiKeyInput.value = apiKey;
@@ -7750,6 +8173,113 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 if (menuToggle) menuToggle.click();
             }
         });
+
+        // --- Google Gemini / NotebookLM Studio Interactive Enhancements ---
+        const headerNewDocBtn = document.getElementById('headerNewDocBtn');
+        if (headerNewDocBtn) {
+            headerNewDocBtn.onclick = () => {
+                if (newDocBtn) newDocBtn.click();
+            };
+        }
+
+        // Preview Dynamic Zoom Scaling
+        let previewZoomLevel = 1.0;
+        const previewResetZoomBtn = document.getElementById('previewResetZoomBtn');
+        const previewZoomInBtn = document.getElementById('previewZoomInBtn');
+        const previewZoomOutBtn = document.getElementById('previewZoomOutBtn');
+        const previewDownloadBtn = document.getElementById('previewDownloadBtn');
+
+        function setPreviewZoom(zoom) {
+            previewZoomLevel = Math.max(0.7, Math.min(1.6, Math.round(zoom * 10) / 10));
+            document.documentElement.style.setProperty('--preview-zoom', previewZoomLevel.toString());
+        }
+
+        if (previewZoomInBtn) {
+            previewZoomInBtn.onclick = () => setPreviewZoom(previewZoomLevel + 0.1);
+        }
+        if (previewZoomOutBtn) {
+            previewZoomOutBtn.onclick = () => setPreviewZoom(previewZoomLevel - 0.1);
+        }
+        if (previewResetZoomBtn) {
+            previewResetZoomBtn.onclick = () => setPreviewZoom(1.0);
+        }
+        if (previewDownloadBtn) {
+            previewDownloadBtn.onclick = () => {
+                if (exportBtn) exportBtn.click();
+            };
+        }
+
+        // Studio Header Quick Actions
+        const previewCopyHtmlBtn = document.getElementById('previewCopyHtmlBtn');
+        const previewExpandBtn = document.getElementById('previewExpandBtn');
+
+        if (previewCopyHtmlBtn) {
+            previewCopyHtmlBtn.onclick = async () => {
+                if (previewContent) {
+                    await copyTextToClipboard(previewContent.innerHTML);
+                    if (typeof showUndoToast === 'function') {
+                        showUndoToast('Rendered HTML copied to clipboard');
+                    }
+                }
+            };
+        }
+
+        if (previewExpandBtn) {
+            previewExpandBtn.onclick = () => {
+                if (typeof applyEditorSplitRatio === 'function') {
+                    if (editorSplitRatio <= 0.25) {
+                        applyEditorSplitRatio(0.5, true);
+                    } else {
+                        applyEditorSplitRatio(0.2, true);
+                    }
+                }
+            };
+        }
+
+        // Studio Feedback Buttons
+        const feedbackGoodBtn = document.getElementById('feedbackGoodBtn');
+        const feedbackBadBtn = document.getElementById('feedbackBadBtn');
+
+        if (feedbackGoodBtn) {
+            feedbackGoodBtn.onclick = () => {
+                feedbackGoodBtn.classList.toggle('active');
+                if (feedbackBadBtn) feedbackBadBtn.classList.remove('active');
+                if (typeof showUndoToast === 'function') {
+                    showUndoToast('Thanks for your feedback!');
+                }
+            };
+        }
+
+        if (feedbackBadBtn) {
+            feedbackBadBtn.onclick = () => {
+                feedbackBadBtn.classList.toggle('active');
+                if (feedbackGoodBtn) feedbackGoodBtn.classList.remove('active');
+                if (typeof showUndoToast === 'function') {
+                    showUndoToast('Feedback noted. We will refine future outputs.');
+                }
+            };
+        }
+
+        // Collapsible Gemini Thoughts Accordions
+        const aiThoughtsToggle = document.getElementById('aiThoughtsToggle');
+        const aiThoughtsBody = document.getElementById('aiThoughtsBody');
+        if (aiThoughtsToggle && aiThoughtsBody) {
+            aiThoughtsToggle.onclick = () => {
+                const isExpanded = aiThoughtsToggle.getAttribute('aria-expanded') === 'true';
+                aiThoughtsToggle.setAttribute('aria-expanded', !isExpanded);
+                aiThoughtsBody.style.display = isExpanded ? 'none' : 'block';
+            };
+        }
+
+        const promptThoughtsToggle = document.getElementById('promptThoughtsToggle');
+        const promptThoughtsBody = document.getElementById('promptThoughtsBody');
+        if (promptThoughtsToggle && promptThoughtsBody) {
+            promptThoughtsToggle.onclick = () => {
+                const isExpanded = promptThoughtsToggle.getAttribute('aria-expanded') === 'true';
+                promptThoughtsToggle.setAttribute('aria-expanded', !isExpanded);
+                promptThoughtsBody.style.display = isExpanded ? 'none' : 'block';
+            };
+        }
 
         // Initialize App
         window.onload = () => {
