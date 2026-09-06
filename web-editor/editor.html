@@ -5454,26 +5454,139 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                     newText = before + (selected || '// your code here') + after;
                     newCursorPos = selected ? end + before.length + after.length : start + before.length;
                     break;
-                case 'quote':
-                    before = '> ';
-                    newText = before + (selected || 'quote');
-                    newCursorPos = start + before.length + (selected || 'quote').length;
-                    break;
-                case 'list':
-                    before = '- ';
-                    newText = before + (selected || 'list item');
-                    newCursorPos = start + before.length + (selected || 'list item').length;
-                    break;
-                case 'numbered':
-                    before = '1. ';
-                    newText = before + (selected || 'numbered item');
-                    newCursorPos = start + before.length + (selected || 'numbered item').length;
-                    break;
-                case 'task':
-                    before = '- [ ] ';
-                    newText = before + (selected || 'task item');
-                    newCursorPos = start + before.length + (selected || 'task item').length;
-                    break;
+                case 'quote': {
+                    const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+                    const lineEnd = end === start ? (val.indexOf('\n', start) === -1 ? val.length : val.indexOf('\n', start)) : (val.indexOf('\n', end) === -1 ? val.length : val.indexOf('\n', end));
+                    const targetBlock = val.substring(lineStart, lineEnd);
+                    const rawLines = targetBlock.split('\n');
+                    const allQuotes = rawLines.length > 0 && rawLines.every(l => !l.trim() || /^(\s*)>\s/.test(l));
+
+                    let transformedLines = [];
+                    if (allQuotes) {
+                        transformedLines = rawLines.map(l => l.replace(/^(\s*)>\s/, '$1'));
+                    } else {
+                        transformedLines = rawLines.map(l => l.trim() ? `> ${l.replace(/^(\s*)>\s/, '$1').trimStart()}` : l);
+                        if (transformedLines.length === 1 && !transformedLines[0].trim()) {
+                            transformedLines[0] = '> ';
+                        }
+                    }
+
+                    const result = transformedLines.join('\n');
+                    editorTextarea.value = val.substring(0, lineStart) + result + val.substring(lineEnd);
+                    editorTextarea.focus();
+                    if (start === end) {
+                        editorTextarea.setSelectionRange(lineStart + result.length, lineStart + result.length);
+                    } else {
+                        editorTextarea.setSelectionRange(lineStart, lineStart + result.length);
+                    }
+                    renderEditor();
+                    triggerAutosave();
+                    playClickSound();
+                    return;
+                }
+                case 'list': {
+                    const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+                    const lineEnd = end === start ? (val.indexOf('\n', start) === -1 ? val.length : val.indexOf('\n', start)) : (val.indexOf('\n', end) === -1 ? val.length : val.indexOf('\n', end));
+                    const targetBlock = val.substring(lineStart, lineEnd);
+                    const rawLines = targetBlock.split('\n');
+                    const allBulleted = rawLines.length > 0 && rawLines.every(l => !l.trim() || /^(\s*)[-*+]\s/.test(l));
+
+                    let transformedLines = [];
+                    if (allBulleted) {
+                        transformedLines = rawLines.map(l => l.replace(/^(\s*)[-*+]\s/, '$1'));
+                    } else {
+                        transformedLines = rawLines.map(l => {
+                            if (!l.trim()) return l;
+                            const stripped = l.replace(/^(\s*)([-*+]|\d+\.|-\s\[[ xX]?\])\s/, '$1');
+                            return `- ${stripped.trimStart()}`;
+                        });
+                        if (transformedLines.length === 1 && !transformedLines[0].trim()) {
+                            transformedLines[0] = '- ';
+                        }
+                    }
+
+                    const result = transformedLines.join('\n');
+                    editorTextarea.value = val.substring(0, lineStart) + result + val.substring(lineEnd);
+                    editorTextarea.focus();
+                    if (start === end) {
+                        editorTextarea.setSelectionRange(lineStart + result.length, lineStart + result.length);
+                    } else {
+                        editorTextarea.setSelectionRange(lineStart, lineStart + result.length);
+                    }
+                    renderEditor();
+                    triggerAutosave();
+                    playClickSound();
+                    return;
+                }
+                case 'numbered': {
+                    const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+                    const lineEnd = end === start ? (val.indexOf('\n', start) === -1 ? val.length : val.indexOf('\n', start)) : (val.indexOf('\n', end) === -1 ? val.length : val.indexOf('\n', end));
+                    const targetBlock = val.substring(lineStart, lineEnd);
+                    const rawLines = targetBlock.split('\n');
+                    const allNumbered = rawLines.length > 0 && rawLines.every(l => !l.trim() || /^(\s*)\d+\.\s/.test(l));
+
+                    let transformedLines = [];
+                    if (allNumbered) {
+                        transformedLines = rawLines.map(l => l.replace(/^(\s*)\d+\.\s/, '$1'));
+                    } else {
+                        let counter = 1;
+                        transformedLines = rawLines.map(l => {
+                            if (!l.trim()) return l;
+                            const stripped = l.replace(/^(\s*)([-*+]|\d+\.|-\s\[[ xX]?\])\s/, '$1');
+                            return `${counter++}. ${stripped.trimStart()}`;
+                        });
+                        if (transformedLines.length === 1 && !transformedLines[0].trim()) {
+                            transformedLines[0] = '1. ';
+                        }
+                    }
+
+                    const result = transformedLines.join('\n');
+                    editorTextarea.value = val.substring(0, lineStart) + result + val.substring(lineEnd);
+                    editorTextarea.focus();
+                    if (start === end) {
+                        editorTextarea.setSelectionRange(lineStart + result.length, lineStart + result.length);
+                    } else {
+                        editorTextarea.setSelectionRange(lineStart, lineStart + result.length);
+                    }
+                    renderEditor();
+                    triggerAutosave();
+                    playClickSound();
+                    return;
+                }
+                case 'task': {
+                    const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+                    const lineEnd = end === start ? (val.indexOf('\n', start) === -1 ? val.length : val.indexOf('\n', start)) : (val.indexOf('\n', end) === -1 ? val.length : val.indexOf('\n', end));
+                    const targetBlock = val.substring(lineStart, lineEnd);
+                    const rawLines = targetBlock.split('\n');
+                    const allTasks = rawLines.length > 0 && rawLines.every(l => !l.trim() || /^(\s*)-\s\[[ xX]?\]\s/.test(l));
+
+                    let transformedLines = [];
+                    if (allTasks) {
+                        transformedLines = rawLines.map(l => l.replace(/^(\s*)-\s\[[ xX]?\]\s/, '$1'));
+                    } else {
+                        transformedLines = rawLines.map(l => {
+                            if (!l.trim()) return l;
+                            const stripped = l.replace(/^(\s*)([-*+]|\d+\.|-\s\[[ xX]?\])\s/, '$1');
+                            return `- [ ] ${stripped.trimStart()}`;
+                        });
+                        if (transformedLines.length === 1 && !transformedLines[0].trim()) {
+                            transformedLines[0] = '- [ ] ';
+                        }
+                    }
+
+                    const result = transformedLines.join('\n');
+                    editorTextarea.value = val.substring(0, lineStart) + result + val.substring(lineEnd);
+                    editorTextarea.focus();
+                    if (start === end) {
+                        editorTextarea.setSelectionRange(lineStart + result.length, lineStart + result.length);
+                    } else {
+                        editorTextarea.setSelectionRange(lineStart, lineStart + result.length);
+                    }
+                    renderEditor();
+                    triggerAutosave();
+                    playClickSound();
+                    return;
+                }
                 case 'link':
                     newText = `[${selected || 'link text'}](url)`;
                     newCursorPos = selected ? start + selected.length + 3 : start + 1;
@@ -5903,21 +6016,263 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 }
             }
 
-            // 1. Handle Tab key to accept autocomplete
-            if (e.key === 'Tab' && currentSuggestion) {
+            // --- Word-Doc Style Smart List Behaviors ---
+
+            // 1. Smart Enter Handler (Auto-continue, Auto-exit, Outdent, Sequential Renumber)
+            if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey && editorTextarea.selectionStart === editorTextarea.selectionEnd) {
+                const pos = editorTextarea.selectionStart;
+                const val = editorTextarea.value;
+                const lineStart = val.lastIndexOf('\n', pos - 1) + 1;
+                const nextNewline = val.indexOf('\n', pos);
+                const lineEnd = nextNewline === -1 ? val.length : nextNewline;
+                const lineBeforeCursor = val.substring(lineStart, pos);
+                const lineAfterCursor = val.substring(pos, lineEnd);
+
+                // Check for Empty List Item (Exit or Outdent)
+                if (!lineAfterCursor.trim()) {
+                    // Empty Task: "- [ ] " or "- [x] "
+                    const emptyTaskM = lineBeforeCursor.match(/^(\s*)-\s\[[ xX]?\]\s*$/);
+                    if (emptyTaskM) {
+                        e.preventDefault();
+                        const indent = emptyTaskM[1];
+                        if (indent.length >= 2) {
+                            const newIndent = indent.substring(2);
+                            const replacement = `${newIndent}- [ ] `;
+                            editorTextarea.value = val.substring(0, lineStart) + replacement + val.substring(lineEnd);
+                            editorTextarea.selectionStart = editorTextarea.selectionEnd = lineStart + replacement.length;
+                        } else {
+                            editorTextarea.value = val.substring(0, lineStart) + val.substring(lineEnd);
+                            editorTextarea.selectionStart = editorTextarea.selectionEnd = lineStart;
+                        }
+                        renderEditor(); triggerAutosave(); return;
+                    }
+
+                    // Empty Bullet: "- ", "* ", "+ "
+                    const emptyBulletM = lineBeforeCursor.match(/^(\s*)([-*+])\s*$/);
+                    if (emptyBulletM) {
+                        e.preventDefault();
+                        const indent = emptyBulletM[1];
+                        const marker = emptyBulletM[2];
+                        if (indent.length >= 2) {
+                            const newIndent = indent.substring(2);
+                            const replacement = `${newIndent}${marker} `;
+                            editorTextarea.value = val.substring(0, lineStart) + replacement + val.substring(lineEnd);
+                            editorTextarea.selectionStart = editorTextarea.selectionEnd = lineStart + replacement.length;
+                        } else {
+                            editorTextarea.value = val.substring(0, lineStart) + val.substring(lineEnd);
+                            editorTextarea.selectionStart = editorTextarea.selectionEnd = lineStart;
+                        }
+                        renderEditor(); triggerAutosave(); return;
+                    }
+
+                    // Empty Numbered: "1. ", "2. ", etc.
+                    const emptyNumM = lineBeforeCursor.match(/^(\s*)\d+\.\s*$/);
+                    if (emptyNumM) {
+                        e.preventDefault();
+                        const indent = emptyNumM[1];
+                        if (indent.length >= 2) {
+                            const newIndent = indent.substring(2);
+                            const replacement = `${newIndent}1. `;
+                            editorTextarea.value = val.substring(0, lineStart) + replacement + val.substring(lineEnd);
+                            editorTextarea.selectionStart = editorTextarea.selectionEnd = lineStart + replacement.length;
+                        } else {
+                            editorTextarea.value = val.substring(0, lineStart) + val.substring(lineEnd);
+                            editorTextarea.selectionStart = editorTextarea.selectionEnd = lineStart;
+                        }
+                        renderEditor(); triggerAutosave(); return;
+                    }
+
+                    // Empty Blockquote: "> "
+                    const emptyQuoteM = lineBeforeCursor.match(/^(\s*)>\s*$/);
+                    if (emptyQuoteM) {
+                        e.preventDefault();
+                        editorTextarea.value = val.substring(0, lineStart) + val.substring(lineEnd);
+                        editorTextarea.selectionStart = editorTextarea.selectionEnd = lineStart;
+                        renderEditor(); triggerAutosave(); return;
+                    }
+                }
+
+                // Non-empty Task Item continuation
+                const taskM = lineBeforeCursor.match(/^(\s*)-\s\[[ xX]?\]\s+/);
+                if (taskM) {
+                    e.preventDefault();
+                    const pfx = `\n${taskM[1]}- [ ] `;
+                    editorTextarea.value = val.substring(0, pos) + pfx + val.substring(pos);
+                    editorTextarea.selectionStart = editorTextarea.selectionEnd = pos + pfx.length;
+                    renderEditor(); triggerAutosave(); playClickSound(); return;
+                }
+
+                // Non-empty Bullet Item continuation
+                const bulletM = lineBeforeCursor.match(/^(\s*)([-*+])\s+/);
+                if (bulletM) {
+                    e.preventDefault();
+                    const pfx = `\n${bulletM[1]}${bulletM[2]} `;
+                    editorTextarea.value = val.substring(0, pos) + pfx + val.substring(pos);
+                    editorTextarea.selectionStart = editorTextarea.selectionEnd = pos + pfx.length;
+                    renderEditor(); triggerAutosave(); playClickSound(); return;
+                }
+
+                // Non-empty Numbered Item continuation with sequential renumbering
+                const numM = lineBeforeCursor.match(/^(\s*)(\d+)\.\s+/);
+                if (numM) {
+                    e.preventDefault();
+                    const indent = numM[1];
+                    const nextNum = parseInt(numM[2], 10) + 1;
+                    const pfx = `\n${indent}${nextNum}. `;
+                    
+                    let afterText = val.substring(pos);
+                    if (afterText.startsWith('\n')) {
+                        const afterLines = afterText.substring(1).split('\n');
+                        let curExpected = nextNum;
+                        let modified = false;
+                        const escIndent = indent.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        for (let i = 0; i < afterLines.length; i++) {
+                            const line = afterLines[i];
+                            const m = line.match(new RegExp(`^(${escIndent})(\\d+)\\.\\s(.*)$`));
+                            if (m) {
+                                const num = parseInt(m[2], 10);
+                                if (num >= curExpected) {
+                                    curExpected = num + 1;
+                                    afterLines[i] = `${m[1]}${curExpected}. ${m[3]}`;
+                                    modified = true;
+                                } else {
+                                    break;
+                                }
+                            } else if (!line.trim()) {
+                                break;
+                            } else {
+                                break;
+                            }
+                        }
+                        if (modified) {
+                            afterText = '\n' + afterLines.join('\n');
+                        }
+                    }
+
+                    editorTextarea.value = val.substring(0, pos) + pfx + afterText;
+                    editorTextarea.selectionStart = editorTextarea.selectionEnd = pos + pfx.length;
+                    renderEditor(); triggerAutosave(); playClickSound(); return;
+                }
+
+                // Non-empty Blockquote continuation
+                const quoteM = lineBeforeCursor.match(/^(\s*)(>+)\s+/);
+                if (quoteM) {
+                    e.preventDefault();
+                    const pfx = `\n${quoteM[1]}${quoteM[2]} `;
+                    editorTextarea.value = val.substring(0, pos) + pfx + val.substring(pos);
+                    editorTextarea.selectionStart = editorTextarea.selectionEnd = pos + pfx.length;
+                    renderEditor(); triggerAutosave(); playClickSound(); return;
+                }
+            }
+
+            // 2. Smart Backspace on Empty List Markers (1-tap delete & outdent)
+            if (e.key === 'Backspace' && !e.ctrlKey && !e.metaKey && !e.altKey && editorTextarea.selectionStart === editorTextarea.selectionEnd) {
+                const pos = editorTextarea.selectionStart;
+                const val = editorTextarea.value;
+                const lineStart = val.lastIndexOf('\n', pos - 1) + 1;
+                const lineBeforeCursor = val.substring(lineStart, pos);
+                const nextNewline = val.indexOf('\n', pos);
+                const lineEnd = nextNewline === -1 ? val.length : nextNewline;
+                const lineAfterCursor = val.substring(pos, lineEnd);
+
+                if (!lineAfterCursor.trim()) {
+                    const emptyMatch = lineBeforeCursor.match(/^(\s*)([-*+]|\d+\.|-\s\[[ xX]?\]|>)\s$/);
+                    if (emptyMatch) {
+                        e.preventDefault();
+                        const indent = emptyMatch[1];
+                        const marker = emptyMatch[2];
+                        if (indent.length >= 2) {
+                            const newIndent = indent.substring(2);
+                            const replacement = `${newIndent}${marker} `;
+                            editorTextarea.value = val.substring(0, lineStart) + replacement + val.substring(lineEnd);
+                            editorTextarea.selectionStart = editorTextarea.selectionEnd = lineStart + replacement.length;
+                        } else {
+                            editorTextarea.value = val.substring(0, lineStart) + val.substring(lineEnd);
+                            editorTextarea.selectionStart = editorTextarea.selectionEnd = lineStart;
+                        }
+                        renderEditor(); triggerAutosave(); playClickSound(); return;
+                    }
+                }
+            }
+
+            // 3. Handle Tab key to accept autocomplete OR Smart List Indent/Outdent
+            if (e.key === 'Tab') {
+                if (currentSuggestion) {
+                    e.preventDefault();
+                    const start = editorTextarea.selectionStart;
+                    const end = editorTextarea.selectionEnd;
+                    const val = editorTextarea.value;
+                    editorTextarea.value = val.substring(0, start) + currentSuggestion + val.substring(end);
+                    editorTextarea.selectionStart = editorTextarea.selectionEnd = start + currentSuggestion.length;
+                    
+                    renderEditor();
+                    triggerAutosave();
+                    
+                    currentSuggestion = '';
+                    autocompleteTooltip.style.display = 'none';
+                    return;
+                }
+
+                // Smart Tab / Shift+Tab for List Indentation & General Indent
                 e.preventDefault();
                 const start = editorTextarea.selectionStart;
                 const end = editorTextarea.selectionEnd;
                 const val = editorTextarea.value;
-                editorTextarea.value = val.substring(0, start) + currentSuggestion + val.substring(end);
-                editorTextarea.selectionStart = editorTextarea.selectionEnd = start + currentSuggestion.length;
-                
-                renderEditor();
-                triggerAutosave();
-                
-                currentSuggestion = '';
-                autocompleteTooltip.style.display = 'none';
-                return;
+                const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+                const nextNewline = val.indexOf('\n', end);
+                const lineEnd = nextNewline === -1 ? val.length : nextNewline;
+
+                if (e.shiftKey) {
+                    // Outdent (Shift+Tab)
+                    const block = val.substring(lineStart, lineEnd);
+                    const lines = block.split('\n');
+                    let removedFirst = 0;
+                    let totalRemoved = 0;
+
+                    const outdented = lines.map((l, idx) => {
+                        let removed = 0;
+                        if (l.startsWith('  ')) {
+                            removed = 2;
+                            l = l.substring(2);
+                        } else if (l.startsWith(' ') || l.startsWith('\t')) {
+                            removed = 1;
+                            l = l.substring(1);
+                        }
+                        if (idx === 0) removedFirst = removed;
+                        totalRemoved += removed;
+                        return l;
+                    }).join('\n');
+
+                    editorTextarea.value = val.substring(0, lineStart) + outdented + val.substring(lineEnd);
+                    if (start === end) {
+                        const newPos = Math.max(lineStart, start - removedFirst);
+                        editorTextarea.selectionStart = editorTextarea.selectionEnd = newPos;
+                    } else {
+                        editorTextarea.selectionStart = Math.max(lineStart, start - removedFirst);
+                        editorTextarea.selectionEnd = Math.max(lineStart, end - totalRemoved);
+                    }
+                    renderEditor(); triggerAutosave(); playClickSound(); return;
+                } else {
+                    // Indent (Tab)
+                    if (start === end) {
+                        const currentLine = val.substring(lineStart, lineEnd);
+                        if (/^(\s*)([-*+]|\d+\.|-\s\[[ xX]?\]|>)/.test(currentLine)) {
+                            editorTextarea.value = val.substring(0, lineStart) + '  ' + currentLine + val.substring(lineEnd);
+                            editorTextarea.selectionStart = editorTextarea.selectionEnd = start + 2;
+                        } else {
+                            editorTextarea.value = val.substring(0, start) + '  ' + val.substring(end);
+                            editorTextarea.selectionStart = editorTextarea.selectionEnd = start + 2;
+                        }
+                    } else {
+                        const block = val.substring(lineStart, lineEnd);
+                        const lines = block.split('\n');
+                        const indented = lines.map(l => '  ' + l).join('\n');
+                        editorTextarea.value = val.substring(0, lineStart) + indented + val.substring(lineEnd);
+                        editorTextarea.selectionStart = start + 2;
+                        editorTextarea.selectionEnd = end + (lines.length * 2);
+                    }
+                    renderEditor(); triggerAutosave(); playClickSound(); return;
+                }
             }
 
             // 2. Handle Escape to cancel autocomplete
