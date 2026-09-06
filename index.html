@@ -3578,8 +3578,8 @@
                         <i class="ti ti-arrow-left"></i> Insert in Editor
                     </button>
                 </div>
-                <button class="btn btn-primary" id="promptStudioRunBtn" style="width: 100%; background: linear-gradient(135deg, var(--accent-color), #B8860B); color: #FFF;">
-                    <i class="ti ti-player-play"></i> Run with Gemini AI
+                <button class="btn btn-primary" id="promptStudioRunBtn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i class="ti ti-sparkles"></i> <span id="promptStudioRunBtnText">Draft with Gemini</span>
                 </button>
             </div>
         </div>
@@ -7247,6 +7247,8 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 if (promptStudioOutputLabel) promptStudioOutputLabel.textContent = 'Next-Turn Counter-Prompt';
                 if (promptStudioPlaceholder) promptStudioPlaceholder.textContent = 'Actionable Next-Turn Counter-Prompt for AI Agent will appear here.';
                 if (promptStudioCopyBtnText) promptStudioCopyBtnText.textContent = 'Copy for Terminal';
+                if (promptStudioCopyBtn) promptStudioCopyBtn.className = 'btn btn-primary';
+                if (promptStudioRunBtn) promptStudioRunBtn.style.display = 'none';
             } else {
                 if (submodeMasterPrompt) {
                     submodeMasterPrompt.classList.add('active');
@@ -7264,6 +7266,10 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 if (promptStudioOutputLabel) promptStudioOutputLabel.textContent = 'Engineered Master Prompt';
                 if (promptStudioPlaceholder) promptStudioPlaceholder.textContent = 'Engineered 5-part Master Prompt will appear here (Persona, Objective, Context, Constraints, Output Schema).';
                 if (promptStudioCopyBtnText) promptStudioCopyBtnText.textContent = 'Copy Prompt';
+                if (promptStudioCopyBtn) promptStudioCopyBtn.className = 'btn btn-secondary';
+                if (promptStudioRunBtn) {
+                    promptStudioRunBtn.style.display = (promptStudioActions && promptStudioActions.style.display !== 'none') ? 'flex' : 'none';
+                }
             }
         }
 
@@ -7448,6 +7454,12 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                     }
                     promptStudioOutputBox.textContent = generated;
                     if (promptStudioActions) promptStudioActions.style.display = 'flex';
+                    if (promptStudioRunBtn) {
+                        promptStudioRunBtn.style.display = promptStudioSubmode === 'counter' ? 'none' : 'flex';
+                    }
+                    if (promptStudioCopyBtn) {
+                        promptStudioCopyBtn.className = promptStudioSubmode === 'counter' ? 'btn btn-primary' : 'btn btn-secondary';
+                    }
                     if (promptStudioStatusBadge) promptStudioStatusBadge.style.display = 'inline';
                     if (navigator.vibrate) navigator.vibrate(20);
                 } catch (err) {
