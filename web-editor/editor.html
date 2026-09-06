@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content">
     <title>ZenWrite - AI Creative Text Editor</title>
     <meta name="description" content="ZenWrite is a modern, responsive, distraction-free markdown text editor powered by Google Gemini AI.">
-    <meta name="theme-color" content="#131314">
+    <meta name="theme-color" content="#8E6C40">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="ZenWrite">
@@ -49,24 +49,24 @@
         }
 
         [data-theme="dark"] {
-            /* Google Gemini / NotebookLM Studio Theme (Dark Mode) */
-            --bg-primary: #131314;
-            --bg-secondary: #1E1F20;
-            --bg-tertiary: #282A2C;
-            --text-primary: #E3E3E3;
-            --text-secondary: #8E918F;
-            --accent-glow: rgba(168, 199, 250, 0.15);
-            --accent-color: #A8C7FA; /* Google Gemini Soft Blue */
-            --accent-text: #041E49;
-            --border-color: #37393B;
-            --shadow-color: rgba(0, 0, 0, 0.5);
-            --editor-bg: #131314;
-            --preview-bg: #1E1F20;
-            --diff-del-bg: rgba(242, 184, 181, 0.2);
-            --diff-del-text: #F2B8B5;
-            --diff-ins-bg: rgba(196, 238, 206, 0.2);
-            --diff-ins-text: #C4EECE;
-            --glass-bg: rgba(30, 31, 32, 0.85);
+            /* Deep Obsidian Theme (Dark Mode - Warm Gold Accent) */
+            --bg-primary: #0A0A0B;
+            --bg-secondary: #121214;
+            --bg-tertiary: #1A1A1E;
+            --text-primary: #F0EDE6;
+            --text-secondary: #A09E99;
+            --accent-glow: rgba(226, 184, 116, 0.15);
+            --accent-color: #E2B874; /* Warm Gold avoids purple-on-dark cliché */
+            --accent-text: #121214;
+            --border-color: rgba(226, 184, 116, 0.2);
+            --shadow-color: rgba(0, 0, 0, 0.6);
+            --editor-bg: #0A0A0B;
+            --preview-bg: #0A0A0B;
+            --diff-del-bg: rgba(239, 68, 68, 0.2);
+            --diff-del-text: #F87171;
+            --diff-ins-bg: rgba(16, 185, 129, 0.2);
+            --diff-ins-text: #34D399;
+            --glass-bg: rgba(18, 18, 20, 0.75);
             --preview-zoom: 1;
         }
 
@@ -572,7 +572,7 @@
 
         .m3-pill-btn.accent {
             background-color: var(--accent-glow);
-            border-color: rgba(168, 199, 250, 0.4);
+            border-color: var(--border-color);
             color: var(--accent-color);
             font-weight: 600;
         }
@@ -782,54 +782,6 @@
             background-color: var(--bg-tertiary);
             color: var(--text-primary);
             border-color: var(--border-color);
-        }
-
-        /* Floating Studio Canvas Control Dock (NotebookLM Mindmap / Canvas Style) */
-        .studio-canvas-controls {
-            position: absolute;
-            top: 52px;
-            left: 18px;
-            z-index: 5;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 4px;
-            box-shadow: 0 4px 16px var(--shadow-color);
-            backdrop-filter: blur(8px);
-            opacity: 0.85;
-            transition: opacity 0.2s ease, transform 0.2s ease;
-        }
-
-        .studio-canvas-controls:hover {
-            opacity: 1;
-            transform: scale(1.02);
-        }
-
-        .studio-canvas-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: none;
-            background: transparent;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            font-size: 0.95rem;
-        }
-
-        .studio-canvas-btn:hover {
-            background-color: var(--bg-tertiary);
-            color: var(--text-primary);
-        }
-
-        .studio-canvas-btn:active {
-            transform: scale(0.92);
         }
 
         /* Bottom Studio Feedback Bar (NotebookLM Style) */
@@ -3864,14 +3816,6 @@
                     </div>
                 </div>
 
-                <!-- Floating Canvas Control Dock (NotebookLM Mindmap / Canvas Style) -->
-                <div class="studio-canvas-controls" id="studioCanvasControls" role="toolbar" aria-label="Preview Canvas Controls">
-                    <button type="button" class="studio-canvas-btn" id="previewResetZoomBtn" title="Reset Zoom (100%)" aria-label="Reset Zoom"><i class="ti ti-arrows-maximize"></i></button>
-                    <button type="button" class="studio-canvas-btn" id="previewZoomInBtn" title="Zoom In (+)" aria-label="Zoom In"><i class="ti ti-plus"></i></button>
-                    <button type="button" class="studio-canvas-btn" id="previewZoomOutBtn" title="Zoom Out (-)" aria-label="Zoom Out"><i class="ti ti-minus"></i></button>
-                    <button type="button" class="studio-canvas-btn" id="previewDownloadBtn" title="Export / Download Document" aria-label="Download Document"><i class="ti ti-download"></i></button>
-                </div>
-
                 <div class="preview-content" id="previewContent">
                     <!-- Rendered HTML -->
                 </div>
@@ -4243,7 +4187,7 @@
         // --- State Management ---
         let documents = [];
         let activeDocId = null;
-        let theme = 'dark';
+        let theme = 'light';
         let soundEnabled = true;
         let previewEnabled = true;
         let isZenMode = false;
@@ -4656,7 +4600,7 @@
 
             if (savedSettings) {
                 const settings = JSON.parse(savedSettings);
-                theme = settings.theme || 'dark';
+                theme = settings.theme || 'light';
                 soundEnabled = settings.soundEnabled !== false;
                 previewEnabled = settings.previewEnabled !== false;
                 apiKey = settings.apiKey || '';
@@ -8179,33 +8123,6 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         if (headerNewDocBtn) {
             headerNewDocBtn.onclick = () => {
                 if (newDocBtn) newDocBtn.click();
-            };
-        }
-
-        // Preview Dynamic Zoom Scaling
-        let previewZoomLevel = 1.0;
-        const previewResetZoomBtn = document.getElementById('previewResetZoomBtn');
-        const previewZoomInBtn = document.getElementById('previewZoomInBtn');
-        const previewZoomOutBtn = document.getElementById('previewZoomOutBtn');
-        const previewDownloadBtn = document.getElementById('previewDownloadBtn');
-
-        function setPreviewZoom(zoom) {
-            previewZoomLevel = Math.max(0.7, Math.min(1.6, Math.round(zoom * 10) / 10));
-            document.documentElement.style.setProperty('--preview-zoom', previewZoomLevel.toString());
-        }
-
-        if (previewZoomInBtn) {
-            previewZoomInBtn.onclick = () => setPreviewZoom(previewZoomLevel + 0.1);
-        }
-        if (previewZoomOutBtn) {
-            previewZoomOutBtn.onclick = () => setPreviewZoom(previewZoomLevel - 0.1);
-        }
-        if (previewResetZoomBtn) {
-            previewResetZoomBtn.onclick = () => setPreviewZoom(1.0);
-        }
-        if (previewDownloadBtn) {
-            previewDownloadBtn.onclick = () => {
-                if (exportBtn) exportBtn.click();
             };
         }
 

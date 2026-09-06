@@ -1,5 +1,5 @@
 // ZenWrite Web Editor Progressive Web App (PWA) Service Worker
-const CACHE_NAME = "zenwrite-editor-cache-v2.6.0";
+const CACHE_NAME = "zenwrite-editor-cache-v2.6.4";
 const STATIC_ASSETS = [
     "./",
     "./editor.html",
@@ -15,7 +15,7 @@ const STATIC_ASSETS = [
 self.addEventListener("install", (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log("[ZenWrite Editor SW] Pre-caching offline app shell v2.6.0");
+            console.log("[ZenWrite Editor SW] Pre-caching offline app shell v2.6.4");
             return cache.addAll(STATIC_ASSETS).catch((err) => {
                 console.warn("[ZenWrite SW] Pre-cache warning:", err);
             });
