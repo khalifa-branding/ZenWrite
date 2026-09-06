@@ -784,6 +784,54 @@
             border-color: var(--border-color);
         }
 
+        /* Floating Studio Canvas Control Dock (NotebookLM Mindmap / Canvas Style) */
+        .studio-canvas-controls {
+            position: absolute;
+            top: 52px;
+            left: 18px;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 4px;
+            box-shadow: 0 4px 16px var(--shadow-color);
+            backdrop-filter: blur(8px);
+            opacity: 0.85;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .studio-canvas-controls:hover {
+            opacity: 1;
+            transform: scale(1.02);
+        }
+
+        .studio-canvas-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-size: 0.95rem;
+        }
+
+        .studio-canvas-btn:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .studio-canvas-btn:active {
+            transform: scale(0.92);
+        }
+
         /* Bottom Studio Feedback Bar (NotebookLM Style) */
         .studio-feedback-bar {
             flex-shrink: 0;
@@ -865,336 +913,6 @@
             align-items: center;
             gap: 8px;
             min-width: 0;
-        }
-
-        /* NotebookLM Center Mode Switcher Tabs */
-        .studio-tab-group {
-            display: inline-flex;
-            align-items: center;
-            background-color: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 2px;
-            gap: 2px;
-        }
-
-        .studio-tab-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            font-family: 'Outfit', sans-serif;
-            font-size: 0.78rem;
-            font-weight: 500;
-            padding: 3px 12px;
-            border-radius: 16px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.15s ease;
-        }
-
-        .studio-tab-btn i {
-            font-size: 0.82rem;
-        }
-
-        .studio-tab-btn.active {
-            background-color: var(--bg-secondary);
-            color: var(--text-primary);
-            font-weight: 600;
-            box-shadow: 0 1px 4px var(--shadow-color);
-        }
-
-        .studio-tab-btn:hover:not(.active) {
-            color: var(--text-primary);
-        }
-
-        /* Center Pane Modes: Chat vs Markdown */
-        .pane-view-chat {
-            display: none;
-            flex-direction: column;
-            flex: 1 1 0;
-            min-height: 0;
-            position: relative;
-            background-color: var(--bg-secondary);
-            overflow: hidden;
-        }
-
-        #editorPane.mode-chat #paneViewChat {
-            display: flex;
-        }
-        #editorPane.mode-chat #editorTextareaWrapper {
-            display: none !important;
-        }
-        #editorPane.mode-chat #desktopFormatToolbar {
-            display: none !important;
-        }
-
-        #editorPane.mode-markdown #paneViewChat {
-            display: none !important;
-        }
-        #editorPane.mode-markdown #editorTextareaWrapper {
-            display: flex;
-        }
-        #editorPane.mode-markdown #desktopFormatToolbar {
-            display: flex;
-        }
-
-        .chat-message-stream {
-            flex: 1 1 0;
-            min-height: 0;
-            overflow-y: auto;
-            padding: 24px 28px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .chat-welcome-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            padding: 36px 20px;
-            max-width: 520px;
-            margin: auto;
-        }
-
-        .chat-welcome-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: var(--accent-glow);
-            color: var(--accent-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.45rem;
-            margin-bottom: 14px;
-        }
-
-        .chat-welcome-title {
-            font-size: 1.22rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin: 0 0 8px 0;
-        }
-
-        .chat-welcome-subtitle {
-            font-size: 0.88rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            margin: 0 0 20px 0;
-        }
-
-        .chat-prompt-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            justify-content: center;
-        }
-
-        .chat-prompt-chip {
-            background-color: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            border-radius: 18px;
-            padding: 6px 14px;
-            font-size: 0.78rem;
-            color: var(--text-primary);
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.15s ease;
-        }
-
-        .chat-prompt-chip:hover {
-            background-color: var(--bg-primary);
-            border-color: var(--accent-color);
-            color: var(--accent-color);
-            transform: translateY(-1px);
-        }
-
-        .chat-turn {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            max-width: 92%;
-        }
-
-        .chat-turn.user-turn {
-            align-self: flex-end;
-            align-items: flex-end;
-        }
-
-        .chat-turn.assistant-turn {
-            align-self: flex-start;
-            align-items: flex-start;
-            width: 100%;
-            max-width: 100%;
-        }
-
-        .chat-bubble.user-bubble {
-            background-color: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            border-radius: 20px 20px 4px 20px;
-            padding: 10px 18px;
-            color: var(--text-primary);
-            font-size: 0.9rem;
-            line-height: 1.5;
-            word-break: break-word;
-            box-shadow: 0 2px 8px var(--shadow-color);
-        }
-
-        .chat-bubble.assistant-bubble {
-            background: transparent;
-            color: var(--text-primary);
-            font-size: 0.92rem;
-            line-height: 1.6;
-            width: 100%;
-            word-break: break-word;
-        }
-
-        .chat-bubble.assistant-bubble p {
-            margin: 0 0 10px 0;
-        }
-
-        .chat-bubble.assistant-bubble ul,
-        .chat-bubble.assistant-bubble ol {
-            margin: 0 0 10px 20px;
-            padding: 0;
-        }
-
-        .chat-bubble.assistant-bubble li {
-            margin-bottom: 4px;
-        }
-
-        .chat-bubble.assistant-bubble code {
-            background-color: var(--bg-tertiary);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'Fira Code', monospace;
-            font-size: 0.84rem;
-        }
-
-        .chat-bubble.assistant-bubble pre {
-            background-color: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 12px;
-            overflow-x: auto;
-            font-family: 'Fira Code', monospace;
-            font-size: 0.84rem;
-            margin: 10px 0;
-        }
-
-        .chat-turn-actions {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-top: 6px;
-            flex-wrap: wrap;
-        }
-
-        .chat-action-pill {
-            background-color: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 4px 11px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.15s ease;
-        }
-
-        .chat-action-pill:hover {
-            background-color: var(--bg-primary);
-            border-color: var(--accent-color);
-            color: var(--text-primary);
-        }
-
-        .chat-action-pill.primary {
-            background-color: var(--accent-color);
-            border-color: var(--accent-color);
-            color: var(--accent-text);
-            font-weight: 600;
-        }
-
-        .chat-action-pill.primary:hover {
-            opacity: 0.92;
-            box-shadow: 0 2px 8px var(--accent-glow);
-        }
-
-        .chat-action-pill.icon-only {
-            padding: 4px 8px;
-            font-size: 0.82rem;
-        }
-
-        .chat-typing-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--accent-color);
-            font-size: 0.85rem;
-            font-weight: 500;
-            padding: 8px 14px;
-            background-color: var(--accent-glow);
-            border-radius: 16px;
-        }
-
-        /* Pinned Bottom Capsule Bar in Center Chat Pane */
-        .chat-capsule-container {
-            padding: 12px 24px 16px;
-            background: linear-gradient(to top, var(--bg-secondary) 85%, transparent);
-            flex-shrink: 0;
-        }
-
-        .chat-capsule-box {
-            position: relative;
-            background-color: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 10px 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            box-shadow: 0 4px 16px var(--shadow-color);
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .chat-capsule-box:focus-within {
-            border-color: var(--accent-color);
-            box-shadow: 0 0 0 3px var(--accent-glow), 0 4px 16px var(--shadow-color);
-        }
-
-        .chat-capsule-input {
-            width: 100%;
-            background: transparent;
-            border: none;
-            color: var(--text-primary);
-            font-family: inherit;
-            font-size: 0.9rem;
-            resize: none;
-            outline: none;
-            min-height: 24px;
-            max-height: 120px;
-            line-height: 1.4;
-            box-sizing: border-box;
-        }
-
-        .chat-capsule-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        /* Suppress 4th side-drawer to preserve 3-zone architecture */
-        #aiDrawer {
-            display: none !important;
         }
 
         .selection-badge {
@@ -4001,18 +3719,11 @@
 
         <!-- Editor & Preview Panel -->
         <div class="editor-container">
-            <!-- Center Interactive Workspace Pane (Gemini Chat & Markdown Drafting) -->
-            <section class="pane mode-chat" id="editorPane">
+            <!-- Editor Pane -->
+            <section class="pane" id="editorPane">
                 <div class="pane-header">
                     <div class="pane-header-left">
-                        <div class="studio-tab-group" role="tablist" aria-label="Center Workspace Mode">
-                            <button type="button" class="studio-tab-btn active" id="paneTabChat" role="tab" aria-selected="true" title="Interactive Gemini AI Chat">
-                                <i class="ti ti-sparkles"></i> <span>Chat</span>
-                            </button>
-                            <button type="button" class="studio-tab-btn" id="paneTabMarkdown" role="tab" aria-selected="false" title="Raw Markdown Drafting">
-                                <i class="ti ti-edit"></i> <span>Markdown</span>
-                            </button>
-                        </div>
+                        <span>Editor</span>
                     </div>
                     <!-- Desktop Formatting Action Toolbar -->
                     <div class="desktop-format-toolbar" id="desktopFormatToolbar" role="toolbar" aria-label="Desktop Text Formatting">
@@ -4112,45 +3823,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Center Interactive Chat View (NotebookLM Style) -->
-                <div class="pane-view-chat" id="paneViewChat">
-                    <div class="chat-message-stream" id="chatMessageStream">
-                        <div class="chat-welcome-card" id="chatWelcomeCard">
-                            <div class="chat-welcome-icon"><i class="ti ti-sparkles"></i></div>
-                            <h3 class="chat-welcome-title">Gemini AI Workspace</h3>
-                            <p class="chat-welcome-subtitle">Ask questions, synthesize notes, or draft content grounded in your active document.</p>
-                            <div class="chat-prompt-chips">
-                                <button type="button" class="chat-prompt-chip" data-prompt="Draft a comprehensive, structured article based on my notes.">
-                                    <i class="ti ti-pencil"></i> Draft article
-                                </button>
-                                <button type="button" class="chat-prompt-chip" data-prompt="Synthesize and summarize the key takeaways of this document.">
-                                    <i class="ti ti-bulb"></i> Key takeaways
-                                </button>
-                                <button type="button" class="chat-prompt-chip" data-prompt="Engineer a 5-Part Master Prompt for this topic.">
-                                    <i class="ti ti-wand"></i> 5-Part Master Prompt
-                                </button>
-                                <button type="button" class="chat-prompt-chip" data-prompt="Explain the core concepts of this document in simple, clear terms.">
-                                    <i class="ti ti-info-circle"></i> Explain concepts
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Pinned Bottom Capsule Prompt Bar (NotebookLM style) -->
-                    <div class="chat-capsule-container" id="chatCapsuleContainer">
-                        <div class="chat-capsule-box">
-                            <textarea class="chat-capsule-input" id="chatPromptInput" placeholder="Ask a question or create something..." rows="1" aria-label="Ask Gemini a question"></textarea>
-                            <div class="chat-capsule-footer">
-                                <span class="capsule-source-chip" id="chatSourceChip" title="Active Document Context"><i class="ti ti-file-text"></i> 1 source</span>
-                                <button type="button" class="gemini-capsule-send-btn" id="chatSendBtn" title="Send to Gemini (Enter)" aria-label="Send to Gemini">
-                                    <i class="ti ti-arrow-right"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- AI Agent Paste Detection Banner -->
                 <div class="agent-prompt-banner" id="agentPromptBanner" style="display: none;">
                     <div class="agent-banner-info">
@@ -4166,7 +3838,7 @@
                         </button>
                     </div>
                 </div>
-                <div class="editor-textarea-wrapper" id="editorTextareaWrapper">
+                <div class="editor-textarea-wrapper">
                     <div class="line-numbers" id="lineNumbers">1</div>
                     <textarea class="editor-textarea" id="editorTextarea" placeholder="Paste or write any text, draft, notes, email, or prompt idea here... then tap any AI Action to transform it into your desired output!"></textarea>
                 </div>
@@ -4187,14 +3859,17 @@
                         <span class="breadcrumb-badge">Live</span>
                     </div>
                     <div class="pane-header-actions" style="margin-left: auto; border-left: none;">
-                        <button type="button" class="studio-header-btn" id="previewZoomOutBtn" title="Zoom Out (-)" aria-label="Zoom Out"><i class="ti ti-minus"></i></button>
-                        <button type="button" class="studio-header-btn" id="previewResetZoomBtn" title="Reset Zoom (100%)" aria-label="Reset Zoom"><i class="ti ti-zoom-reset"></i></button>
-                        <button type="button" class="studio-header-btn" id="previewZoomInBtn" title="Zoom In (+)" aria-label="Zoom In"><i class="ti ti-plus"></i></button>
-                        <div class="format-tool-separator" role="separator" style="height: 16px; margin: 0 4px;"></div>
                         <button type="button" class="studio-header-btn" id="previewCopyHtmlBtn" title="Copy Rendered HTML" aria-label="Copy Rendered HTML"><i class="ti ti-code"></i></button>
-                        <button type="button" class="studio-header-btn" id="previewDownloadBtn" title="Export / Download Document" aria-label="Download Document"><i class="ti ti-download"></i></button>
                         <button type="button" class="studio-header-btn" id="previewExpandBtn" title="Toggle Preview Pane Width" aria-label="Toggle Preview Pane Width"><i class="ti ti-arrows-maximize"></i></button>
                     </div>
+                </div>
+
+                <!-- Floating Canvas Control Dock (NotebookLM Mindmap / Canvas Style) -->
+                <div class="studio-canvas-controls" id="studioCanvasControls" role="toolbar" aria-label="Preview Canvas Controls">
+                    <button type="button" class="studio-canvas-btn" id="previewResetZoomBtn" title="Reset Zoom (100%)" aria-label="Reset Zoom"><i class="ti ti-arrows-maximize"></i></button>
+                    <button type="button" class="studio-canvas-btn" id="previewZoomInBtn" title="Zoom In (+)" aria-label="Zoom In"><i class="ti ti-plus"></i></button>
+                    <button type="button" class="studio-canvas-btn" id="previewZoomOutBtn" title="Zoom Out (-)" aria-label="Zoom Out"><i class="ti ti-minus"></i></button>
+                    <button type="button" class="studio-canvas-btn" id="previewDownloadBtn" title="Export / Download Document" aria-label="Download Document"><i class="ti ti-download"></i></button>
                 </div>
 
                 <div class="preview-content" id="previewContent">
@@ -7791,25 +7466,16 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         rejectDiffBtn.onclick = () => diffModalOverlay.style.display = 'none';
         closeDiffModal.onclick = () => diffModalOverlay.style.display = 'none';
 
-        // AI Studio Top-Bar Action: Activates NotebookLM center Chat workspace
-        if (aiDrawerToggle) {
-            aiDrawerToggle.onclick = () => {
-                if (typeof setCenterPaneMode === 'function') {
-                    setCenterPaneMode('chat');
-                }
-                const chatInput = document.getElementById('chatPromptInput');
-                if (chatInput) {
-                    setTimeout(() => chatInput.focus(), 50);
-                }
-            };
-        }
+        // AI Drawer side panel toggle
+        aiDrawerToggle.onclick = () => {
+            aiDrawer.classList.toggle('hidden');
+            if (typeof updateBackdropState === 'function') updateBackdropState();
+        };
 
-        if (aiDrawerClose) {
-            aiDrawerClose.onclick = () => {
-                if (aiDrawer) aiDrawer.classList.add('hidden');
-                if (typeof updateBackdropState === 'function') updateBackdropState();
-            };
-        }
+        aiDrawerClose.onclick = () => {
+            aiDrawer.classList.add('hidden');
+            if (typeof updateBackdropState === 'function') updateBackdropState();
+        };
 
         // AI Drawer draft action
         aiDraftBtn.onclick = async () => {
@@ -8615,241 +8281,6 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             };
         }
 
-        // --- NotebookLM Center Pane (Chat & Markdown Drafting) Controller ---
-        const editorPane = document.getElementById('editorPane');
-        const paneTabChat = document.getElementById('paneTabChat');
-        const paneTabMarkdown = document.getElementById('paneTabMarkdown');
-        const desktopFormatToolbar = document.getElementById('desktopFormatToolbar');
-        const chatMessageStream = document.getElementById('chatMessageStream');
-        const chatWelcomeCard = document.getElementById('chatWelcomeCard');
-        const chatPromptInput = document.getElementById('chatPromptInput');
-        const chatSendBtn = document.getElementById('chatSendBtn');
-        const chatSourceChip = document.getElementById('chatSourceChip');
-
-        function setCenterPaneMode(mode) {
-            if (!editorPane) return;
-            if (mode === 'chat') {
-                editorPane.classList.remove('mode-markdown');
-                editorPane.classList.add('mode-chat');
-                if (paneTabChat) {
-                    paneTabChat.classList.add('active');
-                    paneTabChat.setAttribute('aria-selected', 'true');
-                }
-                if (paneTabMarkdown) {
-                    paneTabMarkdown.classList.remove('active');
-                    paneTabMarkdown.setAttribute('aria-selected', 'false');
-                }
-                if (chatMessageStream) {
-                    chatMessageStream.scrollTop = chatMessageStream.scrollHeight;
-                }
-            } else {
-                editorPane.classList.remove('mode-chat');
-                editorPane.classList.add('mode-markdown');
-                if (paneTabMarkdown) {
-                    paneTabMarkdown.classList.add('active');
-                    paneTabMarkdown.setAttribute('aria-selected', 'true');
-                }
-                if (paneTabChat) {
-                    paneTabChat.classList.remove('active');
-                    paneTabChat.setAttribute('aria-selected', 'false');
-                }
-                if (typeof renderEditor === 'function') renderEditor();
-                if (lineNumbers && editorTextarea) lineNumbers.scrollTop = editorTextarea.scrollTop;
-            }
-            try { localStorage.setItem('zenwrite_center_mode', mode); } catch (e) {}
-        }
-
-        if (paneTabChat) paneTabChat.onclick = () => setCenterPaneMode('chat');
-        if (paneTabMarkdown) paneTabMarkdown.onclick = () => setCenterPaneMode('markdown');
-
-        // Auto-update source chip with current document title
-        function updateChatSourceChip() {
-            if (!chatSourceChip) return;
-            const docTitle = documentTitleInput ? documentTitleInput.value.trim() : '';
-            chatSourceChip.innerHTML = `<i class="ti ti-file-text"></i> ${docTitle || '1 source'}`;
-        }
-        if (documentTitleInput) {
-            documentTitleInput.addEventListener('input', updateChatSourceChip);
-        }
-
-        // Auto-expanding chat textarea
-        if (chatPromptInput) {
-            chatPromptInput.addEventListener('input', () => {
-                chatPromptInput.style.height = 'auto';
-                chatPromptInput.style.height = Math.min(120, Math.max(24, chatPromptInput.scrollHeight)) + 'px';
-            });
-            chatPromptInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    if (chatSendBtn) chatSendBtn.click();
-                }
-            });
-        }
-
-        // Prompt Chips Click Handlers
-        document.querySelectorAll('.chat-prompt-chip').forEach(chip => {
-            chip.onclick = () => {
-                const prompt = chip.getAttribute('data-prompt');
-                if (prompt && chatPromptInput) {
-                    chatPromptInput.value = prompt;
-                    chatPromptInput.style.height = 'auto';
-                    chatPromptInput.style.height = Math.min(120, Math.max(24, chatPromptInput.scrollHeight)) + 'px';
-                    if (chatSendBtn) chatSendBtn.click();
-                }
-            };
-        });
-
-        // NotebookLM Conversational Chat Turn Engine
-        let isChatGenerating = false;
-
-        async function sendChatMessage(userText) {
-            if (!userText || !userText.trim() || isChatGenerating) return;
-            isChatGenerating = true;
-
-            if (chatWelcomeCard) chatWelcomeCard.style.display = 'none';
-
-            // 1. Render User Turn
-            const userTurn = document.createElement('div');
-            userTurn.className = 'chat-turn user-turn';
-            const userBubble = document.createElement('div');
-            userBubble.className = 'chat-bubble user-bubble';
-            userBubble.textContent = userText.trim();
-            userTurn.appendChild(userBubble);
-            chatMessageStream.appendChild(userTurn);
-
-            // Clear & reset input
-            if (chatPromptInput) {
-                chatPromptInput.value = '';
-                chatPromptInput.style.height = 'auto';
-            }
-
-            // 2. Render Assistant Turn with Typing Indicator
-            const turnId = 'turn_' + Date.now();
-            const assistantTurn = document.createElement('div');
-            assistantTurn.className = 'chat-turn assistant-turn';
-            assistantTurn.id = turnId;
-
-            assistantTurn.innerHTML = `
-                <div class="chat-typing-indicator">
-                    <i class="ti ti-sparkles"></i> <span>Gemini is synthesizing...</span>
-                </div>
-            `;
-            chatMessageStream.appendChild(assistantTurn);
-            chatMessageStream.scrollTop = chatMessageStream.scrollHeight;
-
-            // 3. Call Gemini AI with active document context
-            const docContext = editorTextarea ? editorTextarea.value.trim() : '';
-            const instruction = "You are a professional research and drafting assistant in Google Gemini NotebookLM. Ground your response in the provided document context where relevant. Provide an insightful, well-structured output in clean markdown with headings and bullet points. Return ONLY the synthesized response.";
-            
-            try {
-                const response = await runGeminiAI(instruction, userText.trim(), docContext);
-                if (response) {
-                    const parsedHtml = (typeof parseMarkdown === 'function') ? parseMarkdown(response) : response;
-                    assistantTurn.innerHTML = `
-                        <div class="chat-bubble assistant-bubble">
-                            <div class="gemini-thoughts-card">
-                                <button type="button" class="gemini-thoughts-header" aria-expanded="false">
-                                    <i class="ti ti-sparkles"></i> <span>Thoughts</span> <i class="ti ti-chevron-down thoughts-chevron"></i>
-                                </button>
-                                <div class="gemini-thoughts-body" style="display: none;">
-                                    Analyzed document context and user intent. Structured synthesis with clear visual hierarchy, actionable takeaways, and clean markdown ready for note creation.
-                                </div>
-                            </div>
-                            <div class="chat-response-content">${parsedHtml}</div>
-                            <div class="chat-turn-actions">
-                                <button type="button" class="chat-action-pill primary chat-save-draft-btn" title="Save to Studio Draft Canvas">
-                                    <i class="ti ti-notes"></i> <span>Save to Draft</span>
-                                </button>
-                                <button type="button" class="chat-action-pill chat-copy-btn" title="Copy response text">
-                                    <i class="ti ti-copy"></i> <span>Copy</span>
-                                </button>
-                                <button type="button" class="chat-action-pill icon-only chat-good-btn" title="Good response"><i class="ti ti-thumb-up"></i></button>
-                                <button type="button" class="chat-action-pill icon-only chat-bad-btn" title="Bad response"><i class="ti ti-thumb-down"></i></button>
-                            </div>
-                        </div>
-                    `;
-
-                    // Wire up Thoughts accordion
-                    const thoughtsHeader = assistantTurn.querySelector('.gemini-thoughts-header');
-                    const thoughtsBody = assistantTurn.querySelector('.gemini-thoughts-body');
-                    if (thoughtsHeader && thoughtsBody) {
-                        thoughtsHeader.onclick = () => {
-                            const isExp = thoughtsHeader.getAttribute('aria-expanded') === 'true';
-                            thoughtsHeader.setAttribute('aria-expanded', !isExp);
-                            thoughtsBody.style.display = isExp ? 'none' : 'block';
-                        };
-                    }
-
-                    // Wire up Save to Draft button -> Updates Right Studio Canvas
-                    const saveBtn = assistantTurn.querySelector('.chat-save-draft-btn');
-                    if (saveBtn) {
-                        saveBtn.onclick = () => {
-                            if (editorTextarea) {
-                                const current = editorTextarea.value.trim();
-                                if (!current || current.startsWith('# ⚡ Welcome to ZenWrite AI') || current.startsWith('# Welcome to ZenWrite')) {
-                                    editorTextarea.value = response;
-                                } else {
-                                    editorTextarea.value = current + "\n\n---\n\n" + response;
-                                }
-                                if (typeof renderEditor === 'function') renderEditor();
-                                if (typeof triggerAutosave === 'function') triggerAutosave();
-                                if (typeof commitEditorMutation === 'function') {
-                                    commitEditorMutation(editorTextarea.value, editorTextarea.value.length, editorTextarea.value.length, false);
-                                }
-                                saveBtn.classList.remove('primary');
-                                saveBtn.innerHTML = '<i class="ti ti-check"></i> <span>Saved to Studio!</span>';
-                                if (typeof showUndoToast === 'function') {
-                                    showUndoToast('Draft synced to Right Studio Canvas');
-                                }
-                            }
-                        };
-                    }
-
-                    // Wire up Copy button
-                    const copyBtn = assistantTurn.querySelector('.chat-copy-btn');
-                    if (copyBtn) {
-                        copyBtn.onclick = async () => {
-                            if (typeof copyTextToClipboard === 'function') {
-                                await copyTextToClipboard(response);
-                                copyBtn.innerHTML = '<i class="ti ti-check"></i> <span>Copied!</span>';
-                                setTimeout(() => {
-                                    copyBtn.innerHTML = '<i class="ti ti-copy"></i> <span>Copy</span>';
-                                }, 2000);
-                            }
-                        };
-                    }
-
-                    // Thumbs up / down
-                    const goodBtn = assistantTurn.querySelector('.chat-good-btn');
-                    const badBtn = assistantTurn.querySelector('.chat-bad-btn');
-                    if (goodBtn) goodBtn.onclick = () => { goodBtn.classList.toggle('active'); if (badBtn) badBtn.classList.remove('active'); };
-                    if (badBtn) badBtn.onclick = () => { badBtn.classList.toggle('active'); if (goodBtn) goodBtn.classList.remove('active'); };
-
-                } else {
-                    assistantTurn.innerHTML = `
-                        <div class="chat-bubble assistant-bubble" style="color: #EF4444;">
-                            <i class="ti ti-alert-circle"></i> Failed to generate response. Please verify your Gemini API key in Settings.
-                        </div>
-                    `;
-                }
-            } catch (err) {
-                assistantTurn.innerHTML = `
-                    <div class="chat-bubble assistant-bubble" style="color: #EF4444;">
-                        <i class="ti ti-alert-circle"></i> Error: ${err.message || 'Unknown network error'}
-                    </div>
-                `;
-            } finally {
-                isChatGenerating = false;
-                chatMessageStream.scrollTop = chatMessageStream.scrollHeight;
-            }
-        }
-
-        if (chatSendBtn) {
-            chatSendBtn.onclick = () => {
-                if (chatPromptInput) sendChatMessage(chatPromptInput.value);
-            };
-        }
-
         // Initialize App
         window.onload = () => {
             loadFromLocalStorage();
@@ -8861,8 +8292,6 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             }
             if (typeof updateBackdropState === 'function') updateBackdropState();
             if (typeof updateSidebarEdgeTabState === 'function') updateSidebarEdgeTabState();
-            setCenterPaneMode(localStorage.getItem('zenwrite_center_mode') || 'chat');
-            updateChatSourceChip();
         };
 
     </script>
