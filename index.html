@@ -104,6 +104,9 @@
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
+            height: 100%;
+            min-height: 0;
+            overflow: hidden;
             z-index: 10;
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -120,6 +123,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-shrink: 0;
         }
 
         .logo {
@@ -167,7 +171,8 @@
         }
 
         .doc-list {
-            flex: 1;
+            flex: 1 1 auto;
+            min-height: 0;
             overflow-y: auto;
             padding: 16px 12px;
             display: flex;
@@ -270,6 +275,7 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            flex-shrink: 0;
         }
 
         .sidebar-footer-btn {
@@ -306,6 +312,7 @@
             display: flex;
             flex-direction: column;
             height: 100%;
+            min-height: 0;
             position: relative;
             overflow: hidden;
         }
@@ -890,8 +897,8 @@
         }
 
         .editor-textarea-wrapper {
-            flex: 1;
-            height: calc(100% - 38px);
+            flex: 1 1 0;
+            height: auto;
             min-height: 0;
             position: relative;
             display: flex;
@@ -911,7 +918,7 @@
             flex-shrink: 0;
             background-color: var(--bg-secondary);
             border-right: 1px solid var(--border-color);
-            padding: 20px 8px 20px 0;
+            padding: 24px 8px 24px 0;
             text-align: right;
             font-family: 'Fira Code', monospace;
             font-size: 0.95rem; /* Matches editor-textarea font-size */
@@ -951,7 +958,8 @@
         }
 
         .preview-content {
-            flex: 1;
+            flex: 1 1 auto;
+            min-height: 0;
             padding: 24px;
             overflow-y: auto;
             line-height: 1.7;
@@ -1815,6 +1823,9 @@
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
+            height: 100%;
+            min-height: 0;
+            overflow: hidden;
             z-index: 10;
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
@@ -1833,6 +1844,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-shrink: 0;
         }
 
         .ai-drawer-title {
@@ -1848,7 +1860,8 @@
         }
 
         .ai-drawer-body {
-            flex: 1;
+            flex: 1 1 auto;
+            min-height: 0;
             padding: 16px;
             overflow-y: auto;
             display: flex;
@@ -2347,6 +2360,7 @@
         /* AI Agent Paste Detection Banner */
         .agent-prompt-banner {
             display: flex;
+            flex-shrink: 0;
             align-items: center;
             justify-content: space-between;
             background: linear-gradient(135deg, rgba(212, 160, 23, 0.12), rgba(212, 160, 23, 0.04));
@@ -2585,6 +2599,10 @@
                 width: 100%;
                 box-sizing: border-box;
             }
+            .line-numbers {
+                padding: 28px 8px 28px 0;
+                font-size: 1rem;
+            }
             .editor-textarea {
                 padding: 28px;
                 font-size: 1rem;
@@ -2623,6 +2641,9 @@
             }
             .preview-content {
                 padding: 20px 24px;
+            }
+            .line-numbers {
+                padding: 18px 8px 18px 0;
             }
             .editor-textarea {
                 padding: 18px 20px;
@@ -2773,6 +2794,11 @@
                 height: 100dvh !important;
                 width: 100vw !important;
                 max-width: 420px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                overflow: hidden !important;
+                min-height: 0 !important;
+                box-sizing: border-box !important;
                 z-index: 300 !important;
                 box-shadow: -12px 0 48px rgba(0, 0, 0, 0.45) !important;
                 transform: translateX(0) !important;
@@ -2780,6 +2806,17 @@
                 padding-top: env(safe-area-inset-top, 0px);
                 padding-bottom: env(safe-area-inset-bottom, 0px);
                 padding-right: env(safe-area-inset-right, 0px);
+            }
+
+            .ai-drawer-header {
+                flex-shrink: 0 !important;
+            }
+
+            .ai-drawer-body {
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
             }
 
             .ai-drawer.hidden, #aiDrawer.hidden, #proofreaderDrawer.hidden {
@@ -2914,7 +2951,9 @@
 
             /* Full-height Editor wrapper on mobile */
             .editor-textarea-wrapper {
-                height: 100% !important;
+                flex: 1 1 0 !important;
+                height: auto !important;
+                min-height: 0 !important;
             }
 
             /* Hide line numbers gutter on mobile to maximize horizontal width */
@@ -4263,6 +4302,7 @@ Your 1-Click AI Transformation Canvas for everyday writing, drafts, and prompt e
             // Line numbers mapping
             const lines = content.split('\n');
             lineNumbers.innerHTML = lines.map((_, i) => i + 1).join('<br>');
+            lineNumbers.scrollTop = editorTextarea.scrollTop;
 
             // Real-time Content Awareness Sensing
             if (typeof updateContentSenseUI === 'function') {
@@ -6141,6 +6181,9 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         editorTextarea.onscroll = () => {
             lineNumbers.scrollTop = editorTextarea.scrollTop;
         };
+        editorTextarea.addEventListener('scroll', () => {
+            lineNumbers.scrollTop = editorTextarea.scrollTop;
+        }, { passive: true });
 
         // Typewriter click listener & Autocomplete handler
         editorTextarea.onkeydown = async (e) => {
