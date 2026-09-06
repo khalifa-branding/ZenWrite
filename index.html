@@ -3767,16 +3767,10 @@
         class DocumentHistoryManager {
             constructor(maxDepth = 120) {
                 this.maxDepth = maxDepth;
-                this.undoStack = [];
-                this.redoStack = [];
-                this.currentValue = '';
-                this.currentStart = 0;
-                this.currentEnd = 0;
-                this.lastTypingTime = 0;
-                this.isHistoryAction = false;
+                this.init('');
             }
 
-            init(value, start = 0, end = 0) {
+            init(value = '', start = 0, end = 0) {
                 this.undoStack = [];
                 this.redoStack = [];
                 this.currentValue = value || '';
@@ -3786,14 +3780,16 @@
                 this.isHistoryAction = false;
             }
 
+            _push(stack, item) {
+                stack.push(item);
+                if (stack.length > this.maxDepth) stack.shift();
+            }
+
             recordBeforeChange(value, start, end) {
                 if (this.isHistoryAction) return;
                 const last = this.undoStack[this.undoStack.length - 1];
                 if (!last || last.value !== value) {
-                    this.undoStack.push({ value, start, end });
-                    if (this.undoStack.length > this.maxDepth) {
-                        this.undoStack.shift();
-                    }
+                    this._push(this.undoStack, { value, start, end });
                 }
                 this.redoStack = [];
                 this.currentValue = value;
@@ -3819,14 +3815,11 @@
                 this.currentEnd = end;
             }
 
-            undo(currentVal, currentStart, currentEnd) {
-                if (this.undoStack.length === 0) return null;
+            _step(sourceStack, targetStack, currentVal, currentStart, currentEnd) {
+                if (!sourceStack.length) return null;
                 this.isHistoryAction = true;
-                this.redoStack.push({ value: currentVal, start: currentStart, end: currentEnd });
-                if (this.redoStack.length > this.maxDepth) {
-                    this.redoStack.shift();
-                }
-                const state = this.undoStack.pop();
+                this._push(targetStack, { value: currentVal, start: currentStart, end: currentEnd });
+                const state = sourceStack.pop();
                 this.currentValue = state.value;
                 this.currentStart = state.start;
                 this.currentEnd = state.end;
@@ -3834,19 +3827,12 @@
                 return state;
             }
 
+            undo(currentVal, currentStart, currentEnd) {
+                return this._step(this.undoStack, this.redoStack, currentVal, currentStart, currentEnd);
+            }
+
             redo(currentVal, currentStart, currentEnd) {
-                if (this.redoStack.length === 0) return null;
-                this.isHistoryAction = true;
-                this.undoStack.push({ value: currentVal, start: currentStart, end: currentEnd });
-                if (this.undoStack.length > this.maxDepth) {
-                    this.undoStack.shift();
-                }
-                const state = this.redoStack.pop();
-                this.currentValue = state.value;
-                this.currentStart = state.start;
-                this.currentEnd = state.end;
-                this.isHistoryAction = false;
-                return state;
+                return this._step(this.redoStack, this.undoStack, currentVal, currentStart, currentEnd);
             }
 
             canUndo() {
@@ -3880,30 +3866,35 @@
             if (redoBtn) redoBtn.disabled = !docHistory.canRedo();
         }
 
+        function _applyHistoryState(state) {
+            if (!state || !editorTextarea) return;
+            editorTextarea.value = state.value;
+            editorTextarea.setSelectionRange(state.start, state.end);
+            renderEditor();
+            triggerAutosave();
+            playClickSound();
+            updateUndoRedoButtons();
+        }
+
         function historyUndo() {
             if (!docHistory || !editorTextarea) return;
-            const state = docHistory.undo(editorTextarea.value, editorTextarea.selectionStart, editorTextarea.selectionEnd);
-            if (state) {
-                editorTextarea.value = state.value;
-                editorTextarea.setSelectionRange(state.start, state.end);
-                renderEditor();
-                triggerAutosave();
-                playClickSound();
-                updateUndoRedoButtons();
-            }
+            _applyHistoryState(docHistory.undo(editorTextarea.value, editorTextarea.selectionStart, editorTextarea.selectionEnd));
         }
 
         function historyRedo() {
             if (!docHistory || !editorTextarea) return;
-            const state = docHistory.redo(editorTextarea.value, editorTextarea.selectionStart, editorTextarea.selectionEnd);
-            if (state) {
-                editorTextarea.value = state.value;
-                editorTextarea.setSelectionRange(state.start, state.end);
-                renderEditor();
-                triggerAutosave();
-                playClickSound();
-                updateUndoRedoButtons();
-            }
+            _applyHistoryState(docHistory.redo(editorTextarea.value, editorTextarea.selectionStart, editorTextarea.selectionEnd));
+        }
+
+        // Helper to commit an editor mutation with undo snapshot, cursor update, and UI refresh
+        function commitEditorMutation(newVal, newStart, newEnd = newStart, playSound = false) {
+            historyRecordState(true);
+            editorTextarea.value = newVal;
+            editorTextarea.setSelectionRange(newStart, newEnd);
+            renderEditor();
+            triggerAutosave();
+            if (playSound) playClickSound();
+            updateUndoRedoButtons();
         }
 
         // --- Custom Markdown Parser ---
@@ -5763,20 +5754,10 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         }
 
         // Bind Undo & Redo Toolbar Buttons
-        const formatUndoBtn = document.getElementById('formatUndoBtn');
-        if (formatUndoBtn) {
-            formatUndoBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                historyUndo();
-            });
-        }
-        const formatRedoBtn = document.getElementById('formatRedoBtn');
-        if (formatRedoBtn) {
-            formatRedoBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                historyRedo();
-            });
-        }
+        [['formatUndoBtn', historyUndo], ['formatRedoBtn', historyRedo]].forEach(([id, fn]) => {
+            const btn = document.getElementById(id);
+            if (btn) btn.addEventListener('click', (e) => { e.preventDefault(); fn(); });
+        });
 
         // Bind Desktop Formatting Toolbar Buttons
         document.querySelectorAll('.desktop-format-toolbar .format-tool-btn').forEach(btn => {
@@ -6218,65 +6199,51 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                     const emptyTaskM = lineBeforeCursor.match(/^(\s*)-\s\[[ xX]?\]\s*$/);
                     if (emptyTaskM) {
                         e.preventDefault();
-                        historyRecordState(true);
                         const indent = emptyTaskM[1];
                         if (indent.length >= 2) {
-                            const newIndent = indent.substring(2);
-                            const replacement = `${newIndent}- [ ] `;
-                            editorTextarea.value = val.substring(0, lineStart) + replacement + val.substring(lineEnd);
-                            editorTextarea.selectionStart = editorTextarea.selectionEnd = lineStart + replacement.length;
+                            const replacement = `${indent.substring(2)}- [ ] `;
+                            commitEditorMutation(val.substring(0, lineStart) + replacement + val.substring(lineEnd), lineStart + replacement.length);
                         } else {
-                            editorTextarea.value = val.substring(0, lineStart) + val.substring(lineEnd);
-                            editorTextarea.selectionStart = editorTextarea.selectionEnd = lineStart;
+                            commitEditorMutation(val.substring(0, lineStart) + val.substring(lineEnd), lineStart);
                         }
-                        renderEditor(); triggerAutosave(); updateUndoRedoButtons(); return;
+                        return;
                     }
 
                     // Empty Bullet: "- ", "* ", "+ "
                     const emptyBulletM = lineBeforeCursor.match(/^(\s*)([-*+])\s*$/);
                     if (emptyBulletM) {
                         e.preventDefault();
-                        historyRecordState(true);
                         const indent = emptyBulletM[1];
                         const marker = emptyBulletM[2];
                         if (indent.length >= 2) {
-                            const newIndent = indent.substring(2);
-                            const replacement = `${newIndent}${marker} `;
-                            editorTextarea.value = val.substring(0, lineStart) + replacement + val.substring(lineEnd);
-                            editorTextarea.selectionStart = editorTextarea.selectionEnd = lineStart + replacement.length;
+                            const replacement = `${indent.substring(2)}${marker} `;
+                            commitEditorMutation(val.substring(0, lineStart) + replacement + val.substring(lineEnd), lineStart + replacement.length);
                         } else {
-                            editorTextarea.value = val.substring(0, lineStart) + val.substring(lineEnd);
-                            editorTextarea.selectionStart = editorTextarea.selectionEnd = lineStart;
+                            commitEditorMutation(val.substring(0, lineStart) + val.substring(lineEnd), lineStart);
                         }
-                        renderEditor(); triggerAutosave(); updateUndoRedoButtons(); return;
+                        return;
                     }
 
                     // Empty Numbered: "1. ", "2. ", etc.
                     const emptyNumM = lineBeforeCursor.match(/^(\s*)\d+\.\s*$/);
                     if (emptyNumM) {
                         e.preventDefault();
-                        historyRecordState(true);
                         const indent = emptyNumM[1];
                         if (indent.length >= 2) {
-                            const newIndent = indent.substring(2);
-                            const replacement = `${newIndent}1. `;
-                            editorTextarea.value = val.substring(0, lineStart) + replacement + val.substring(lineEnd);
-                            editorTextarea.selectionStart = editorTextarea.selectionEnd = lineStart + replacement.length;
+                            const replacement = `${indent.substring(2)}1. `;
+                            commitEditorMutation(val.substring(0, lineStart) + replacement + val.substring(lineEnd), lineStart + replacement.length);
                         } else {
-                            editorTextarea.value = val.substring(0, lineStart) + val.substring(lineEnd);
-                            editorTextarea.selectionStart = editorTextarea.selectionEnd = lineStart;
+                            commitEditorMutation(val.substring(0, lineStart) + val.substring(lineEnd), lineStart);
                         }
-                        renderEditor(); triggerAutosave(); updateUndoRedoButtons(); return;
+                        return;
                     }
 
                     // Empty Blockquote: "> "
                     const emptyQuoteM = lineBeforeCursor.match(/^(\s*)>\s*$/);
                     if (emptyQuoteM) {
                         e.preventDefault();
-                        historyRecordState(true);
-                        editorTextarea.value = val.substring(0, lineStart) + val.substring(lineEnd);
-                        editorTextarea.selectionStart = editorTextarea.selectionEnd = lineStart;
-                        renderEditor(); triggerAutosave(); updateUndoRedoButtons(); return;
+                        commitEditorMutation(val.substring(0, lineStart) + val.substring(lineEnd), lineStart);
+                        return;
                     }
                 }
 
@@ -6284,29 +6251,24 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 const taskM = lineBeforeCursor.match(/^(\s*)-\s\[[ xX]?\]\s+/);
                 if (taskM) {
                     e.preventDefault();
-                    historyRecordState(true);
                     const pfx = `\n${taskM[1]}- [ ] `;
-                    editorTextarea.value = val.substring(0, pos) + pfx + val.substring(pos);
-                    editorTextarea.selectionStart = editorTextarea.selectionEnd = pos + pfx.length;
-                    renderEditor(); triggerAutosave(); playClickSound(); updateUndoRedoButtons(); return;
+                    commitEditorMutation(val.substring(0, pos) + pfx + val.substring(pos), pos + pfx.length, pos + pfx.length, true);
+                    return;
                 }
 
                 // Non-empty Bullet Item continuation
                 const bulletM = lineBeforeCursor.match(/^(\s*)([-*+])\s+/);
                 if (bulletM) {
                     e.preventDefault();
-                    historyRecordState(true);
                     const pfx = `\n${bulletM[1]}${bulletM[2]} `;
-                    editorTextarea.value = val.substring(0, pos) + pfx + val.substring(pos);
-                    editorTextarea.selectionStart = editorTextarea.selectionEnd = pos + pfx.length;
-                    renderEditor(); triggerAutosave(); playClickSound(); updateUndoRedoButtons(); return;
+                    commitEditorMutation(val.substring(0, pos) + pfx + val.substring(pos), pos + pfx.length, pos + pfx.length, true);
+                    return;
                 }
 
                 // Non-empty Numbered Item continuation with sequential renumbering
                 const numM = lineBeforeCursor.match(/^(\s*)(\d+)\.\s+/);
                 if (numM) {
                     e.preventDefault();
-                    historyRecordState(true);
                     const indent = numM[1];
                     const nextNum = parseInt(numM[2], 10) + 1;
                     const pfx = `\n${indent}${nextNum}. `;
@@ -6329,8 +6291,6 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                                 } else {
                                     break;
                                 }
-                            } else if (!line.trim()) {
-                                break;
                             } else {
                                 break;
                             }
@@ -6340,20 +6300,17 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                         }
                     }
 
-                    editorTextarea.value = val.substring(0, pos) + pfx + afterText;
-                    editorTextarea.selectionStart = editorTextarea.selectionEnd = pos + pfx.length;
-                    renderEditor(); triggerAutosave(); playClickSound(); updateUndoRedoButtons(); return;
+                    commitEditorMutation(val.substring(0, pos) + pfx + afterText, pos + pfx.length, pos + pfx.length, true);
+                    return;
                 }
 
                 // Non-empty Blockquote continuation
                 const quoteM = lineBeforeCursor.match(/^(\s*)(>+)\s+/);
                 if (quoteM) {
                     e.preventDefault();
-                    historyRecordState(true);
                     const pfx = `\n${quoteM[1]}${quoteM[2]} `;
-                    editorTextarea.value = val.substring(0, pos) + pfx + val.substring(pos);
-                    editorTextarea.selectionStart = editorTextarea.selectionEnd = pos + pfx.length;
-                    renderEditor(); triggerAutosave(); playClickSound(); updateUndoRedoButtons(); return;
+                    commitEditorMutation(val.substring(0, pos) + pfx + val.substring(pos), pos + pfx.length, pos + pfx.length, true);
+                    return;
                 }
             }
 
@@ -6371,19 +6328,15 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                     const emptyMatch = lineBeforeCursor.match(/^(\s*)([-*+]|\d+\.|-\s\[[ xX]?\]|>)\s$/);
                     if (emptyMatch) {
                         e.preventDefault();
-                        historyRecordState(true);
                         const indent = emptyMatch[1];
                         const marker = emptyMatch[2];
                         if (indent.length >= 2) {
-                            const newIndent = indent.substring(2);
-                            const replacement = `${newIndent}${marker} `;
-                            editorTextarea.value = val.substring(0, lineStart) + replacement + val.substring(lineEnd);
-                            editorTextarea.selectionStart = editorTextarea.selectionEnd = lineStart + replacement.length;
+                            const replacement = `${indent.substring(2)}${marker} `;
+                            commitEditorMutation(val.substring(0, lineStart) + replacement + val.substring(lineEnd), lineStart + replacement.length, lineStart + replacement.length, true);
                         } else {
-                            editorTextarea.value = val.substring(0, lineStart) + val.substring(lineEnd);
-                            editorTextarea.selectionStart = editorTextarea.selectionEnd = lineStart;
+                            commitEditorMutation(val.substring(0, lineStart) + val.substring(lineEnd), lineStart, lineStart, true);
                         }
-                        renderEditor(); triggerAutosave(); playClickSound(); updateUndoRedoButtons(); return;
+                        return;
                     }
                 }
             }
@@ -6392,17 +6345,10 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             if (e.key === 'Tab') {
                 if (currentSuggestion) {
                     e.preventDefault();
-                    historyRecordState(true);
                     const start = editorTextarea.selectionStart;
                     const end = editorTextarea.selectionEnd;
                     const val = editorTextarea.value;
-                    editorTextarea.value = val.substring(0, start) + currentSuggestion + val.substring(end);
-                    editorTextarea.selectionStart = editorTextarea.selectionEnd = start + currentSuggestion.length;
-                    
-                    renderEditor();
-                    triggerAutosave();
-                    updateUndoRedoButtons();
-                    
+                    commitEditorMutation(val.substring(0, start) + currentSuggestion + val.substring(end), start + currentSuggestion.length);
                     currentSuggestion = '';
                     autocompleteTooltip.style.display = 'none';
                     return;
@@ -6410,7 +6356,6 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
 
                 // Smart Tab / Shift+Tab for List Indentation & General Indent
                 e.preventDefault();
-                historyRecordState(true);
                 const start = editorTextarea.selectionStart;
                 const end = editorTextarea.selectionEnd;
                 const val = editorTextarea.value;
@@ -6439,35 +6384,26 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                         return l;
                     }).join('\n');
 
-                    editorTextarea.value = val.substring(0, lineStart) + outdented + val.substring(lineEnd);
-                    if (start === end) {
-                        const newPos = Math.max(lineStart, start - removedFirst);
-                        editorTextarea.selectionStart = editorTextarea.selectionEnd = newPos;
-                    } else {
-                        editorTextarea.selectionStart = Math.max(lineStart, start - removedFirst);
-                        editorTextarea.selectionEnd = Math.max(lineStart, end - totalRemoved);
-                    }
-                    renderEditor(); triggerAutosave(); playClickSound(); updateUndoRedoButtons(); return;
+                    const newStart = Math.max(lineStart, start - removedFirst);
+                    const newEnd = start === end ? newStart : Math.max(lineStart, end - totalRemoved);
+                    commitEditorMutation(val.substring(0, lineStart) + outdented + val.substring(lineEnd), newStart, newEnd, true);
+                    return;
                 } else {
                     // Indent (Tab)
                     if (start === end) {
                         const currentLine = val.substring(lineStart, lineEnd);
-                        if (/^(\s*)([-*+]|\d+\.|-\s\[[ xX]?\]|>)/.test(currentLine)) {
-                            editorTextarea.value = val.substring(0, lineStart) + '  ' + currentLine + val.substring(lineEnd);
-                            editorTextarea.selectionStart = editorTextarea.selectionEnd = start + 2;
-                        } else {
-                            editorTextarea.value = val.substring(0, start) + '  ' + val.substring(end);
-                            editorTextarea.selectionStart = editorTextarea.selectionEnd = start + 2;
-                        }
+                        const isList = /^(\s*)([-*+]|\d+\.|-\s\[[ xX]?\]|>)/.test(currentLine);
+                        const newVal = isList
+                            ? val.substring(0, lineStart) + '  ' + currentLine + val.substring(lineEnd)
+                            : val.substring(0, start) + '  ' + val.substring(end);
+                        commitEditorMutation(newVal, start + 2, start + 2, true);
                     } else {
                         const block = val.substring(lineStart, lineEnd);
                         const lines = block.split('\n');
                         const indented = lines.map(l => '  ' + l).join('\n');
-                        editorTextarea.value = val.substring(0, lineStart) + indented + val.substring(lineEnd);
-                        editorTextarea.selectionStart = start + 2;
-                        editorTextarea.selectionEnd = end + (lines.length * 2);
+                        commitEditorMutation(val.substring(0, lineStart) + indented + val.substring(lineEnd), start + 2, end + (lines.length * 2), true);
                     }
-                    renderEditor(); triggerAutosave(); playClickSound(); updateUndoRedoButtons(); return;
+                    return;
                 }
             }
 
