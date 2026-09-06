@@ -638,6 +638,69 @@
             color: #FFFFFF !important;
         }
 
+        /* Desktop Formatting Toolbar */
+        .desktop-format-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            padding: 0 4px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            flex: 1;
+            justify-content: center;
+            max-width: 480px;
+        }
+
+        .desktop-format-toolbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .format-tool-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-secondary);
+            width: 26px;
+            height: 26px;
+            min-width: 26px;
+            min-height: 26px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .format-tool-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .format-tool-btn:active {
+            transform: scale(0.92);
+            background: var(--accent-glow);
+            color: var(--accent-color);
+        }
+
+        .format-tool-btn i {
+            font-size: 0.95rem;
+        }
+
+        .format-tool-separator {
+            width: 1px;
+            height: 16px;
+            background-color: var(--border-color);
+            margin: 0 4px;
+            flex-shrink: 0;
+        }
+
         .editor-ai-menu {
             min-width: 285px;
             width: max-content;
@@ -3133,6 +3196,26 @@
                         <span>Editor</span>
                         <span class="selection-badge" id="editorSelectionBadge"><i class="ti ti-check"></i> <span id="editorSelectionCount">0 words</span></span>
                     </div>
+                    <!-- Desktop Formatting Action Toolbar -->
+                    <div class="desktop-format-toolbar" id="desktopFormatToolbar" role="toolbar" aria-label="Desktop Text Formatting">
+                        <button type="button" class="format-tool-btn" data-format="h1" title="Heading 1 (#)" aria-label="Heading 1"><b>H1</b></button>
+                        <button type="button" class="format-tool-btn" data-format="h2" title="Heading 2 (##)" aria-label="Heading 2"><b>H2</b></button>
+                        <button type="button" class="format-tool-btn" data-format="h3" title="Heading 3 (###)" aria-label="Heading 3"><b>H3</b></button>
+                        <div class="format-tool-separator" role="separator"></div>
+                        <button type="button" class="format-tool-btn" data-format="bold" title="Bold (Ctrl+B)" aria-label="Bold"><i class="ti ti-bold"></i></button>
+                        <button type="button" class="format-tool-btn" data-format="italic" title="Italic (Ctrl+I)" aria-label="Italic"><i class="ti ti-italic"></i></button>
+                        <button type="button" class="format-tool-btn" data-format="strikethrough" title="Strikethrough (Ctrl+Shift+X)" aria-label="Strikethrough"><i class="ti ti-strikethrough"></i></button>
+                        <button type="button" class="format-tool-btn" data-format="code" title="Inline Code (`)" aria-label="Inline Code"><i class="ti ti-code"></i></button>
+                        <div class="format-tool-separator" role="separator"></div>
+                        <button type="button" class="format-tool-btn" data-format="quote" title="Blockquote (>)" aria-label="Blockquote"><i class="ti ti-quote"></i></button>
+                        <button type="button" class="format-tool-btn" data-format="list" title="Bulleted List (-)" aria-label="Bulleted List"><i class="ti ti-list"></i></button>
+                        <button type="button" class="format-tool-btn" data-format="numbered" title="Numbered List (1.)" aria-label="Numbered List"><i class="ti ti-list-numbers"></i></button>
+                        <button type="button" class="format-tool-btn" data-format="task" title="Task Checkbox (- [ ])" aria-label="Task Checkbox"><i class="ti ti-checkbox"></i></button>
+                        <div class="format-tool-separator" role="separator"></div>
+                        <button type="button" class="format-tool-btn" data-format="codeblock" title="Code Block (```)" aria-label="Code Block"><i class="ti ti-braces"></i></button>
+                        <button type="button" class="format-tool-btn" data-format="link" title="Insert Link (Ctrl+K)" aria-label="Insert Link"><i class="ti ti-link"></i></button>
+                        <button type="button" class="format-tool-btn" data-format="hr" title="Horizontal Divider (---)" aria-label="Horizontal Divider"><i class="ti ti-separator"></i></button>
+                    </div>
                     <div class="pane-header-actions">
                         <div class="pane-dropdown" id="editorAiDropdown">
                             <button class="pane-action-btn pane-ai-action-btn" id="editorAiBtn" title="AI Writing Actions (Selection or Full Document)" aria-label="AI Writing Actions" aria-haspopup="true" aria-expanded="false">
@@ -5313,7 +5396,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             };
         }
 
-        // --- Mobile Quick Markdown Toolbar Formatting ---
+        // --- Markdown Toolbar Formatting (Desktop & Mobile) ---
         function applyMarkdownFormat(type) {
             const start = editorTextarea.selectionStart;
             const end = editorTextarea.selectionEnd;
@@ -5328,56 +5411,76 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             switch (type) {
                 case 'h1':
                     before = '# ';
-                    newText = before + selected;
-                    newCursorPos = start + before.length + selected.length;
+                    newText = before + (selected || 'Heading 1');
+                    newCursorPos = start + before.length + (selected ? selected.length : 'Heading 1'.length);
                     break;
                 case 'h2':
                     before = '## ';
-                    newText = before + selected;
-                    newCursorPos = start + before.length + selected.length;
+                    newText = before + (selected || 'Heading 2');
+                    newCursorPos = start + before.length + (selected ? selected.length : 'Heading 2'.length);
+                    break;
+                case 'h3':
+                    before = '### ';
+                    newText = before + (selected || 'Heading 3');
+                    newCursorPos = start + before.length + (selected ? selected.length : 'Heading 3'.length);
                     break;
                 case 'bold':
                     before = '**';
                     after = '**';
-                    newText = before + (selected || 'bold') + after;
+                    newText = before + (selected || 'bold text') + after;
                     newCursorPos = selected ? end + 4 : start + 2;
                     break;
                 case 'italic':
                     before = '*';
                     after = '*';
-                    newText = before + (selected || 'italic') + after;
+                    newText = before + (selected || 'italic text') + after;
                     newCursorPos = selected ? end + 2 : start + 1;
+                    break;
+                case 'strikethrough':
+                    before = '~~';
+                    after = '~~';
+                    newText = before + (selected || 'strikethrough') + after;
+                    newCursorPos = selected ? end + 4 : start + 2;
+                    break;
+                case 'code':
+                    before = '`';
+                    after = '`';
+                    newText = before + (selected || 'code') + after;
+                    newCursorPos = selected ? end + 2 : start + 1;
+                    break;
+                case 'codeblock':
+                    before = '```\n';
+                    after = '\n```';
+                    newText = before + (selected || '// your code here') + after;
+                    newCursorPos = selected ? end + before.length + after.length : start + before.length;
                     break;
                 case 'quote':
                     before = '> ';
                     newText = before + (selected || 'quote');
                     newCursorPos = start + before.length + (selected || 'quote').length;
                     break;
-                case 'code':
-                    if (selected.includes('\n')) {
-                        before = '```\n';
-                        after = '\n```';
-                        newText = before + (selected || 'code') + after;
-                    } else {
-                        before = '`';
-                        after = '`';
-                        newText = before + (selected || 'code') + after;
-                    }
-                    newCursorPos = selected ? end + before.length + after.length : start + before.length;
-                    break;
                 case 'list':
                     before = '- ';
-                    newText = before + (selected || 'item');
-                    newCursorPos = start + before.length + (selected || 'item').length;
+                    newText = before + (selected || 'list item');
+                    newCursorPos = start + before.length + (selected || 'list item').length;
+                    break;
+                case 'numbered':
+                    before = '1. ';
+                    newText = before + (selected || 'numbered item');
+                    newCursorPos = start + before.length + (selected || 'numbered item').length;
                     break;
                 case 'task':
                     before = '- [ ] ';
-                    newText = before + (selected || 'task');
-                    newCursorPos = start + before.length + (selected || 'task').length;
+                    newText = before + (selected || 'task item');
+                    newCursorPos = start + before.length + (selected || 'task item').length;
                     break;
                 case 'link':
-                    newText = `[${selected || 'link'}](url)`;
+                    newText = `[${selected || 'link text'}](url)`;
                     newCursorPos = selected ? start + selected.length + 3 : start + 1;
+                    break;
+                case 'hr':
+                    newText = (start > 0 && val[start - 1] !== '\n' ? '\n\n---\n\n' : '---\n\n');
+                    newCursorPos = start + newText.length;
                     break;
                 default:
                     return;
@@ -5390,6 +5493,17 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             triggerAutosave();
             playClickSound();
         }
+
+        // Bind Desktop Formatting Toolbar Buttons
+        document.querySelectorAll('.desktop-format-toolbar .format-tool-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const format = btn.getAttribute('data-format');
+                if (format) {
+                    applyMarkdownFormat(format);
+                }
+            });
+        });
 
         // Bind Mobile Format & AI Toolbar Buttons
         document.querySelectorAll('.mobile-format-toolbar .format-btn').forEach(btn => {
@@ -5764,6 +5878,31 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
 
         // Typewriter click listener & Autocomplete handler
         editorTextarea.onkeydown = async (e) => {
+            // Native Markdown Formatting Shortcuts (Ctrl/Cmd + B, I, K, Shift+X)
+            const isMod = e.ctrlKey || e.metaKey;
+            if (isMod && !e.altKey) {
+                if (e.key === 'b' || e.key === 'B') {
+                    e.preventDefault();
+                    applyMarkdownFormat('bold');
+                    return;
+                }
+                if (e.key === 'i' || e.key === 'I') {
+                    e.preventDefault();
+                    applyMarkdownFormat('italic');
+                    return;
+                }
+                if (e.key === 'k' || e.key === 'K') {
+                    e.preventDefault();
+                    applyMarkdownFormat('link');
+                    return;
+                }
+                if (e.shiftKey && (e.key === 'x' || e.key === 'X')) {
+                    e.preventDefault();
+                    applyMarkdownFormat('strikethrough');
+                    return;
+                }
+            }
+
             // 1. Handle Tab key to accept autocomplete
             if (e.key === 'Tab' && currentSuggestion) {
                 e.preventDefault();

@@ -1,12 +1,12 @@
-// ZenWrite Progressive Web App (PWA) Service Worker
-const CACHE_NAME = "zenwrite-cache-v2.4.0";
+// ZenWrite Web Editor Progressive Web App (PWA) Service Worker
+const CACHE_NAME = "zenwrite-editor-cache-v2.5.0";
 const STATIC_ASSETS = [
     "./",
-    "./index.html",
-    "./config.js",
-    "./manifest.json",
-    "./favicon.jpg",
-    "./favicon.ico",
+    "./editor.html",
+    "../config.js",
+    "../manifest.json",
+    "../favicon.jpg",
+    "../favicon.ico",
     "https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css",
     "https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap"
 ];
@@ -15,7 +15,7 @@ const STATIC_ASSETS = [
 self.addEventListener("install", (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log("[ZenWrite SW] Pre-caching offline app shell v2.4.0");
+            console.log("[ZenWrite Editor SW] Pre-caching offline app shell v2.5.0");
             return cache.addAll(STATIC_ASSETS).catch((err) => {
                 console.warn("[ZenWrite SW] Pre-cache warning:", err);
             });
