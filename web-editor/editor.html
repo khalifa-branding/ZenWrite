@@ -45,7 +45,6 @@
             --glass-bg: rgba(244, 241, 240, 0.7);
             --sidebar-width: 280px;
             --ai-drawer-width: 320px;
-            --preview-zoom: 1;
         }
 
         [data-theme="dark"] {
@@ -67,7 +66,6 @@
             --diff-ins-bg: rgba(16, 185, 129, 0.2);
             --diff-ins-text: #34D399;
             --glass-bg: rgba(18, 18, 20, 0.75);
-            --preview-zoom: 1;
         }
 
         * {
@@ -598,7 +596,6 @@
         }
 
         /* Editor Layout */
-        /* Editor Layout */
         .editor-container {
             flex: 1;
             display: flex;
@@ -722,6 +719,11 @@
             padding-left: 10px;
             margin-left: 8px;
             border-left: 1px solid var(--border-color);
+        }
+
+        .preview-header-actions {
+            margin-left: auto;
+            border-left: none;
         }
 
         /* Google NotebookLM Studio Breadcrumb Header */
@@ -1164,6 +1166,25 @@
             transform: scale(1.1);
         }
 
+        .tone-chips-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4px;
+            padding: 2px 4px 6px;
+        }
+
+        .tone-chip-btn {
+            font-size: 0.78rem;
+            padding: 5px 8px;
+            border-radius: 6px;
+            gap: 6px;
+        }
+
+        .tone-chip-btn i {
+            font-size: 0.85rem;
+            width: 14px;
+        }
+
         .editor-textarea-wrapper {
             flex: 1 1 0;
             height: auto;
@@ -1232,11 +1253,10 @@
             overflow-y: auto;
             line-height: 1.7;
             font-family: 'Inter', sans-serif;
-            font-size: calc(1rem * var(--preview-zoom, 1));
+            font-size: 1rem;
             color: var(--text-primary);
             box-sizing: border-box;
             width: 100%;
-            transition: font-size 0.15s ease;
         }
 
         /* Markdown Styling inside preview */
@@ -3711,6 +3731,9 @@
                                     <i class="ti ti-pencil" aria-hidden="true"></i> <span>Continue Writing</span>
                                     <kbd class="dropdown-kbd">Alt+\</kbd>
                                 </button>
+                                <button class="pane-dropdown-item" data-action="agent-prompt" role="menuitem" tabindex="-1" style="color: var(--accent-color); font-weight: 600;">
+                                    <i class="ti ti-terminal-2" aria-hidden="true"></i> <span>Agent Prompt</span>
+                                </button>
                                 <button class="pane-dropdown-item" data-action="perfect-prompt" role="menuitem" tabindex="-1" style="color: var(--accent-color); font-weight: 600;">
                                     <i class="ti ti-wand" aria-hidden="true"></i> <span>5-Part Master Prompt</span>
                                 </button>
@@ -3737,24 +3760,24 @@
                                 <div class="dropdown-divider" role="separator"></div>
 
                                 <div class="dropdown-section-title" role="presentation">🎭 Change Tone</div>
-                                <div class="tone-chips-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; padding: 2px 4px 6px;">
-                                    <button type="button" class="pane-dropdown-item tone-chip-btn" data-action="tone-professional" role="menuitem" tabindex="-1" style="font-size: 0.78rem; padding: 5px 8px; border-radius: 6px; gap: 6px;">
-                                        <i class="ti ti-briefcase" style="font-size: 0.85rem; width: 14px;"></i> <span>Professional</span>
+                                <div class="tone-chips-grid">
+                                    <button type="button" class="pane-dropdown-item tone-chip-btn" data-action="tone-professional" role="menuitem" tabindex="-1">
+                                        <i class="ti ti-briefcase"></i> <span>Professional</span>
                                     </button>
-                                    <button type="button" class="pane-dropdown-item tone-chip-btn" data-action="tone-casual" role="menuitem" tabindex="-1" style="font-size: 0.78rem; padding: 5px 8px; border-radius: 6px; gap: 6px;">
-                                        <i class="ti ti-coffee" style="font-size: 0.85rem; width: 14px;"></i> <span>Casual</span>
+                                    <button type="button" class="pane-dropdown-item tone-chip-btn" data-action="tone-casual" role="menuitem" tabindex="-1">
+                                        <i class="ti ti-coffee"></i> <span>Casual</span>
                                     </button>
-                                    <button type="button" class="pane-dropdown-item tone-chip-btn" data-action="tone-persuasive" role="menuitem" tabindex="-1" style="font-size: 0.78rem; padding: 5px 8px; border-radius: 6px; gap: 6px;">
-                                        <i class="ti ti-target" style="font-size: 0.85rem; width: 14px;"></i> <span>Persuasive</span>
+                                    <button type="button" class="pane-dropdown-item tone-chip-btn" data-action="tone-persuasive" role="menuitem" tabindex="-1">
+                                        <i class="ti ti-target"></i> <span>Persuasive</span>
                                     </button>
-                                    <button type="button" class="pane-dropdown-item tone-chip-btn" data-action="tone-friendly" role="menuitem" tabindex="-1" style="font-size: 0.78rem; padding: 5px 8px; border-radius: 6px; gap: 6px;">
-                                        <i class="ti ti-mood-smile" style="font-size: 0.85rem; width: 14px;"></i> <span>Friendly</span>
+                                    <button type="button" class="pane-dropdown-item tone-chip-btn" data-action="tone-friendly" role="menuitem" tabindex="-1">
+                                        <i class="ti ti-mood-smile"></i> <span>Friendly</span>
                                     </button>
-                                    <button type="button" class="pane-dropdown-item tone-chip-btn" data-action="tone-urgent" role="menuitem" tabindex="-1" style="font-size: 0.78rem; padding: 5px 8px; border-radius: 6px; gap: 6px;">
-                                        <i class="ti ti-flame" style="font-size: 0.85rem; width: 14px;"></i> <span>Urgent</span>
+                                    <button type="button" class="pane-dropdown-item tone-chip-btn" data-action="tone-urgent" role="menuitem" tabindex="-1">
+                                        <i class="ti ti-flame"></i> <span>Urgent</span>
                                     </button>
-                                    <button type="button" class="pane-dropdown-item tone-chip-btn" data-action="tone-sarcastic" role="menuitem" tabindex="-1" style="font-size: 0.78rem; padding: 5px 8px; border-radius: 6px; gap: 6px;">
-                                        <i class="ti ti-sparkles" style="font-size: 0.85rem; width: 14px;"></i> <span>Sarcastic</span>
+                                    <button type="button" class="pane-dropdown-item tone-chip-btn" data-action="tone-sarcastic" role="menuitem" tabindex="-1">
+                                        <i class="ti ti-sparkles"></i> <span>Sarcastic</span>
                                     </button>
                                 </div>
 
@@ -3810,7 +3833,7 @@
                         <span class="breadcrumb-active">Preview</span>
                         <span class="breadcrumb-badge">Live</span>
                     </div>
-                    <div class="pane-header-actions" style="margin-left: auto; border-left: none;">
+                    <div class="pane-header-actions preview-header-actions">
                         <button type="button" class="studio-header-btn" id="previewCopyHtmlBtn" title="Copy Rendered HTML" aria-label="Copy Rendered HTML"><i class="ti ti-code"></i></button>
                         <button type="button" class="studio-header-btn" id="previewExpandBtn" title="Toggle Preview Pane Width" aria-label="Toggle Preview Pane Width"><i class="ti ti-arrows-maximize"></i></button>
                     </div>
@@ -3847,6 +3870,9 @@
             </button>
             <button type="button" class="format-btn" data-ai-action="continue" aria-label="Continue Writing with AI">
                 <i class="ti ti-pencil" aria-hidden="true"></i> <span>Continue</span>
+            </button>
+            <button type="button" class="format-btn" data-ai-action="agent-prompt" aria-label="Agent Prompt">
+                <i class="ti ti-terminal-2" aria-hidden="true"></i> <span>Agent Prompt</span>
             </button>
             <button type="button" class="format-btn" data-ai-action="perfect-prompt" aria-label="5-Part Master Prompt">
                 <i class="ti ti-wand" aria-hidden="true"></i> <span>Master Prompt</span>
@@ -4149,12 +4175,12 @@
     <div class="custom-context-menu" id="customContextMenu" role="menu" aria-label="Context AI Actions" tabindex="-1">
         <div class="context-header" id="contextSelectionInfo" role="presentation">Target: None</div>
         <div class="dropdown-section-title" role="presentation" style="padding: 4px 8px 2px;">Prompt Studio & Transform</div>
+        <button class="context-item" data-action="agent-prompt" role="menuitem" tabindex="-1" style="color: var(--accent-color); font-weight: 600;"><i class="ti ti-terminal-2" aria-hidden="true"></i> Agent Prompt</button>
         <button class="context-item" data-action="perfect-prompt" role="menuitem" tabindex="-1" style="color: var(--accent-color); font-weight: 600;"><i class="ti ti-wand" aria-hidden="true"></i> 5-Part Master Prompt</button>
         <button class="context-item" data-action="counter-prompt" role="menuitem" tabindex="-1" style="color: var(--accent-color); font-weight: 600;"><i class="ti ti-robot" aria-hidden="true"></i> Agent Counter-Prompt</button>
         <button class="context-item" data-action="grammar" role="menuitem" tabindex="-1"><i class="ti ti-checks" aria-hidden="true"></i> Correct Grammar</button>
         <button class="context-item" data-action="rephrase" role="menuitem" tabindex="-1"><i class="ti ti-refresh" aria-hidden="true"></i> Rephrase Text</button>
-        <button class="context-item" data-action="concise" role="menuitem" tabindex="-1"><i class="ti ti-arrows-minimize" aria-hidden="true"></i> Make Concise</button>
-        <button class="context-item" data-action="shorter" role="menuitem" tabindex="-1"><i class="ti ti-scissors" aria-hidden="true"></i> Make Shorter</button>
+        <button class="context-item" data-action="concise" role="menuitem" tabindex="-1"><i class="ti ti-scissors" aria-hidden="true"></i> Make Shorter / Direct</button>
         <button class="context-item" data-action="expand" role="menuitem" tabindex="-1"><i class="ti ti-arrows-maximize" aria-hidden="true"></i> Elaborate / Expand</button>
         <button class="context-item" data-action="explain" role="menuitem" tabindex="-1"><i class="ti ti-info-circle" aria-hidden="true"></i> Explain This</button>
         <div class="context-divider" role="separator"></div>
@@ -6031,7 +6057,9 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 const action = btn.getAttribute('data-action');
                 let promptInstruction = '';
 
-                if (action === 'perfect-prompt') {
+                if (action === 'agent-prompt') {
+                    promptInstruction = getAgentPromptInstruction();
+                } else if (action === 'perfect-prompt') {
                     promptInstruction = 'You are a world-class Prompt Engineer and AI Alignment Specialist. Analyze and transform the following rough idea, draft task, or user prompt into an exquisitely engineered, production-ready master prompt structured with: 1) # PERSONA & ROLE, 2) # TASK OBJECTIVE, 3) # CONTEXT & BACKGROUND, 4) # SPECIFIC RULES & CONSTRAINTS, and 5) # EXPECTED OUTPUT FORMAT. Use bracket placeholders like [Insert Text Here] for dynamic parameters. Return ONLY the perfected master prompt ready to use without conversational filler or triple backtick wraps.';
                 } else if (action === 'counter-prompt') {
                     aiDrawer.classList.remove('hidden');
@@ -7268,6 +7296,8 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             let promptInstruction = '';
             if (action === 'continue') {
                 promptInstruction = 'Continue writing seamlessly from the end of the target text. Maintain the exact same style, voice, formatting, and language. Write the next 1-3 paragraphs naturally. Return ONLY the continuation text to be appended. Do not repeat the existing text and do not include conversational introductions or quotes.';
+            } else if (action === 'agent-prompt') {
+                promptInstruction = getAgentPromptInstruction();
             } else if (action === 'perfect-prompt') {
                 promptInstruction = 'You are a world-class Prompt Engineer and AI Alignment Specialist. Analyze and transform the following rough idea, draft task, or user prompt into an exquisitely engineered, production-ready master prompt structured with: 1) # PERSONA & ROLE, 2) # TASK OBJECTIVE, 3) # CONTEXT & BACKGROUND, 4) # SPECIFIC RULES & CONSTRAINTS, and 5) # EXPECTED OUTPUT FORMAT. Use bracket placeholders like [Insert Text Here] for dynamic parameters. Return ONLY the perfected master prompt ready to use without conversational filler or triple backtick wraps.';
             } else if (action === 'counter-prompt') {
@@ -7851,6 +7881,10 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             };
         });
 
+        function getAgentPromptInstruction() {
+            return `You are a principal AI Agent Architect and Lead Prompt Engineer. Your task is to analyze the following raw draft, notes, or feature request and transform it into a content-aware, production-ready AGENT PROMPT optimized for autonomous AI coding agents (such as Antigravity, Cursor, Claude Code, Windsurf, Aider, or Codex).\n\nAnalyze the draft deeply to extract implicit domain context, tech stack requirements, architectural boundaries, and intended behavior. Then construct a structured, unambiguous, and highly actionable prompt following this blueprint:\n\n# TASK OBJECTIVE\n[Clear, concise, and imperative statement of exactly what the agent must accomplish]\n\n# DETECTED CONTEXT & SCOPE\n[Contextual awareness: technologies, frameworks, specific files/paths mentioned or implied, and current system behavior]\n\n# STEP-BY-STEP IMPLEMENTATION PLAN\n[Numbered sequence of concrete, minimal-diff instructions for the agent to execute in order]\n\n# CONSTRAINTS & GUARDRAILS\n- Preserve existing working code and unrelated functionality.\n- Maintain backward compatibility and API contracts.\n- Retain all existing code comments, docstrings, and documentation.\n- Avoid unnecessary refactoring or speculative architectural complexity.\n\n# VERIFICATION & ACCEPTANCE CRITERIA\n[Explicit verification steps: CLI commands, test suites, edge case checks, or UI validation required to prove success]\n\nFormatting Rules:\n- Return ONLY the finalized agent-ready prompt text ready to paste directly into an AI agent's terminal or prompt box.\n- Do NOT wrap the entire response in triple backticks.\n- Do NOT include conversational filler like "Here is your agent prompt:".`;
+        }
+
         function getAgentCounterPromptInstruction(directiveGoal = 'proceed') {
             let goalGuidance = '';
             if (directiveGoal === 'proceed') {
@@ -8178,25 +8212,19 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         }
 
         // Collapsible Gemini Thoughts Accordions
-        const aiThoughtsToggle = document.getElementById('aiThoughtsToggle');
-        const aiThoughtsBody = document.getElementById('aiThoughtsBody');
-        if (aiThoughtsToggle && aiThoughtsBody) {
-            aiThoughtsToggle.onclick = () => {
-                const isExpanded = aiThoughtsToggle.getAttribute('aria-expanded') === 'true';
-                aiThoughtsToggle.setAttribute('aria-expanded', !isExpanded);
-                aiThoughtsBody.style.display = isExpanded ? 'none' : 'block';
-            };
+        function setupThoughtsAccordion(toggleId, bodyId) {
+            const toggle = document.getElementById(toggleId);
+            const body = document.getElementById(bodyId);
+            if (toggle && body) {
+                toggle.onclick = () => {
+                    const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+                    toggle.setAttribute('aria-expanded', !isExpanded);
+                    body.style.display = isExpanded ? 'none' : 'block';
+                };
+            }
         }
-
-        const promptThoughtsToggle = document.getElementById('promptThoughtsToggle');
-        const promptThoughtsBody = document.getElementById('promptThoughtsBody');
-        if (promptThoughtsToggle && promptThoughtsBody) {
-            promptThoughtsToggle.onclick = () => {
-                const isExpanded = promptThoughtsToggle.getAttribute('aria-expanded') === 'true';
-                promptThoughtsToggle.setAttribute('aria-expanded', !isExpanded);
-                promptThoughtsBody.style.display = isExpanded ? 'none' : 'block';
-            };
-        }
+        setupThoughtsAccordion('aiThoughtsToggle', 'aiThoughtsBody');
+        setupThoughtsAccordion('promptThoughtsToggle', 'promptThoughtsBody');
 
         // Initialize App
         window.onload = () => {
