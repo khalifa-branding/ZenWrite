@@ -24,17 +24,17 @@ self.addEventListener("install", (event) => {
     self.skipWaiting();
 });
 
-// Activate Event: Instant Cleanup of All Stale Caches
+// Activate Event: Instant Cleanup of All Stale Caches (Scoped to web-editor)
 self.addEventListener("activate", (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
-                cacheNames.map((name) => {
-                    if (name !== CACHE_NAME) {
-                        console.log("[ZenWrite SW] Purging old cache:", name);
+                cacheNames
+                    .filter((name) => name.startsWith("zenwrite-editor-cache-") && name !== CACHE_NAME)
+                    .map((name) => {
+                        console.log("[ZenWrite Editor SW] Purging old cache:", name);
                         return caches.delete(name);
-                    }
-                })
+                    })
             );
         }).then(() => self.clients.claim())
     );
@@ -71,7 +71,7 @@ self.addEventListener("fetch", (event) => {
                 })
                 .catch(() => {
                     return caches.match(event.request).then((cached) => {
-                        return cached || caches.match("./index.html");
+                        return cached || caches.match("./editor.html");
                     });
                 })
         );

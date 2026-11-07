@@ -6067,14 +6067,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 } else if (action === 'perfect-prompt') {
                     promptInstruction = 'You are a world-class Prompt Engineer and AI Alignment Specialist. Analyze and transform the following rough idea, draft task, or user prompt into an exquisitely engineered, production-ready master prompt structured with: 1) # PERSONA & ROLE, 2) # TASK OBJECTIVE, 3) # CONTEXT & BACKGROUND, 4) # SPECIFIC RULES & CONSTRAINTS, and 5) # EXPECTED OUTPUT FORMAT. Use bracket placeholders like [Insert Text Here] for dynamic parameters. Return ONLY the perfected master prompt ready to use without conversational filler or triple backtick wraps.';
                 } else if (action === 'counter-prompt') {
-                    aiDrawer.classList.remove('hidden');
-                    setAiDrawerTab('prompt-studio');
-                    updatePromptStudioSubmode('counter');
-                    const text = selectedText || editorTextarea.value.trim();
-                    if (promptStudioInput) promptStudioInput.value = text;
-                    if (typeof autoSelectNextTurnDirective === 'function') autoSelectNextTurnDirective(text, true);
-                    updateBackdropState();
-                    if (promptStudioGenBtn) promptStudioGenBtn.click();
+                    launchCounterPromptStudio(selectedText || editorTextarea.value.trim());
                     return;
                 } else if (action === 'grammar') {
                     promptInstruction = 'Proofread and correct the spelling, grammar, and sentence structure of the text. Keep all styling intact. Return ONLY the updated corrected text without any extra text or quotes.';
@@ -7308,13 +7301,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             } else if (action === 'perfect-prompt') {
                 promptInstruction = 'You are a world-class Prompt Engineer and AI Alignment Specialist. Analyze and transform the following rough idea, draft task, or user prompt into an exquisitely engineered, production-ready master prompt structured with: 1) # PERSONA & ROLE, 2) # TASK OBJECTIVE, 3) # CONTEXT & BACKGROUND, 4) # SPECIFIC RULES & CONSTRAINTS, and 5) # EXPECTED OUTPUT FORMAT. Use bracket placeholders like [Insert Text Here] for dynamic parameters. Return ONLY the perfected master prompt ready to use without conversational filler or triple backtick wraps.';
             } else if (action === 'counter-prompt') {
-                aiDrawer.classList.remove('hidden');
-                setAiDrawerTab('prompt-studio');
-                updatePromptStudioSubmode('counter');
-                if (promptStudioInput) promptStudioInput.value = targetText;
-                if (typeof autoSelectNextTurnDirective === 'function') autoSelectNextTurnDirective(targetText, true);
-                updateBackdropState();
-                if (promptStudioGenBtn) promptStudioGenBtn.click();
+                launchCounterPromptStudio(targetText);
                 return;
             } else if (action === 'format-json') {
                 promptInstruction = 'Format, clean, indent, and validate the following JSON data. Ensure strict valid JSON output with standard 2-space indentation. Return ONLY the formatted JSON without conversational text or backtick wraps.';
@@ -7885,8 +7872,47 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         // Directive Scenario Chips & Context-Aware Automation Engine
         let directiveManualOverride = false;
 
-        function inferNextTurnDirective(text) {
-            if (!text || typeof text !== 'string' || text.trim().length === 0) {
+        /**
+         * Opens Master Prompt Studio in Agent Counter-Prompt submode,
+         * populates target text, auto-detects the next-turn directive, and triggers generation.
+         * @param {string} [text] - Optional text override (defaults to active selection or editor text)
+         */
+        function launchCounterPromptStudio(text) {
+            const targetText = text !== undefined ? text : (selectedText || editorTextarea.value.trim());
+            const drawer = document.getElementById('aiDrawer');
+            if (drawer) drawer.classList.remove('hidden');
+            if (typeof setAiDrawerTab === 'function') setAiDrawerTab('prompt-studio');
+            if (typeof updatePromptStudioSubmode === 'function') updatePromptStudioSubmode('counter');
+            const studioInput = document.getElementById('promptStudioInput');
+            if (studioInput) studioInput.value = targetText;
+            if (typeof autoSelectNextTurnDirective === 'function') autoSelectNextTurnDirective(targetText, true);
+            if (typeof updateBackdropState === 'function') updateBackdropState();
+            const genBtn = document.getElementById('promptStudioGenBtn');
+            if (genBtn) genBtn.click();
+        }
+
+        /**
+         * Scans for the latest index of regex pattern matches within a sample string.
+         * @param {string} sample
+         * @param {RegExp[]} patterns
+         * @param {function(string, number): boolean} [excludeFilterFn]
+         * @returns {number}
+         */
+        function getLastPatternIndex(sample, patterns, excludeFilterFn) {
+            let lastIdx = -1;
+            for (const re of patterns) {
+                const regex = new RegExp(re.source, 'gi');
+                let m;
+                while ((m = regex.exec(sample)) !== null) {
+                    if (excludeFilterFn && excludeFilterFn(sample, m.index)) continue;
+                    if (m.index > lastIdx) lastIdx = m.index;
+                }
+            }
+            return lastIdx;
+        }
+
+        function inferNextTurnDirective(rawText) {
+            if (!rawText || typeof rawText !== 'string' || rawText.trim().length === 0) {
                 return {
                     goal: 'proceed',
                     confidence: 'low',
@@ -7895,36 +7921,52 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 };
             }
 
+            // Strip ANSI terminal escape sequences to prevent word-boundary mismatches
+            const text = rawText.replace(/\u001b\[[0-9;]*[a-zA-Z]/g, '');
             const sample = text.length > 8000
                 ? (text.slice(0, 4000) + '\n' + text.slice(-4000))
                 : text;
 
-            // 1. Errors & Bugs -> 'fix' (highest priority when failures/errors exist)
-            const errorSignals = [
-                /command exited with (?:code\s+[1-9]\d*|error)/i,
-                /\b(?:FAIL(?:ED|URE)?|ERR(?:OR)?|ERR!|CRITICAL|FATAL)\b/,
-                /\b(?:SyntaxError|TypeError|ReferenceError|AssertionError|UnhandledPromiseRejection|Traceback|panic:)/,
-                /\b(?:tests? failed|\d+ failed|\bfailed suites?\b)/i,
-                /\b(?:bug|defect|regression|broken|crash(?:ed)?)\b/i
-            ];
-            const hasError = errorSignals.some(pattern => pattern.test(sample));
-            if (hasError) {
-                return {
-                    goal: 'fix',
-                    confidence: 'high',
-                    reason: 'Detected error, non-zero exit code, or stack trace in recent output',
-                    ambiguous: false
-                };
-            }
+            // 1. Critical active error signals (non-zero exit codes, fatal exceptions)
+            const activeExitCodeError = /command exited with (?:code\s+[1-9]\d*|error)/i.test(sample);
+            const hasFatalCrash = /\b(?:fatal(?: error)?:|panic:|\buncaught exception\b|fatal:)/i.test(sample);
 
-            // 2. Successful test completion / ready for deployment -> 'deploy'
+            // 2. Deploy / verified completion signals
             const deploySignals = [
                 /\b(?:all \d+ (?:tests?|suites?) passed|tests? passed flawlessly|100% (?:tests? )?passed|0 failed)\b/i,
                 /\b(?:ready (?:to|for) (?:deploy(?:ment)?|commit|push|release|sync)|working tree clean)\b/i,
                 /\b(?:deployment and test verification look solid|everything verified)\b/i
             ];
             const isDeployReady = deploySignals.some(pattern => pattern.test(sample));
-            if (isDeployReady) {
+
+            // If active exit code error or fatal crash occurred, fix always takes precedence
+            if (activeExitCodeError || hasFatalCrash) {
+                return {
+                    goal: 'fix',
+                    confidence: 'high',
+                    reason: 'Detected active non-zero exit code or fatal error in output',
+                    ambiguous: false
+                };
+            }
+
+            // 3. General error signals & temporal recency resolution
+            const errorSignals = [
+                /\b(?:fail(?:ed|ure)?|err(?:or)?|err!|critical|fatal)\b/i,
+                /\b(?:SyntaxError|TypeError|ReferenceError|AssertionError|UnhandledPromiseRejection|Traceback)/i,
+                /\b(?:tests? failed|\d+ failed|\bfailed suites?\b)/i,
+                /\b(?:bug|defect|regression|broken|crash(?:ed)?)\b/i
+            ];
+
+            const isRemediationContext = (str, index) => {
+                const prefix = str.slice(Math.max(0, index - 25), index).toLowerCase();
+                return prefix.includes('fix') || prefix.includes('resolv') || prefix.includes('handl');
+            };
+
+            const lastErrorIndex = getLastPatternIndex(sample, errorSignals, isRemediationContext);
+            const lastDeployIndex = isDeployReady ? getLastPatternIndex(sample, deploySignals) : -1;
+
+            // If clean deploy completion was reached AFTER any historical errors, choose deploy
+            if (isDeployReady && lastDeployIndex > lastErrorIndex) {
                 return {
                     goal: 'deploy',
                     confidence: 'high',
@@ -7933,7 +7975,17 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 };
             }
 
-            // 3. Testing needed / requested -> 'test'
+            // If an unresolved error is present, choose fix
+            if (lastErrorIndex !== -1) {
+                return {
+                    goal: 'fix',
+                    confidence: 'high',
+                    reason: 'Detected error, test failure, or stack trace in recent output',
+                    ambiguous: false
+                };
+            }
+
+            // 4. Testing needed / requested -> 'test'
             const testSignals = [
                 /\b(?:run|execute|verify with)\s+(?:the\s+)?(?:unit\s+)?(?:tests?|test\s+suite|verification\s+suite|regression\s+matrix)\b/i,
                 /\b(?:npm\s+test|node\s+test|pytest|cargo\s+test|run_all_tests)\b/i,
@@ -7941,8 +7993,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 /\b(?:verification\s+plan|validation\s+steps)\b/i,
                 /\b(?:Shall I|Would you like me to|Do you want me to)\s+(?:run|execute|verify|test)\s+(?:the\s+)?(?:unit\s+)?tests?\b/i
             ];
-            const needsTest = testSignals.some(pattern => pattern.test(sample));
-            if (needsTest) {
+            if (testSignals.some(pattern => pattern.test(sample))) {
                 return {
                     goal: 'test',
                     confidence: 'high',
@@ -7951,14 +8002,13 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 };
             }
 
-            // 4. Refactoring / cleanup needed -> 'refactor'
+            // 5. Refactoring / cleanup needed -> 'refactor'
             const refactorSignals = [
                 /\b(?:refactor|cleanup|clean up|code smells?|redundant|dead code|simplify(?:ing)?|duplicate code|polish(?:ing)?)\b/i,
                 /\b(?:lint warnings?|style issues?|deprecat(?:ed|ion))\b/i,
                 /\b(?:Would you like me to refactor|Shall I simplify|clean up the codebase)\b/i
             ];
-            const needsRefactor = refactorSignals.some(pattern => pattern.test(sample));
-            if (needsRefactor) {
+            if (refactorSignals.some(pattern => pattern.test(sample))) {
                 return {
                     goal: 'refactor',
                     confidence: 'high',
@@ -7967,14 +8017,13 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 };
             }
 
-            // 5. Turn-taking / Proceed with plan -> 'proceed'
+            // 6. Turn-taking / Proceed with plan -> 'proceed'
             const proceedSignals = [
                 /\b(?:Would you like me to proceed|Shall I proceed|ready to implement|implementation plan|proposed changes)\b/i,
                 /\b(?:I will now proceed|let me know if you would like me to proceed)\b/i,
                 /<USER_REQUEST>/i
             ];
-            const isProceed = proceedSignals.some(pattern => pattern.test(sample));
-            if (isProceed) {
+            if (proceedSignals.some(pattern => pattern.test(sample))) {
                 return {
                     goal: 'proceed',
                     confidence: 'high',
@@ -7983,7 +8032,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 };
             }
 
-            // 6. Ambiguous fallback:
+            // 7. Ambiguous fallback
             return {
                 goal: 'proceed',
                 confidence: 'low',
@@ -7992,7 +8041,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             };
         }
 
-        function updateDirectiveInferenceBadge(mode, goal, reason) {
+                function updateDirectiveInferenceBadge(mode, goal, reason) {
             const badge = document.getElementById('directiveInferenceBadge');
             const icon = document.getElementById('directiveInferenceIcon');
             const text = document.getElementById('directiveInferenceText');
@@ -8071,30 +8120,29 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             }
 
             // Directive specific resolution checks
-            if (directive === 'fix') {
-                const instructsFix = /\b(?:fix|diagnos(?:e|is)|root cause|debug|resolv(?:e|ing)|investigat(?:e|ion)|error)\b/i.test(promptLower);
-                if (!instructsFix) {
-                    result.valid = false;
-                    result.warnings.push('Fix directive counter-prompt does not contain explicit instructions to diagnose or resolve root causes.');
+            const directiveRequirements = {
+                fix: {
+                    regex: /\b(?:fix|diagnos(?:e|is)|root cause|debug|resolv(?:e|ing)|investigat(?:e|ion)|error)\b/i,
+                    warning: 'Fix directive counter-prompt does not contain explicit instructions to diagnose or resolve root causes.'
+                },
+                test: {
+                    regex: /\b(?:test|verify|check|assertion|validation|coverage|suite)\b/i,
+                    warning: 'Test directive counter-prompt does not instruct running verification tests.'
+                },
+                deploy: {
+                    regex: /\b(?:commit|push|sync|deploy|stage|git)\b/i,
+                    warning: 'Deploy directive counter-prompt does not instruct committing or syncing changes.'
+                },
+                refactor: {
+                    regex: /\b(?:refactor|clean|simplify|polish|deduplicat|redundanc)\b/i,
+                    warning: 'Refactor directive counter-prompt does not contain refactoring instructions.'
                 }
-            } else if (directive === 'test') {
-                const instructsTest = /\b(?:test|verify|check|assertion|validation|coverage|suite)\b/i.test(promptLower);
-                if (!instructsTest) {
-                    result.valid = false;
-                    result.warnings.push('Test directive counter-prompt does not instruct running verification tests.');
-                }
-            } else if (directive === 'deploy') {
-                const instructsDeploy = /\b(?:commit|push|sync|deploy|stage|git)\b/i.test(promptLower);
-                if (!instructsDeploy) {
-                    result.valid = false;
-                    result.warnings.push('Deploy directive counter-prompt does not instruct committing or syncing changes.');
-                }
-            } else if (directive === 'refactor') {
-                const instructsRefactor = /\b(?:refactor|clean|simplify|polish|deduplicat|redundanc)\b/i.test(promptLower);
-                if (!instructsRefactor) {
-                    result.valid = false;
-                    result.warnings.push('Refactor directive counter-prompt does not contain refactoring instructions.');
-                }
+            };
+
+            const requirement = directiveRequirements[directive];
+            if (requirement && !requirement.regex.test(promptLower)) {
+                result.valid = false;
+                result.warnings.push(requirement.warning);
             }
 
             return result;
@@ -8115,20 +8163,16 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         }
 
         function getAgentCounterPromptInstruction(directiveGoal = 'proceed') {
-            let goalGuidance = '';
-            if (directiveGoal === 'proceed') {
-                goalGuidance = 'Goal: Acknowledge the plan/step proposed by the agent, confirm approval with no unnecessary delay, and give direct, imperative instructions to execute and implement the changes immediately.';
-            } else if (directiveGoal === 'test') {
-                goalGuidance = 'Goal: Instruct the agent to run unit tests, integrity checks, and validation commands to verify zero breakages and complete test coverage.';
-            } else if (directiveGoal === 'fix') {
-                goalGuidance = 'Goal: Point out any errors, failed tests, edge cases, or bugs in the output and instruct the agent to systematically diagnose, fix the root cause, and re-verify.';
-            } else if (directiveGoal === 'refactor') {
-                goalGuidance = 'Goal: Instruct the agent to refactor, simplify, and polish the code structure, removing redundancy while preserving all functionality and backward compatibility.';
-            } else if (directiveGoal === 'deploy') {
-                goalGuidance = 'Goal: Instruct the agent to run syntax validation, stage modified files, craft a descriptive git commit, and push/sync cleanly to the remote branch.';
-            }
+            const goalGuidanceMap = {
+                proceed: 'Goal: Acknowledge the plan/step proposed by the agent, confirm approval with no unnecessary delay, and give direct, imperative instructions to execute and implement the changes immediately.',
+                test: 'Goal: Instruct the agent to run unit tests, integrity checks, and validation commands to verify zero breakages and complete test coverage.',
+                fix: 'Goal: Point out any errors, failed tests, edge cases, or bugs in the output and instruct the agent to systematically diagnose, fix the root cause, and re-verify.',
+                refactor: 'Goal: Instruct the agent to refactor, simplify, and polish the code structure, removing redundancy while preserving all functionality and backward compatibility.',
+                deploy: 'Goal: Instruct the agent to run syntax validation, stage modified files, craft a descriptive git commit, and push/sync cleanly to the remote branch.'
+            };
+            const goalGuidance = goalGuidanceMap[directiveGoal] || goalGuidanceMap.proceed;
 
-            return `You are an expert AI Agent Director and Prompt Engineer. The user is collaborating with an autonomous AI coding agent in a CLI/IDE terminal (such as Antigravity, Cursor, Claude Code, Aider, or Codex).\\n\\nThe user has pasted the AI agent's latest response/output. Your task is to generate a context-aware, highly actionable NEXT-TURN COUNTER-PROMPT that the user can copy and paste directly back into the agent's terminal without reading, analyzing, or manually drafting a reply.\\n\\n${goalGuidance}\\n\\nStructure the generated counter-prompt cleanly as:\\n1. Short direct confirmation/evaluation of the current step.\\n2. Numbered list of concrete next actions/commands the agent must execute.\\n3. Explicit constraints (e.g. preserve working code, run integrity checks, keep comments).\\n\\nFormatting rules:\\n- Return ONLY the exact counter-prompt text ready to paste into the terminal.\\n- Do not wrap the entire response in triple backticks.\\n- Do not include conversational introductory remarks like "Here is your counter prompt:".\\n- Make it authoritative, concise, and unambiguous.`;
+            return `You are an expert AI Agent Director and Prompt Engineer. The user is collaborating with an autonomous AI coding agent in a CLI/IDE terminal (such as Antigravity, Cursor, Claude Code, Aider, or Codex).\n\nThe user has pasted the AI agent's latest response/output. Your task is to generate a context-aware, highly actionable NEXT-TURN COUNTER-PROMPT that the user can copy and paste directly back into the agent's terminal without reading, analyzing, or manually drafting a reply.\n\n${goalGuidance}\n\nStructure the generated counter-prompt cleanly as:\n1. Short direct confirmation/evaluation of the current step.\n2. Numbered list of concrete next actions/commands the agent must execute.\n3. Explicit constraints (e.g. preserve working code, run integrity checks, keep comments).\n\nFormatting rules:\n- Return ONLY the exact counter-prompt text ready to paste into the terminal.\n- Do not wrap the entire response in triple backticks.\n- Do not include conversational introductory remarks like "Here is your counter prompt:".\n- Make it authoritative, concise, and unambiguous.`;
         }
 
         // Optimized O(1) bounded string sampler & heuristic classifier
@@ -8194,16 +8238,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         const agentBannerCloseBtn = document.getElementById('agentBannerCloseBtn');
 
         if (agentBannerGenBtn) {
-            agentBannerGenBtn.onclick = () => {
-                const text = selectedText || editorTextarea.value.trim();
-                aiDrawer.classList.remove('hidden');
-                setAiDrawerTab('prompt-studio');
-                updatePromptStudioSubmode('counter');
-                if (promptStudioInput) promptStudioInput.value = text;
-                autoSelectNextTurnDirective(text, true);
-                updateBackdropState();
-                if (promptStudioGenBtn) promptStudioGenBtn.click();
-            };
+            agentBannerGenBtn.onclick = () => launchCounterPromptStudio();
         }
 
         if (agentBannerCloseBtn) {
@@ -8218,14 +8253,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         if (pillCounterPromptBtn) {
             pillCounterPromptBtn.onclick = (e) => {
                 e.stopPropagation();
-                const text = selectedText || editorTextarea.value.trim();
-                aiDrawer.classList.remove('hidden');
-                setAiDrawerTab('prompt-studio');
-                updatePromptStudioSubmode('counter');
-                if (promptStudioInput) promptStudioInput.value = text;
-                autoSelectNextTurnDirective(text, true);
-                updateBackdropState();
-                if (promptStudioGenBtn) promptStudioGenBtn.click();
+                launchCounterPromptStudio();
             };
         }
 

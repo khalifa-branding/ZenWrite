@@ -24,17 +24,17 @@ self.addEventListener("install", (event) => {
     self.skipWaiting();
 });
 
-// Activate Event: Instant Cleanup of All Stale Caches
+// Activate Event: Instant Cleanup of All Stale Caches (Scoped to root app)
 self.addEventListener("activate", (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
-                cacheNames.map((name) => {
-                    if (name !== CACHE_NAME) {
+                cacheNames
+                    .filter((name) => name.startsWith("zenwrite-cache-") && name !== CACHE_NAME)
+                    .map((name) => {
                         console.log("[ZenWrite SW] Purging old cache:", name);
                         return caches.delete(name);
-                    }
-                })
+                    })
             );
         }).then(() => self.clients.claim())
     );
@@ -46,6 +46,11 @@ self.addEventListener("fetch", (event) => {
 
     // Bypass Service Worker cache for live Gemini AI API requests
     if (url.hostname.includes("googleapis.com") || url.hostname.includes("generativelanguage")) {
+        return;
+    }
+
+    // Bypass requests destined for /web-editor/ sub-app to prevent intercept collisions
+    if (url.pathname.includes("/web-editor/")) {
         return;
     }
 
