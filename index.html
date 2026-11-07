@@ -4018,9 +4018,6 @@
             <div id="counterPromptChips" style="display: none; flex-direction: column; flex-shrink: 0; margin-bottom: 2px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                     <label class="form-label" style="margin-bottom: 0; font-size: 0.74rem;">Next-Turn Goal / Directive</label>
-                    <span id="directiveInferenceBadge" style="font-size: 0.7rem; color: var(--accent-color); font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
-                        <i class="ti ti-sparkles" id="directiveInferenceIcon"></i> <span id="directiveInferenceText">Auto</span>
-                    </span>
                 </div>
                 <div class="directive-chips">
                     <button type="button" class="directive-chip active" data-goal="proceed"><i class="ti ti-check"></i> Proceed & Implement</button>
@@ -7899,13 +7896,24 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
          * @returns {number}
          */
         function getLastPatternIndex(sample, patterns, excludeFilterFn) {
+            if (!sample || typeof sample !== 'string' || !Array.isArray(patterns) || patterns.length === 0) {
+                return -1;
+            }
             let lastIdx = -1;
             for (const re of patterns) {
-                const regex = new RegExp(re.source, 'gi');
-                let m;
-                while ((m = regex.exec(sample)) !== null) {
-                    if (excludeFilterFn && excludeFilterFn(sample, m.index)) continue;
-                    if (m.index > lastIdx) lastIdx = m.index;
+                if (!re) continue;
+                try {
+                    const patternSource = re instanceof RegExp ? re.source : (typeof re === 'string' ? re : (re && re.source ? re.source : ''));
+                    if (!patternSource) continue;
+                    const regex = new RegExp(patternSource, 'gi');
+                    let m;
+                    while ((m = regex.exec(sample)) !== null) {
+                        if (excludeFilterFn && excludeFilterFn(sample, m.index)) continue;
+                        if (m.index > lastIdx) lastIdx = m.index;
+                        if (regex.lastIndex === m.index) regex.lastIndex++;
+                    }
+                } catch {
+                    continue;
                 }
             }
             return lastIdx;
