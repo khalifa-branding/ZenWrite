@@ -1,5 +1,5 @@
 // ZenWrite Progressive Web App (PWA) Service Worker
-const CACHE_NAME = "zenwrite-cache-v2.6.6";
+const CACHE_NAME = "zenwrite-cache-v2.6.7";
 const STATIC_ASSETS = [
     "./",
     "./index.html",

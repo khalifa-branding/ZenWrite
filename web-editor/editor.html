@@ -2826,36 +2826,6 @@
             gap: 8px;
         }
 
-        /* Directive Scenario Chips */
-        .directive-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin: 8px 0;
-        }
-
-        .directive-chip {
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 4px 10px;
-            font-size: 0.76rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: all 0.15s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            user-select: none;
-            touch-action: manipulation;
-        }
-
-        .directive-chip:hover, .directive-chip.active {
-            border-color: var(--accent-color);
-            color: var(--accent-color);
-            background: var(--accent-glow);
-        }
 
         /* Submode switcher for Prompt Studio */
         .prompt-submode-switcher {
@@ -4014,19 +3984,6 @@
                 </button>
             </div>
 
-            <!-- Directive Scenario Chips (Counter-Prompt Mode) -->
-            <div id="counterPromptChips" style="display: none; flex-direction: column; flex-shrink: 0; margin-bottom: 2px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                    <label class="form-label" style="margin-bottom: 0; font-size: 0.74rem;">Next-Turn Goal / Directive</label>
-                </div>
-                <div class="directive-chips">
-                    <button type="button" class="directive-chip active" data-goal="proceed"><i class="ti ti-check"></i> Proceed & Implement</button>
-                    <button type="button" class="directive-chip" data-goal="test"><i class="ti ti-flask"></i> Verify & Test</button>
-                    <button type="button" class="directive-chip" data-goal="fix"><i class="ti ti-bug"></i> Fix Bugs & Errors</button>
-                    <button type="button" class="directive-chip" data-goal="refactor"><i class="ti ti-code"></i> Clean & Refactor</button>
-                    <button type="button" class="directive-chip" data-goal="deploy"><i class="ti ti-git-commit"></i> Commit & Sync</button>
-                </div>
-            </div>
 
             <div class="form-group" style="flex-shrink: 0; margin-bottom: 0;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
@@ -7807,86 +7764,21 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
 
         const submodeMasterPrompt = document.getElementById('submodeMasterPrompt');
         const submodeCounterPrompt = document.getElementById('submodeCounterPrompt');
-        const counterPromptChips = document.getElementById('counterPromptChips');
         const promptStudioInputLabel = document.getElementById('promptStudioInputLabel');
         const promptStudioGenBtnIcon = document.getElementById('promptStudioGenBtnIcon');
         const promptStudioGenBtnText = document.getElementById('promptStudioGenBtnText');
         const promptStudioOutputLabel = document.getElementById('promptStudioOutputLabel');
         const promptStudioPlaceholder = document.getElementById('promptStudioPlaceholder');
         const promptStudioCopyBtnText = document.getElementById('promptStudioCopyBtnText');
-
-        function updatePromptStudioSubmode(mode) {
-            promptStudioSubmode = mode;
-            if (mode === 'counter') {
-                if (submodeCounterPrompt) {
-                    submodeCounterPrompt.classList.add('active');
-                    submodeCounterPrompt.setAttribute('aria-selected', 'true');
-                }
-                if (submodeMasterPrompt) {
-                    submodeMasterPrompt.classList.remove('active');
-                    submodeMasterPrompt.setAttribute('aria-selected', 'false');
-                }
-                if (counterPromptChips) counterPromptChips.style.display = 'flex';
-                if (promptStudioInputLabel) promptStudioInputLabel.textContent = 'Pasted AI Agent Output / Response';
-                if (promptStudioInput) promptStudioInput.placeholder = 'Paste the AI agent response, proposed changes, or terminal output here...';
-                if (promptStudioGenBtnIcon) promptStudioGenBtnIcon.className = 'ti ti-robot';
-                if (promptStudioGenBtnText) promptStudioGenBtnText.textContent = 'Generate Agent Counter-Prompt';
-                if (promptStudioOutputLabel) promptStudioOutputLabel.textContent = 'Next-Turn Counter-Prompt';
-                if (promptStudioPlaceholder) promptStudioPlaceholder.textContent = 'Actionable Next-Turn Counter-Prompt for AI Agent will appear here.';
-                if (promptStudioCopyBtnText) promptStudioCopyBtnText.textContent = 'Copy for Terminal';
-                if (promptStudioCopyBtn) promptStudioCopyBtn.className = 'btn btn-primary';
-                if (promptStudioRunBtn) promptStudioRunBtn.style.display = 'none';
-                if (promptStudioInput && promptStudioInput.value.trim()) {
-                    autoSelectNextTurnDirective(promptStudioInput.value.trim(), false);
-                }
-            } else {
-                if (submodeMasterPrompt) {
-                    submodeMasterPrompt.classList.add('active');
-                    submodeMasterPrompt.setAttribute('aria-selected', 'true');
-                }
-                if (submodeCounterPrompt) {
-                    submodeCounterPrompt.classList.remove('active');
-                    submodeCounterPrompt.setAttribute('aria-selected', 'false');
-                }
-                if (counterPromptChips) counterPromptChips.style.display = 'none';
-                if (promptStudioInputLabel) promptStudioInputLabel.textContent = 'Rough Task / Draft Idea';
-                if (promptStudioInput) promptStudioInput.placeholder = 'e.g. Create a customer support reply for delayed shipment with 10% refund voucher...';
-                if (promptStudioGenBtnIcon) promptStudioGenBtnIcon.className = 'ti ti-wand';
-                if (promptStudioGenBtnText) promptStudioGenBtnText.textContent = 'Engineer Master Prompt (5-Part)';
-                if (promptStudioOutputLabel) promptStudioOutputLabel.textContent = 'Engineered Master Prompt';
-                if (promptStudioPlaceholder) promptStudioPlaceholder.textContent = 'Engineered 5-part Master Prompt will appear here (Persona, Objective, Context, Constraints, Output Schema).';
-                if (promptStudioCopyBtnText) promptStudioCopyBtnText.textContent = 'Copy Prompt';
-                if (promptStudioCopyBtn) promptStudioCopyBtn.className = 'btn btn-secondary';
-                if (promptStudioRunBtn) {
-                    promptStudioRunBtn.style.display = (promptStudioActions && promptStudioActions.style.display !== 'none') ? 'flex' : 'none';
-                }
-            }
-        }
-
-        if (submodeMasterPrompt) submodeMasterPrompt.onclick = () => updatePromptStudioSubmode('master');
-        if (submodeCounterPrompt) submodeCounterPrompt.onclick = () => updatePromptStudioSubmode('counter');
-
-        // Directive Scenario Chips & Context-Aware Automation Engine
-        let directiveManualOverride = false;
-
-        /**
-         * Opens Master Prompt Studio in Agent Counter-Prompt submode,
-         * populates target text, auto-detects the next-turn directive, and triggers generation.
-         * @param {string} [text] - Optional text override (defaults to active selection or editor text)
-         */
-        function launchCounterPromptStudio(text) {
-            const targetText = text !== undefined ? text : (selectedText || editorTextarea.value.trim());
-            const drawer = document.getElementById('aiDrawer');
-            if (drawer) drawer.classList.remove('hidden');
-            if (typeof setAiDrawerTab === 'function') setAiDrawerTab('prompt-studio');
-            if (typeof updatePromptStudioSubmode === 'function') updatePromptStudioSubmode('counter');
-            const studioInput = document.getElementById('promptStudioInput');
-            if (studioInput) studioInput.value = targetText;
-            if (typeof autoSelectNextTurnDirective === 'function') autoSelectNextTurnDirective(targetText, true);
-            if (typeof updateBackdropState === 'function') updateBackdropState();
-            const genBtn = document.getElementById('promptStudioGenBtn');
-            if (genBtn) genBtn.click();
-        }
+        const promptStudioGrabBtn = document.getElementById('promptStudioGrabBtn');
+        const promptStudioInput = document.getElementById('promptStudioInput');
+        const promptStudioGenBtn = document.getElementById('promptStudioGenBtn');
+        const promptStudioOutputBox = document.getElementById('promptStudioOutputBox');
+        const promptStudioActions = document.getElementById('promptStudioActions');
+        const promptStudioCopyBtn = document.getElementById('promptStudioCopyBtn');
+        const promptStudioInsertBtn = document.getElementById('promptStudioInsertBtn');
+        const promptStudioRunBtn = document.getElementById('promptStudioRunBtn');
+        const promptStudioStatusBadge = document.getElementById('promptStudioStatusBadge');
 
         /**
          * Scans for the latest index of regex pattern matches within a sample string.
@@ -7919,6 +7811,11 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             return lastIdx;
         }
 
+        /**
+         * Infers the optimal next-turn directive from raw AI agent or terminal output.
+         * @param {string} rawText
+         * @returns {{ goal: string, confidence: string, reason: string, ambiguous: boolean }}
+         */
         function inferNextTurnDirective(rawText) {
             if (!rawText || typeof rawText !== 'string' || rawText.trim().length === 0) {
                 return {
@@ -7938,16 +7835,6 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             // 1. Critical active error signals (non-zero exit codes, fatal exceptions)
             const activeExitCodeError = /command exited with (?:code\s+[1-9]\d*|error)/i.test(sample);
             const hasFatalCrash = /\b(?:fatal(?: error)?:|panic:|\buncaught exception\b|fatal:)/i.test(sample);
-
-            // 2. Deploy / verified completion signals
-            const deploySignals = [
-                /\b(?:all \d+ (?:tests?|suites?) passed|tests? passed flawlessly|100% (?:tests? )?passed|0 failed)\b/i,
-                /\b(?:ready (?:to|for) (?:deploy(?:ment)?|commit|push|release|sync)|working tree clean)\b/i,
-                /\b(?:deployment and test verification look solid|everything verified)\b/i
-            ];
-            const isDeployReady = deploySignals.some(pattern => pattern.test(sample));
-
-            // If active exit code error or fatal crash occurred, fix always takes precedence
             if (activeExitCodeError || hasFatalCrash) {
                 return {
                     goal: 'fix',
@@ -7957,23 +7844,27 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 };
             }
 
-            // 3. General error signals & temporal recency resolution
+            // 2. Deploy / verified completion vs. general error recency resolution
+            const deploySignals = [
+                /\b(?:all \d+ (?:tests?|suites?) passed|tests? passed flawlessly|100% (?:tests? )?passed|0 failed)\b/i,
+                /\b(?:ready (?:to|for) (?:deploy(?:ment)?|commit|push|release|sync)|working tree clean)\b/i,
+                /\b(?:deployment and test verification look solid|everything verified)\b/i
+            ];
             const errorSignals = [
                 /\b(?:fail(?:ed|ure)?|err(?:or)?|err!|critical|fatal)\b/i,
                 /\b(?:SyntaxError|TypeError|ReferenceError|AssertionError|UnhandledPromiseRejection|Traceback)/i,
                 /\b(?:tests? failed|\d+ failed|\bfailed suites?\b)/i,
                 /\b(?:bug|defect|regression|broken|crash(?:ed)?)\b/i
             ];
-
             const isRemediationContext = (str, index) => {
                 const prefix = str.slice(Math.max(0, index - 25), index).toLowerCase();
                 return prefix.includes('fix') || prefix.includes('resolv') || prefix.includes('handl');
             };
 
+            const isDeployReady = deploySignals.some(pattern => pattern.test(sample));
             const lastErrorIndex = getLastPatternIndex(sample, errorSignals, isRemediationContext);
             const lastDeployIndex = isDeployReady ? getLastPatternIndex(sample, deploySignals) : -1;
 
-            // If clean deploy completion was reached AFTER any historical errors, choose deploy
             if (isDeployReady && lastDeployIndex > lastErrorIndex) {
                 return {
                     goal: 'deploy',
@@ -7982,8 +7873,6 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                     ambiguous: false
                 };
             }
-
-            // If an unresolved error is present, choose fix
             if (lastErrorIndex !== -1) {
                 return {
                     goal: 'fix',
@@ -7993,54 +7882,50 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 };
             }
 
-            // 4. Testing needed / requested -> 'test'
-            const testSignals = [
-                /\b(?:run|execute|verify with)\s+(?:the\s+)?(?:unit\s+)?(?:tests?|test\s+suite|verification\s+suite|regression\s+matrix)\b/i,
-                /\b(?:npm\s+test|node\s+test|pytest|cargo\s+test|run_all_tests)\b/i,
-                /\b(?:tests?\s+(?:pending|needed|required|should be run|to be executed|coverage))\b/i,
-                /\b(?:verification\s+plan|validation\s+steps)\b/i,
-                /\b(?:Shall I|Would you like me to|Do you want me to)\s+(?:run|execute|verify|test)\s+(?:the\s+)?(?:unit\s+)?tests?\b/i
-            ];
-            if (testSignals.some(pattern => pattern.test(sample))) {
-                return {
+            // 3. Declarative heuristic categories (test, refactor, proceed)
+            const heuristicCategories = [
+                {
                     goal: 'test',
-                    confidence: 'high',
                     reason: 'Detected pending test verification or request to execute test suites',
-                    ambiguous: false
-                };
-            }
-
-            // 5. Refactoring / cleanup needed -> 'refactor'
-            const refactorSignals = [
-                /\b(?:refactor|cleanup|clean up|code smells?|redundant|dead code|simplify(?:ing)?|duplicate code|polish(?:ing)?)\b/i,
-                /\b(?:lint warnings?|style issues?|deprecat(?:ed|ion))\b/i,
-                /\b(?:Would you like me to refactor|Shall I simplify|clean up the codebase)\b/i
-            ];
-            if (refactorSignals.some(pattern => pattern.test(sample))) {
-                return {
+                    patterns: [
+                        /\b(?:run|execute|verify with)\s+(?:the\s+)?(?:unit\s+)?(?:tests?|test\s+suite|verification\s+suite|regression\s+matrix)\b/i,
+                        /\b(?:npm\s+test|node\s+test|pytest|cargo\s+test|run_all_tests)\b/i,
+                        /\b(?:tests?\s+(?:pending|needed|required|should be run|to be executed|coverage))\b/i,
+                        /\b(?:verification\s+plan|validation\s+steps)\b/i,
+                        /\b(?:Shall I|Would you like me to|Do you want me to)\s+(?:run|execute|verify|test)\s+(?:the\s+)?(?:unit\s+)?tests?\b/i
+                    ]
+                },
+                {
                     goal: 'refactor',
-                    confidence: 'high',
                     reason: 'Detected request or recommendation to clean, refactor, or polish code',
-                    ambiguous: false
-                };
-            }
-
-            // 6. Turn-taking / Proceed with plan -> 'proceed'
-            const proceedSignals = [
-                /\b(?:Would you like me to proceed|Shall I proceed|ready to implement|implementation plan|proposed changes)\b/i,
-                /\b(?:I will now proceed|let me know if you would like me to proceed)\b/i,
-                /<USER_REQUEST>/i
-            ];
-            if (proceedSignals.some(pattern => pattern.test(sample))) {
-                return {
+                    patterns: [
+                        /\b(?:refactor|cleanup|clean up|code smells?|redundant|dead code|simplify(?:ing)?|duplicate code|polish(?:ing)?)\b/i,
+                        /\b(?:lint warnings?|style issues?|deprecat(?:ed|ion))\b/i,
+                        /\b(?:Would you like me to refactor|Shall I simplify|clean up the codebase)\b/i
+                    ]
+                },
+                {
                     goal: 'proceed',
-                    confidence: 'high',
                     reason: 'Detected plan or proposal awaiting approval to implement',
-                    ambiguous: false
-                };
+                    patterns: [
+                        /\b(?:Would you like me to proceed|Shall I proceed|ready to implement|implementation plan|proposed changes)\b/i,
+                        /\b(?:I will now proceed|let me know if you would like me to proceed)\b/i,
+                        /<USER_REQUEST>/i
+                    ]
+                }
+            ];
+
+            for (const category of heuristicCategories) {
+                if (category.patterns.some(pattern => pattern.test(sample))) {
+                    return {
+                        goal: category.goal,
+                        confidence: 'high',
+                        reason: category.reason,
+                        ambiguous: false
+                    };
+                }
             }
 
-            // 7. Ambiguous fallback
             return {
                 goal: 'proceed',
                 confidence: 'low',
@@ -8049,57 +7934,13 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             };
         }
 
-                function updateDirectiveInferenceBadge(mode, goal, reason) {
-            const badge = document.getElementById('directiveInferenceBadge');
-            const icon = document.getElementById('directiveInferenceIcon');
-            const text = document.getElementById('directiveInferenceText');
-            if (!badge || !text) return;
-
-            const goalLabels = {
-                proceed: 'Proceed & Implement',
-                test: 'Verify & Test',
-                fix: 'Fix Bugs & Errors',
-                refactor: 'Clean & Refactor',
-                deploy: 'Commit & Sync'
-            };
-
-            const label = goalLabels[goal] || goal;
-
-            if (mode === 'manual') {
-                if (icon) icon.className = 'ti ti-hand-click';
-                text.textContent = `Manual: ${label}`;
-                badge.title = 'User manually overrode directive goal';
-                badge.style.color = 'var(--text-secondary)';
-            } else if (mode === 'ambiguous') {
-                if (icon) icon.className = 'ti ti-help';
-                text.textContent = `Ambiguous (Default: ${label})`;
-                badge.title = reason || 'Ambiguous context: safely defaulted';
-                badge.style.color = 'var(--text-secondary)';
-            } else {
-                if (icon) icon.className = 'ti ti-sparkles';
-                text.textContent = `Auto: ${label}`;
-                badge.title = reason || 'Auto-detected from context';
-                badge.style.color = 'var(--accent-color)';
-            }
-        }
-
-        function autoSelectNextTurnDirective(text, forceAuto = false) {
-            if (directiveManualOverride && !forceAuto) return activeDirectiveGoal;
-            const inference = inferNextTurnDirective(text);
-            activeDirectiveGoal = inference.goal;
-            directiveManualOverride = false;
-
-            document.querySelectorAll('.directive-chips .directive-chip').forEach(chip => {
-                const goal = chip.getAttribute('data-goal');
-                if (goal === activeDirectiveGoal) {
-                    chip.classList.add('active');
-                } else {
-                    chip.classList.remove('active');
-                }
-            });
-
-            const mode = inference.ambiguous ? 'ambiguous' : 'auto';
-            updateDirectiveInferenceBadge(mode, activeDirectiveGoal, inference.reason);
+        /**
+         * Automatically updates activeDirectiveGoal from input text using silent background inference.
+         * @param {string} text
+         * @returns {string}
+         */
+        function autoSelectNextTurnDirective(text) {
+            activeDirectiveGoal = inferNextTurnDirective(text).goal;
             return activeDirectiveGoal;
         }
 
@@ -8119,7 +7960,6 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             const inputSample = (inputText || '').toLowerCase();
             const promptLower = generatedPrompt.toLowerCase();
 
-            // Safety Rule 1: If input contains errors, directive must address fixing/debugging
             const hasErrorInInput = /command exited with (?:code\s+[1-9]\d*|error)|\b(?:fail(?:ed|ure)?|err(?:or)?|syntaxerror|typeerror|assertionerror)\b/i.test(inputSample);
             if (hasErrorInInput && directive !== 'fix') {
                 result.valid = false;
@@ -8127,7 +7967,6 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 result.warnings.push('Input contains unaddressed errors or failure codes, but directive was not set to Fix Bugs & Errors.');
             }
 
-            // Directive specific resolution checks
             const directiveRequirements = {
                 fix: {
                     regex: /\b(?:fix|diagnos(?:e|is)|root cause|debug|resolv(?:e|ing)|investigat(?:e|ion)|error)\b/i,
@@ -8156,16 +7995,6 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             return result;
         }
 
-        document.querySelectorAll('.directive-chips .directive-chip').forEach(chip => {
-            chip.onclick = () => {
-                document.querySelectorAll('.directive-chips .directive-chip').forEach(c => c.classList.remove('active'));
-                chip.classList.add('active');
-                activeDirectiveGoal = chip.getAttribute('data-goal') || 'proceed';
-                directiveManualOverride = true;
-                updateDirectiveInferenceBadge('manual', activeDirectiveGoal);
-                if (navigator.vibrate) navigator.vibrate(10);
-            };
-        });
         function getAgentPromptInstruction() {
             return `You are a principal AI Agent Architect and Lead Prompt Engineer. Your task is to analyze the following raw draft, notes, or feature request and transform it into a content-aware, production-ready AGENT PROMPT optimized for autonomous AI coding agents (such as Antigravity, Cursor, Claude Code, Windsurf, Aider, or Codex).\n\nAnalyze the draft deeply to extract implicit domain context, tech stack requirements, architectural boundaries, and intended behavior. Then construct a structured, unambiguous, and highly actionable prompt following this blueprint:\n\n# TASK OBJECTIVE\n[Clear, concise, and imperative statement of exactly what the agent must accomplish]\n\n# DETECTED CONTEXT & SCOPE\n[Contextual awareness: technologies, frameworks, specific files/paths mentioned or implied, and current system behavior]\n\n# STEP-BY-STEP IMPLEMENTATION PLAN\n[Numbered sequence of concrete, minimal-diff instructions for the agent to execute in order]\n\n# CONSTRAINTS & GUARDRAILS\n- Preserve existing working code and unrelated functionality.\n- Maintain backward compatibility and API contracts.\n- Retain all existing code comments, docstrings, and documentation.\n- Avoid unnecessary refactoring or speculative architectural complexity.\n\n# VERIFICATION & ACCEPTANCE CRITERIA\n[Explicit verification steps: CLI commands, test suites, edge case checks, or UI validation required to prove success]\n\nFormatting Rules:\n- Return ONLY the finalized agent-ready prompt text ready to paste directly into an AI agent's terminal or prompt box.\n- Do NOT wrap the entire response in triple backticks.\n- Do NOT include conversational filler like "Here is your agent prompt:".`;
         }
@@ -8186,14 +8015,11 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         // Optimized O(1) bounded string sampler & heuristic classifier
         function isAIAgentResponse(text) {
             if (!text || typeof text !== 'string' || text.trim().length < 40) return false;
-            
-            // Performance optimization: sample head and tail for large text (>8KB)
-            // AI agent messages, plans, and turn-taking prompts reside at the head/tail.
+
             const textSample = text.length > 8000
                 ? (text.slice(0, 4000) + '\n' + text.slice(-4000))
                 : text;
 
-            // High-confidence explicit structural markers
             const explicitPatterns = [
                 /\[diff_block_start\]/i,
                 /###?\s*Proposed Changes/i,
@@ -8212,7 +8038,6 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                 return true;
             }
 
-            // Conversational & Agent turn-taking directives (require multi-word agent phrasing)
             const turnTakingPatterns = [
                 /\b(?:Would you like me to|Do you want me to|Shall I)\s+(?:proceed|continue|implement|execute|apply|make|commit|refactor|test)\b/i,
                 /\b(?:I have|I've)\s+(?:completed|implemented|created|updated|fixed|resolved|refactored)\s+the\b/i,
@@ -8223,6 +8048,72 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             ];
 
             return turnTakingPatterns.some(p => p.test(textSample));
+        }
+
+        function updatePromptStudioSubmode(mode) {
+            promptStudioSubmode = mode;
+            if (mode === 'counter') {
+                if (submodeCounterPrompt) {
+                    submodeCounterPrompt.classList.add('active');
+                    submodeCounterPrompt.setAttribute('aria-selected', 'true');
+                }
+                if (submodeMasterPrompt) {
+                    submodeMasterPrompt.classList.remove('active');
+                    submodeMasterPrompt.setAttribute('aria-selected', 'false');
+                }
+                if (promptStudioInputLabel) promptStudioInputLabel.textContent = 'Pasted AI Agent Output / Response';
+                if (promptStudioInput) promptStudioInput.placeholder = 'Paste the AI agent response, proposed changes, or terminal output here...';
+                if (promptStudioGenBtnIcon) promptStudioGenBtnIcon.className = 'ti ti-robot';
+                if (promptStudioGenBtnText) promptStudioGenBtnText.textContent = 'Generate Agent Counter-Prompt';
+                if (promptStudioOutputLabel) promptStudioOutputLabel.textContent = 'Next-Turn Counter-Prompt';
+                if (promptStudioPlaceholder) promptStudioPlaceholder.textContent = 'Actionable Next-Turn Counter-Prompt for AI Agent will appear here.';
+                if (promptStudioCopyBtnText) promptStudioCopyBtnText.textContent = 'Copy for Terminal';
+                if (promptStudioCopyBtn) promptStudioCopyBtn.className = 'btn btn-primary';
+                if (promptStudioRunBtn) promptStudioRunBtn.style.display = 'none';
+                if (promptStudioInput && promptStudioInput.value.trim()) {
+                    autoSelectNextTurnDirective(promptStudioInput.value.trim());
+                }
+            } else {
+                if (submodeMasterPrompt) {
+                    submodeMasterPrompt.classList.add('active');
+                    submodeMasterPrompt.setAttribute('aria-selected', 'true');
+                }
+                if (submodeCounterPrompt) {
+                    submodeCounterPrompt.classList.remove('active');
+                    submodeCounterPrompt.setAttribute('aria-selected', 'false');
+                }
+                if (promptStudioInputLabel) promptStudioInputLabel.textContent = 'Rough Task / Draft Idea';
+                if (promptStudioInput) promptStudioInput.placeholder = 'e.g. Create a customer support reply for delayed shipment with 10% refund voucher...';
+                if (promptStudioGenBtnIcon) promptStudioGenBtnIcon.className = 'ti ti-wand';
+                if (promptStudioGenBtnText) promptStudioGenBtnText.textContent = 'Engineer Master Prompt (5-Part)';
+                if (promptStudioOutputLabel) promptStudioOutputLabel.textContent = 'Engineered Master Prompt';
+                if (promptStudioPlaceholder) promptStudioPlaceholder.textContent = 'Engineered 5-part Master Prompt will appear here (Persona, Objective, Context, Constraints, Output Schema).';
+                if (promptStudioCopyBtnText) promptStudioCopyBtnText.textContent = 'Copy Prompt';
+                if (promptStudioCopyBtn) promptStudioCopyBtn.className = 'btn btn-secondary';
+                if (promptStudioRunBtn) {
+                    promptStudioRunBtn.style.display = (promptStudioActions && promptStudioActions.style.display !== 'none') ? 'flex' : 'none';
+                }
+            }
+        }
+
+        if (submodeMasterPrompt) submodeMasterPrompt.onclick = () => updatePromptStudioSubmode('master');
+        if (submodeCounterPrompt) submodeCounterPrompt.onclick = () => updatePromptStudioSubmode('counter');
+
+        /**
+         * Opens Master Prompt Studio in Agent Counter-Prompt submode,
+         * populates target text, auto-detects the next-turn directive, and triggers generation.
+         * @param {string} [text] - Optional text override (defaults to active selection or editor text)
+         */
+        function launchCounterPromptStudio(text) {
+            const targetText = text !== undefined ? text : (selectedText || editorTextarea.value.trim());
+            const drawer = document.getElementById('aiDrawer');
+            if (drawer) drawer.classList.remove('hidden');
+            if (typeof setAiDrawerTab === 'function') setAiDrawerTab('prompt-studio');
+            updatePromptStudioSubmode('counter');
+            if (promptStudioInput) promptStudioInput.value = targetText;
+            autoSelectNextTurnDirective(targetText);
+            if (typeof updateBackdropState === 'function') updateBackdropState();
+            if (promptStudioGenBtn) promptStudioGenBtn.click();
         }
 
         // Smart Paste Listener for AI Agent Output Detection (Debounced & Non-Blocking)
@@ -8241,23 +8132,20 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             }, 100);
         });
 
-        // Banner Button Handlers
+        // Banner & Selection Pill Counter-Prompt Handlers
         const agentBannerGenBtn = document.getElementById('agentBannerGenBtn');
         const agentBannerCloseBtn = document.getElementById('agentBannerCloseBtn');
+        const pillCounterPromptBtn = document.getElementById('pillCounterPromptBtn');
 
         if (agentBannerGenBtn) {
             agentBannerGenBtn.onclick = () => launchCounterPromptStudio();
         }
-
         if (agentBannerCloseBtn) {
             agentBannerCloseBtn.onclick = () => {
                 const banner = document.getElementById('agentPromptBanner');
                 if (banner) banner.style.display = 'none';
             };
         }
-
-        // Selection Pill Counter-Prompt Button
-        const pillCounterPromptBtn = document.getElementById('pillCounterPromptBtn');
         if (pillCounterPromptBtn) {
             pillCounterPromptBtn.onclick = (e) => {
                 e.stopPropagation();
@@ -8265,23 +8153,13 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
             };
         }
 
-        const promptStudioGrabBtn = document.getElementById('promptStudioGrabBtn');
-        const promptStudioInput = document.getElementById('promptStudioInput');
-        const promptStudioGenBtn = document.getElementById('promptStudioGenBtn');
-        const promptStudioOutputBox = document.getElementById('promptStudioOutputBox');
-        const promptStudioActions = document.getElementById('promptStudioActions');
-        const promptStudioCopyBtn = document.getElementById('promptStudioCopyBtn');
-        const promptStudioInsertBtn = document.getElementById('promptStudioInsertBtn');
-        const promptStudioRunBtn = document.getElementById('promptStudioRunBtn');
-        const promptStudioStatusBadge = document.getElementById('promptStudioStatusBadge');
-
         if (promptStudioGrabBtn) {
             promptStudioGrabBtn.onclick = () => {
                 const text = selectedText || editorTextarea.value.trim();
                 if (text && promptStudioInput) {
                     promptStudioInput.value = text;
                     if (promptStudioSubmode === 'counter') {
-                        autoSelectNextTurnDirective(text, true);
+                        autoSelectNextTurnDirective(text);
                     }
                     promptStudioInput.focus();
                     if (navigator.vibrate) navigator.vibrate(15);
@@ -8294,7 +8172,7 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
         if (promptStudioInput) {
             promptStudioInput.addEventListener('input', () => {
                 if (promptStudioSubmode === 'counter' && promptStudioInput.value.trim()) {
-                    autoSelectNextTurnDirective(promptStudioInput.value.trim(), false);
+                    autoSelectNextTurnDirective(promptStudioInput.value.trim());
                 }
             });
         }
@@ -8308,12 +8186,9 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                     return;
                 }
 
-                let systemInstruction = '';
-                if (promptStudioSubmode === 'counter') {
-                    systemInstruction = getAgentCounterPromptInstruction(activeDirectiveGoal);
-                } else {
-                    systemInstruction = 'You are a world-class Prompt Engineer and AI Alignment Specialist. Your expertise lies in dissecting vague, rough, or unstructured user requests and transforming them into highly optimized, reliable, and context-aware master prompts.\\n\\nYour objective is to take the rough draft or task description provided by the user and engineer it into a high-performing, production-ready master prompt following this exact 5-part structural blueprint:\\n\\n# PERSONA & ROLE\\n[Define a highly specific, expert persona for the AI with deep domain authority]\\n\\n# TASK OBJECTIVE\\n[State clearly and concisely what the AI must accomplish using active, imperative verbs]\\n\\n# CONTEXT & BACKGROUND\\n[Provide the necessary situational awareness, problem space, and operational context]\\n\\n# SPECIFIC RULES & CONSTRAINTS\\n- [Constraint 1: Required Methodology & Inclusion Criteria]\\n- [Constraint 2: Negative Constraints - What to Avoid]\\n- [Constraint 3: Edge Case & Quality Guidelines]\\n- [Constraint 4: Tone, Depth, and Technical Rigor]\\n\\n# EXPECTED OUTPUT FORMAT\\n[Define the exact structure, layout, or markdown/JSON schema of the final response]\\n\\nMeta-Engineering Rules:\\n- Use clear bracket placeholders like [Insert Text Here] or [Variable] for dynamic inputs.\\n- No Conversational Filler: Output ONLY the engineered master prompt. Do not wrap the whole response in triple backticks or include conversational introductory/concluding remarks.';
-                }
+                const systemInstruction = promptStudioSubmode === 'counter'
+                    ? getAgentCounterPromptInstruction(autoSelectNextTurnDirective(rawTask))
+                    : 'You are a world-class Prompt Engineer and AI Alignment Specialist. Your expertise lies in dissecting vague, rough, or unstructured user requests and transforming them into highly optimized, reliable, and context-aware master prompts.\n\nYour objective is to take the rough draft or task description provided by the user and engineer it into a high-performing, production-ready master prompt following this exact 5-part structural blueprint:\n\n# PERSONA & ROLE\n[Define a highly specific, expert persona for the AI with deep domain authority]\n\n# TASK OBJECTIVE\n[State clearly and concisely what the AI must accomplish using active, imperative verbs]\n\n# CONTEXT & BACKGROUND\n[Provide the necessary situational awareness, problem space, and operational context]\n\n# SPECIFIC RULES & CONSTRAINTS\n- [Constraint 1: Required Methodology & Inclusion Criteria]\n- [Constraint 2: Negative Constraints - What to Avoid]\n- [Constraint 3: Edge Case & Quality Guidelines]\n- [Constraint 4: Tone, Depth, and Technical Rigor]\n\n# EXPECTED OUTPUT FORMAT\n[Define the exact structure, layout, or markdown/JSON schema of the final response]\n\nMeta-Engineering Rules:\n- Use clear bracket placeholders like [Insert Text Here] or [Variable] for dynamic inputs.\n- No Conversational Filler: Output ONLY the engineered master prompt. Do not wrap the whole response in triple backticks or include conversational introductory/concluding remarks.';
 
                 const loadingMsg = promptStudioSubmode === 'counter'
                     ? 'Generating actionable Agent Counter-Prompt...'
@@ -8340,7 +8215,8 @@ Do not wrap the JSON output in markdown formatting (do not include \`\`\`json or
                     if (promptStudioRunBtn) {
                         promptStudioRunBtn.style.display = promptStudioSubmode === 'counter' ? 'none' : 'flex';
                     }
-                    if (promptStudioCopyBtn) {
+            
+        if (promptStudioCopyBtn) {
                         promptStudioCopyBtn.className = promptStudioSubmode === 'counter' ? 'btn btn-primary' : 'btn btn-secondary';
                     }
                     if (promptStudioStatusBadge) promptStudioStatusBadge.style.display = 'inline';
